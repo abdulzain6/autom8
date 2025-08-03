@@ -1,0 +1,27 @@
+{
+  "name": "GOOGLE_TASKS",
+  "display_name": "Google Tasks",
+  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/google_tasks.svg",
+  "provider": "Google",
+  "version": "2.0.0",
+  "description": "The Google Tasks API allows managing tasks and task lists programmatically.",
+  "security_schemes": {
+    "oauth2": {
+      "location": "header",
+      "name": "Authorization",
+      "prefix": "Bearer",
+      "client_id": "{{ AIPOLABS_GOOGLE_TASKS_CLIENT_ID }}",
+      "client_secret": "{{ AIPOLABS_GOOGLE_TASKS_CLIENT_SECRET }}",
+      "scope": "https://www.googleapis.com/auth/tasks",
+      "authorize_url": "https://accounts.google.com/o/oauth2/v2/auth",
+      "access_token_url": "https://oauth2.googleapis.com/token",
+      "refresh_token_url": "https://oauth2.googleapis.com/token"
+    }
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Productivity"
+  ],
+  "visibility": "public",
+  "active": true
+}

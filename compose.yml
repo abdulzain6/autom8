@@ -1,0 +1,46 @@
+name: aci
+
+services:
+  db:
+    # Note: we need to use the pgvector/pgvector:pg17 image to use the pgvector extension, instead of the official postgres image
+    image: pgvector/pgvector:pg17
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d local_db"]
+      interval: 1s
+      retries: 5
+      start_period: 1s
+      timeout: 10s
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: local_db
+    ports:
+      - "5432:5432"
+    restart: no
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    healthcheck:
+      test: ["CMD-SHELL", "curl localhost:8000/v1/health"]
+      interval: 10s
+      retries: 5
+      start_period: 3s
+      timeout: 10s
+    env_file:
+      - .env.local
+    # useful for development, changes take effect in the container without needing to rebuild the image.
+    volumes:
+      - ./aci/server:/workdir/aci/server
+      - ./aci/common:/workdir/aci/common
+    ports:
+      - "8000:8000"
+    # this overrides the default CMD specified in the Dockerfile, use this for local development
+    command: /bin/sh -c "alembic upgrade head && tail -f /dev/null && uvicorn aci.server.main:app --proxy-headers --forwarded-allow-ips=* --host 0.0.0.0 --port 8000 --reload --no-access-log"
+    depends_on:
+      db:
+        condition: service_healthy
+      aws:
+        condition: service_healthy
+    restart: no

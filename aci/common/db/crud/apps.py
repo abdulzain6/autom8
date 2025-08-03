@@ -1,0 +1,139 @@
+"""
+CRUD operations for apps. (not including app_configurations)
+"""
+
+from sqlalchemy import select, update
+from sqlalchemy.orm import Session
+
+from aci.common.db.sql_models import App
+from aci.common.logging_setup import get_logger
+from aci.common.schemas.app import AppUpsert
+
+logger = get_logger(__name__)
+
+
+def create_app(
+    db_session: Session,
+    app_upsert: AppUpsert,
+    app_embedding: list[float],
+) -> App:
+    logger.debug(f"Creating app: {app_upsert}")
+
+    app_data = app_upsert.model_dump(mode="json", exclude_none=True)
+    app = App(
+        **app_data,
+        embedding=app_embedding,
+    )
+
+    db_session.add(app)
+    db_session.flush()
+    db_session.refresh(app)
+    return app
+
+
+def update_app(
+    db_session: Session,
+    app: App,
+    app_upsert: AppUpsert,
+    app_embedding: list[float] | None = None,
+) -> App:
+    """
+    Update an existing app.
+    With the option to update the app embedding. (needed if AppEmbeddingFields are updated)
+    """
+    new_app_data = app_upsert.model_dump(mode="json", exclude_unset=True)
+
+    for field, value in new_app_data.items():
+        setattr(app, field, value)
+
+    if app_embedding is not None:
+        app.embedding = app_embedding
+
+    db_session.flush()
+    db_session.refresh(app)
+    return app
+
+
+
+def get_app(db_session: Session, app_name: str, active_only: bool) -> App | None:
+    statement = select(App).filter_by(name=app_name)
+
+    if active_only:
+        statement = statement.filter(App.active)
+
+    app: App | None = db_session.execute(statement).scalar_one_or_none()
+    return app
+
+
+def get_apps(
+    db_session: Session,
+    active_only: bool,
+    configured_only: bool,
+    app_names: list[str] | None,
+    limit: int | None,
+    offset: int | None,
+) -> list[App]:
+    statement = select(App)
+    if active_only:
+        statement = statement.filter(App.active)
+    if configured_only:
+        statement = statement.filter(App.configuration.has())
+    if app_names is not None:
+        statement = statement.filter(App.name.in_(app_names))
+    if offset is not None:
+        statement = statement.offset(offset)
+    if limit is not None:
+        statement = statement.limit(limit)
+    return list(db_session.execute(statement).scalars().all())
+
+
+def search_apps(
+    db_session: Session,
+    active_only: bool,
+    configured_only: bool,
+    app_names: list[str] | None,
+    categories: list[str] | None,
+    intent_embedding: list[float] | None,
+    limit: int,
+    offset: int,
+) -> list[tuple[App, float | None]]:
+    """Get a list of apps with optional filtering by categories and sorting by vector similarity to intent. and pagination."""
+    statement = select(App)
+
+    # filter out inactive apps
+    if active_only:
+        statement = statement.filter(App.active)
+
+    # filter out apps by app_names
+    if app_names is not None:
+        statement = statement.filter(App.name.in_(app_names))
+
+    if configured_only:
+        statement = statement.filter(App.configuration.has())
+
+    # filter out apps by categories
+    # TODO: Is there any way to get typing for cosine_distance, label, overlap?
+    if categories is not None:
+        statement = statement.filter(App.categories.overlap(categories))
+
+    # sort by similarity to intent
+    if intent_embedding is not None:
+        similarity_score = App.embedding.cosine_distance(intent_embedding)
+        statement = statement.add_columns(similarity_score.label("similarity_score"))
+        statement = statement.order_by("similarity_score")
+
+    statement = statement.offset(offset).limit(limit)
+
+    logger.debug(f"Executing statement, statement={statement}")
+
+    results = db_session.execute(statement).all()
+
+    if intent_embedding is not None:
+        return [(app, score) for app, score in results]
+    else:
+        return [(app, None) for (app,) in results]
+
+
+def set_app_active_status(db_session: Session, app_name: str, active: bool) -> None:
+    statement = update(App).filter_by(name=app_name).values(active=active)
+    db_session.execute(statement)

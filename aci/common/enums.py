@@ -1,0 +1,61 @@
+from enum import StrEnum
+
+
+class SecurityScheme(StrEnum):
+    """
+    security scheme type for an app (or function if support override)
+    """
+
+    NO_AUTH = "no_auth"
+    API_KEY = "api_key"
+    HTTP_BASIC = "http_basic"
+    HTTP_BEARER = "http_bearer"
+    OAUTH2 = "oauth2"
+
+
+class Protocol(StrEnum):
+    """
+    function protocol type
+    ideally all functions under the same app should use the same protocol, but we don't enforce that for maximum flexibility
+    """
+
+    REST = "rest"
+    CONNECTOR = "connector"
+    # GRAPHQL = "graphql"
+    # WEBSOCKET = "websocket"
+    # GRPC = "grpc"
+
+
+class HttpLocation(StrEnum):
+    PATH = "path"
+    QUERY = "query"
+    HEADER = "header"
+    COOKIE = "cookie"
+    BODY = "body"
+
+
+# TODO: use lowercase for consistency?
+class HttpMethod(StrEnum):
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
+
+
+class FunctionDefinitionFormat(StrEnum):
+    """
+    format for a function definition.
+    """
+
+    BASIC = "basic"  # only return name and description
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+    OPENAI_RESPONSES = "openai_responses"
+
+
+class ClientIdentityProvider(StrEnum):
+    GOOGLE = "google"
+    # GITHUB = "github"
