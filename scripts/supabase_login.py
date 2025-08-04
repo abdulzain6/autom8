@@ -31,6 +31,7 @@ def upsert_user_and_get_jwt(email: str, password: str) -> Optional[str]:
     auth_url = f"{SUPABASE_URL}/auth/v1/token?grant_type=password"
     auth_payload = {"email": email, "password": password}
 
+
     auth_resp = requests.post(auth_url, json=auth_payload, headers={"apikey": SUPABASE_SERVICE_ROLE_KEY})
     if auth_resp.status_code != 200:
         raise Exception(f"Login failed: {auth_resp.text}")

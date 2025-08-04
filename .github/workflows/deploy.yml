@@ -4,7 +4,7 @@ name: Deploy and Build on Production VM
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   deploy:
