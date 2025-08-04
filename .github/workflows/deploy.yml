@@ -1,0 +1,33 @@
+# .github/workflows/deploy.yml
+
+name: Deploy and Build on Production VM
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VM via SSH and Build
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Navigate to your project directory on the VM
+            cd ~/autom8
+
+            # Pull the latest changes from the master branch
+            git pull origin master
+
+            # Build the new image locally. --no-cache ensures it uses the latest code.
+            sudo docker compose build --no-cache
+
+            # Stop and restart the services to use the new image
+            sudo docker compose up -d --force-recreate
+
+            # Clean up old, unused Docker images to save space
+            sudo docker image prune -af

@@ -16,9 +16,4 @@ services:
       - ./aci/common:/workdir/aci/common
     command: /bin/sh start.sh
     restart: always
-    networks:
-      - autom8net
-
-networks:
-  autom8net:
-    enable_ipv6: true
+    network_mode: host
