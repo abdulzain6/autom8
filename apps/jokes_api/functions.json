@@ -1,0 +1,91 @@
+[
+  {
+    "name": "JOKE_API__GET_RANDOM_JOKE",
+    "description": "Fetches a random joke from any category. You can optionally filter out jokes with certain flags (e.g., nsfw, religious).",
+    "tags": ["joke", "random", "fun"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/joke/Any",
+      "server_url": "https://v2.jokeapi.dev"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters to filter the joke.",
+          "properties": {
+            "blacklistFlags": {
+              "type": "string",
+              "description": "A comma-separated list of flags to blacklist (e.g., 'nsfw,religious,political')."
+            },
+            "type": {
+              "type": "string",
+              "description": "The type of joke to get: 'single' or 'twopart'."
+            }
+          },
+          "required": [],
+          "visible": ["blacklistFlags", "type"],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": ["query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "JOKE_API__GET_JOKE_BY_CATEGORY",
+    "description": "Fetches a joke from a specific category (e.g., 'Programming', 'Pun', 'Spooky').",
+    "tags": ["joke", "category", "fun"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/joke/{category}",
+      "server_url": "https://v2.jokeapi.dev"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters for the request.",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "The category of joke. Available: Programming, Misc, Dark, Pun, Spooky, Christmas."
+            }
+          },
+          "required": ["category"],
+          "visible": ["category"],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters to filter the joke.",
+          "properties": {
+            "blacklistFlags": {
+              "type": "string",
+              "description": "A comma-separated list of flags to blacklist (e.g., 'nsfw,religious,political')."
+            },
+            "type": {
+              "type": "string",
+              "description": "The type of joke to get: 'single' or 'twopart'."
+            }
+          },
+          "required": [],
+          "visible": ["blacklistFlags", "type"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path"],
+      "visible": ["path", "query"],
+      "additionalProperties": false
+    }
+  }
+]

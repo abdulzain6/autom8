@@ -1,0 +1,204 @@
+[
+  {
+    "name": "FRANKFURTER_API__GET_LATEST_RATES",
+    "description": "Fetches the latest foreign exchange rates. You can specify a base currency and one or more target currencies.",
+    "tags": ["currency", "exchange", "rate", "latest", "finance"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/v1/latest",
+      "server_url": "https://api.frankfurter.dev"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for fetching rates.",
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "The three-letter currency code for the base currency (e.g., 'USD'). Defaults to EUR."
+            },
+            "to": {
+              "type": "string",
+              "description": "A comma-separated string of target currency codes (e.g., 'PKR,GBP,JPY'). If omitted, returns all currencies."
+            }
+          },
+          "required": [],
+          "visible": ["from", "to"],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "visible": ["query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "FRANKFURTER_API__CONVERT_CURRENCY",
+    "description": "Converts a specific amount from one currency to another using the latest exchange rates.",
+    "tags": ["currency", "convert", "amount", "finance", "travel"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/v1/latest",
+      "server_url": "https://api.frankfurter.dev"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for the conversion.",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "description": "The amount of money to convert (e.g., 100)."
+            },
+            "from": {
+              "type": "string",
+              "description": "The three-letter code of the currency you are converting from (e.g., 'USD')."
+            },
+            "to": {
+              "type": "string",
+              "description": "The three-letter code of the currency you are converting to (e.g., 'PKR')."
+            }
+          },
+          "required": ["amount", "from", "to"],
+          "visible": ["amount", "from", "to"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["query"],
+      "visible": ["query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "FRANKFURTER_API__GET_HISTORICAL_RATE",
+    "description": "Fetches the historical exchange rates for a single, specific date.",
+    "tags": ["currency", "history", "rate", "finance"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/v1/{date}",
+      "server_url": "https://api.frankfurter.dev"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters for the historical date.",
+          "properties": {
+            "date": {
+              "type": "string",
+              "description": "The date for the historical rates in YYYY-MM-DD format (e.g., '2023-01-15')."
+            }
+          },
+          "required": ["date"],
+          "visible": ["date"],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters to filter the historical rates.",
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "The base currency for the historical rate (e.g., 'USD')."
+            },
+            "to": {
+              "type": "string",
+              "description": "A comma-separated string of target currency codes (e.g., 'PKR,GBP')."
+            }
+          },
+          "required": [],
+          "visible": ["from", "to"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path"],
+      "visible": ["path", "query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "FRANKFURTER_API__GET_TIME_SERIES_RATES",
+    "description": "Fetches historical exchange rates over a period of time. Use '..' to specify the range in the date parameter.",
+    "tags": ["currency", "history", "timeseries", "range", "finance"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/v1/{date_range}",
+      "server_url": "https://api.frankfurter.dev"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameter for the date range.",
+          "properties": {
+            "date_range": {
+              "type": "string",
+              "description": "The date range in YYYY-MM-DD..YYYY-MM-DD format (e.g., '2023-01-01..2023-01-31')."
+            }
+          },
+          "required": ["date_range"],
+          "visible": ["date_range"],
+          "additionalProperties": false
+        },
+        "query": {
+          "type": "object",
+          "description": "Optional query parameters to filter the rates.",
+          "properties": {
+            "from": {
+              "type": "string",
+              "description": "The base currency for the historical rates (e.g., 'USD')."
+            },
+            "to": {
+              "type": "string",
+              "description": "A comma-separated string of target currency codes (e.g., 'PKR,GBP')."
+            }
+          },
+          "required": [],
+          "visible": ["from", "to"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path"],
+      "visible": ["path", "query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "FRANKFURTER_API__LIST_SUPPORTED_CURRENCIES",
+    "description": "Gets a list of all currency symbols and their full names supported by the API.",
+    "tags": ["currency", "list", "supported", "info"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/v1/currencies",
+      "server_url": "https://api.frankfurter.dev"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "visible": [],
+      "additionalProperties": false
+    }
+  }
+]

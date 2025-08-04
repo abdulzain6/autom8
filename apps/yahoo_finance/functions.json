@@ -1,0 +1,93 @@
+[
+  {
+    "name": "YAHOO_FINANCE__GET_CURRENT_STOCK_PRICE",
+    "description": "Retrieves the latest market price, day's high, day's low, and trading volume for a list of stock tickers.",
+    "tags": ["stock", "price", "realtime", "finance"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "tickers": {
+          "type": "array",
+          "description": "A list of stock symbols to fetch data for (e.g., [\"AAPL\", \"MSFT\", \"GOOG\"]).",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["tickers"],
+      "visible": ["tickers"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "YAHOO_FINANCE__GET_HISTORICAL_STOCK_DATA",
+    "description": "Fetches historical market data (Open, High, Low, Close, Volume) for a given stock. Data is returned on a yearly interval to keep the volume manageable for analysis.",
+    "tags": ["stock", "history", "data", "analysis", "finance"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "ticker": {
+          "type": "string",
+          "description": "The stock symbol to retrieve historical data for (e.g., \"NVDA\")."
+        },
+        "period": {
+          "type": "string",
+          "description": "The time frame for the historical data. Use values like '1y', '5y', '10y', up to a maximum of '20y'. Defaults to '10y'."
+        }
+      },
+      "required": ["ticker"],
+      "visible": ["ticker", "period"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "YAHOO_FINANCE__GET_COMPANY_FUNDAMENTAL_INFO",
+    "description": "Retrieves key fundamental data about a company, such as its full name, sector, industry, a summary of its business, and key valuation metrics like P/E ratio and market capitalization.",
+    "tags": ["company", "info", "fundamentals", "analysis", "finance"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "ticker": {
+          "type": "string",
+          "description": "The stock symbol for the company you want to research (e.g., \"TSLA\")."
+        }
+      },
+      "required": ["ticker"],
+      "visible": ["ticker"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "YAHOO_FINANCE__GET_LATEST_COMPANY_NEWS",
+    "description": "Fetches the latest news headlines and links related to a specific company to provide context for market movements.",
+    "tags": ["news", "company", "finance", "updates"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "ticker": {
+          "type": "string",
+          "description": "The stock symbol for the company you want news about (e.g., \"AMZN\")."
+        }
+      },
+      "required": ["ticker"],
+      "visible": ["ticker"],
+      "additionalProperties": false
+    }
+  }
+]

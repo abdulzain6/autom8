@@ -1,0 +1,19 @@
+{
+  "name": "GOOGLE_NEWS",
+  "display_name": "Google News",
+  "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Google_News_icon.svg/1024px-Google_News_icon.svg.png",
+  "provider": "pygooglenews (Unofficial)",
+  "version": "1.0.0",
+  "description": "Fetches news articles from Google News. Allows searching for specific topics and retrieving top headlines by country and language. This connector uses the unofficial pygooglenews library and does not require an API key.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "News",
+    "Data",
+    "Information"
+  ],
+  "visibility": "public",
+  "active": true
+}

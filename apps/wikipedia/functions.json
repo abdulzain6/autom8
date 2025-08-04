@@ -1,0 +1,104 @@
+[
+  {
+    "name": "WIKIPEDIA_API__SEARCH",
+    "description": "Search Wikipedia article titles by a query string.",
+    "tags": ["search", "wiki"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/w/api.php?action=query&format=json&list=search",
+      "server_url": "https://en.wikipedia.org"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "object",
+          "description": "Query parameters for the search.",
+          "properties": {
+            "srsearch": {
+              "type": "string",
+              "description": "The search string (e.g., 'Elon Musk')."
+            }
+          },
+          "required": ["srsearch"],
+          "visible": ["srsearch"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["query"],
+      "visible": ["query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "WIKIPEDIA_API__SUMMARY_GET",
+    "description": "Fetch the summary (intro) of a Wikipedia article by title.",
+    "tags": ["summary", "wiki", "content"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/rest_v1/page/summary/{title}",
+      "server_url": "https://en.wikipedia.org"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters for the request.",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Exact article title (e.g., 'Artificial_intelligence')."
+            }
+          },
+          "required": ["title"],
+          "visible": ["title"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path"],
+      "visible": ["path"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "WIKIPEDIA_API__PAGE_HTML_GET",
+    "description": "Get rendered HTML of a Wikipedia article.",
+    "tags": ["wiki", "html", "content"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "rest",
+    "protocol_data": {
+      "method": "GET",
+      "path": "/api/rest_v1/page/html/{title}",
+      "server_url": "https://en.wikipedia.org"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "object",
+          "description": "Path parameters for the request.",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Exact article title (e.g., 'Python_(programming_language)')."
+            }
+          },
+          "required": ["title"],
+          "visible": ["title"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["path"],
+      "visible": ["path"],
+      "additionalProperties": false
+    }
+  }
+]

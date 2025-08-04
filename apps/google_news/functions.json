@@ -1,0 +1,60 @@
+[
+  {
+    "name": "GOOGLE_NEWS__GET_TOP_HEADLINES",
+    "description": "Fetches the top news headlines for a specific country and language.",
+    "tags": ["news", "headlines", "top stories", "world"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string",
+          "description": "The two-letter ISO 3166-1 code for the country (e.g., 'PK' for Pakistan, 'US' for USA). Defaults to 'PK'."
+        },
+        "lang": {
+          "type": "string",
+          "description": "The two-letter ISO 639-1 code for the language (e.g., 'en' for English, 'ur' for Urdu). Defaults to 'en'."
+        }
+      },
+      "required": [],
+      "visible": ["country", "lang"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "GOOGLE_NEWS__SEARCH_TOPIC",
+    "description": "Searches for news articles related to a specific topic within a given time frame, country, and language.",
+    "tags": ["news", "search", "topic", "articles"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search term or topic (e.g., 'artificial intelligence')."
+        },
+        "period": {
+          "type": "string",
+          "description": "The time frame to search within (e.g., '7d' for 7 days, '1m' for 1 month, '1y' for 1 year). Defaults to '7d'."
+        },
+        "country": {
+          "type": "string",
+          "description": "The two-letter ISO 3166-1 code for the country to search in (e.g., 'PK', 'US'). Defaults to 'US'."
+        },
+        "lang": {
+          "type": "string",
+          "description": "The two-letter ISO 639-1 code for the language (e.g., 'en', 'ur'). Defaults to 'en'."
+        }
+      },
+      "required": ["query"],
+      "visible": ["query", "period", "country", "lang"],
+      "additionalProperties": false
+    }
+  }
+]
