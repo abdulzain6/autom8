@@ -59,7 +59,6 @@ async def list_functions(
     )
 
 
-@router.get("/search", response_model_exclude_none=True)
 async def search_functions(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     query_params: Annotated[FunctionsSearch, Query()],
@@ -116,10 +115,6 @@ async def search_functions(
     return function_definitions
 
 
-@router.get(
-    "/{function_name}/definition",
-    response_model_exclude_none=True,  # having this to exclude "strict" field in openai's function definition if not set
-)
 async def get_function_definition(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     function_name: str,
@@ -163,12 +158,6 @@ async def get_function_definition(
     return function_definition
 
 
-
-@router.post(
-    "/{function_name}/execute",
-    response_model=FunctionExecutionResult,
-    response_model_exclude_none=True,
-)
 async def execute(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     function_name: str,
@@ -223,7 +212,6 @@ async def execute(
     return result
 
 
-# TODO: move to agent/tools.py or a util function
 def format_function_definition(
     function: Function, format: FunctionDefinitionFormat
 ) -> (

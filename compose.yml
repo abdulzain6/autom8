@@ -16,7 +16,7 @@ services:
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       - "--api.dashboard=true"
     ports:
-  #    - "80:80"
+      - "80:80"
       - "443:443"
       - "8080:8080"
     volumes:

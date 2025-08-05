@@ -251,9 +251,7 @@ async def link_oauth2_account(
         state=oauth2_state_jwt,
         code_verifier=oauth2_state.code_verifier,
     )
-
-    # rewrite the authorization url for some apps that need special handling
-    # TODO: this is hacky and need to refactor this in the future
+    
     authorization_url = OAuth2Manager.rewrite_oauth2_authorization_url(
         query_params.app_name, authorization_url
     )
