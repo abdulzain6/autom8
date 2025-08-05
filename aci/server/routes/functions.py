@@ -158,6 +158,11 @@ async def get_function_definition(
     return function_definition
 
 
+@router.post(
+    "/{function_name}/execute",
+    response_model=FunctionExecutionResult,
+    response_model_exclude_none=True,
+)
 async def execute(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     function_name: str,
