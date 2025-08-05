@@ -16,7 +16,7 @@ services:
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       - "--api.dashboard=true"
     ports:
-      - "80:80"
+  #    - "80:80"
       - "443:443"
       - "8080:8080"
     volumes:
@@ -44,15 +44,23 @@ services:
       - web_proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.aci-server-http.rule=Host(`api.getautom8.app`, `getautom8.app`)"
+      
+      # --- HTTP Router with the CORRECTED rule syntax ---
+      - "traefik.http.routers.aci-server-http.rule=Host(`api.getautom8.app`) || Host(`getautom8.app`)"
       - "traefik.http.routers.aci-server-http.entrypoints=web"
       - "traefik.http.routers.aci-server-http.middlewares=https-redirect@docker"
+      
+      # --- Middleware Definition ---
       - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.aci-server-secure.rule=Host(`api.getautom8.app`, `getautom8.app`)"
+      
+      # --- Secure Router with the CORRECTED rule syntax ---
+      - "traefik.http.routers.aci-server-secure.rule=Host(`api.getautom8.app`) || Host(`getautom8.app`)"
       - "traefik.http.routers.aci-server-secure.entrypoints=websecure"
       - "traefik.http.routers.aci-server-secure.tls.certresolver=myresolver"
-      - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.aci-server-secure.service=aci-server-service"
 
+      # --- Service Definition ---
+      - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
 networks:
   web_proxy:
     driver: bridge
