@@ -1,19 +1,61 @@
 name: aci
 
 services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: always
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=abdulzain6@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--api.dashboard=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik-data:/letsencrypt"
+    networks:
+      - web_proxy
+
   server:
     build:
       context: .
       dockerfile: Dockerfile.server
+    restart: always
+    command: /bin/sh start.sh
     healthcheck:
-      test: ["CMD-SHELL", "curl localhost:8000/v1/health"]
+      test: ["CMD-SHELL", "curl http://localhost:8000/v1/health"]
       interval: 10s
       retries: 5
-      start_period: 3s
+      start_period: 30s
       timeout: 10s
     volumes:
       - ./aci/server:/workdir/aci/server
       - ./aci/common:/workdir/aci/common
-    command: /bin/sh start.sh
-    restart: always
-    network_mode: host
+    networks:
+      - web_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.aci-server-http.rule=Host(`api.getautom8.app`, `getautom8.app`)"
+      - "traefik.http.routers.aci-server-http.entrypoints=web"
+      - "traefik.http.routers.aci-server-http.middlewares=https-redirect@docker"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.aci-server-secure.rule=Host(`api.getautom8.app`, `getautom8.app`)"
+      - "traefik.http.routers.aci-server-secure.entrypoints=websecure"
+      - "traefik.http.routers.aci-server-secure.tls.certresolver=myresolver"
+      - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
+
+networks:
+  web_proxy:
+    driver: bridge
+
+volumes:
+  traefik-data:
