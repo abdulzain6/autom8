@@ -207,6 +207,14 @@ class App(Base):
         init=False,
     )
 
+    linked_accounts: Mapped[List["LinkedAccount"]] = relationship(
+        "LinkedAccount",
+        back_populates="app",
+        cascade="all, delete-orphan",
+        lazy="select",
+        init=False,
+    )
+
     @property
     def has_default_credentials(self) -> bool:
         """
@@ -219,7 +227,22 @@ class App(Base):
     @property
     def has_configuration(self) -> bool:
         return self.configuration is not None
+    
 
+    def has_linked_account(self, user_id: str) -> bool:
+        """
+        Checks if the app has a linked account for the given user.
+
+        Args:
+            user_id: The unique identifier for the user.
+
+        Returns:
+            True if a linked account exists for this app and user, False otherwise.
+        """
+        return any(
+            linked_account.user_id == user_id for linked_account in self.linked_accounts
+        )
+    
 
 class AppConfiguration(Base):
     """

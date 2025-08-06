@@ -149,6 +149,7 @@ class AppDetails(BaseModel):
     supported_security_schemes: SecuritySchemesPublic
     has_default_credentials: bool
     is_configured: bool
+    is_linked: bool | None = None
     functions: list[FunctionDetails]
     created_at: datetime
     updated_at: datetime

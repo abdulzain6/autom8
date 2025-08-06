@@ -58,7 +58,8 @@ async def list_apps(
             functions=[FunctionDetails.model_validate(function) for function in app.functions],
             created_at=app.created_at,
             updated_at=app.updated_at,
-            is_configured=app.has_configuration
+            is_configured=app.has_configuration,
+            is_linked=app.has_linked_account(context.user.id),
         )
         response.append(app_details)
 
@@ -165,6 +166,7 @@ async def get_app_details(
         supported_security_schemes=SecuritySchemesPublic.model_validate(app.security_schemes),
         has_default_credentials=app.has_default_credentials,
         is_configured=app.has_configuration,
+        is_linked=app.has_linked_account(context.user.id),
         functions=[FunctionDetails.model_validate(function) for function in functions],
         created_at=app.created_at,
         updated_at=app.updated_at,
