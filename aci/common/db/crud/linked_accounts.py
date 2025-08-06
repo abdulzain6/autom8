@@ -112,7 +112,7 @@ def create_linked_account(
         security_credentials=(
             security_credentials.model_dump(mode="json") if security_credentials else {}
         ),
-        enabled=enabled,
+        disabled_functions=[]
     )
     db_session.add(linked_account)
     db_session.flush()
@@ -147,8 +147,7 @@ def update_linked_account(
     linked_account: LinkedAccount,
     linked_account_update: LinkedAccountUpdate,
 ) -> LinkedAccount:
-    if linked_account_update.enabled is not None:
-        linked_account.enabled = linked_account_update.enabled
+    linked_account.disabled_functions = linked_account_update.disabled_functions
     db_session.flush()
     db_session.refresh(linked_account)
     return linked_account

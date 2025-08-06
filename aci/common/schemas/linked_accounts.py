@@ -30,7 +30,7 @@ class LinkedAccountNoAuthCreate(LinkedAccountCreateBase):
 
 
 class LinkedAccountUpdate(BaseModel):
-    enabled: bool | None = None
+    disabled_functions: list[str]
 
 
 class LinkedAccountOAuth2CreateState(BaseModel):

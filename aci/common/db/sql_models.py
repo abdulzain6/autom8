@@ -366,11 +366,14 @@ class LinkedAccount(Base):
         nullable=False,
     )
 
-    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    disabled_functions: Mapped[List[str]] = mapped_column(
+        ARRAY(String(MAX_STRING_LENGTH)), nullable=False, default_factory=list
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), server_default=func.now(), nullable=False, init=False
     )
+    
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
         server_default=func.now(),
@@ -378,6 +381,7 @@ class LinkedAccount(Base):
         nullable=False,
         init=False,
     )
+
     last_used_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=True, init=False
     )

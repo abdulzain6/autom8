@@ -1,9 +1,10 @@
 import click
 from rich.console import Console
-
 from aci.cli import config
 from aci.common import utils
 from aci.common.db import crud
+from aci.common.db.sql_models import LinkedAccount
+from sqlalchemy import func
 
 console = Console()
 
@@ -76,6 +77,11 @@ def delete_app(
                 db_session.delete(app_config)
             # 4. Delete functions (SQLAlchemy will handle this via cascade)
             for function in functions:
+                db_session.query(LinkedAccount).update({
+                    LinkedAccount.disabled_functions: func.array_remove(
+                        LinkedAccount.disabled_functions, function.name
+                    )
+                })
                 console.print(f"Function '{function.name}' will be deleted with app")
 
             # 5. Delete the app (will cascade to functions)

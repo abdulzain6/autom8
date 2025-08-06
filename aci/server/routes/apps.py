@@ -20,7 +20,7 @@ from aci.server import dependencies as deps
 
 logger = get_logger(__name__)
 router = APIRouter()
-openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+openai_client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BASE_URL)
 
 
 @router.get("", response_model_exclude_none=True)

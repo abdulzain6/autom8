@@ -339,16 +339,6 @@ async def execute_function(
             f"please link the account for this app"
         )
 
-    if not linked_account.enabled:
-        logger.error(
-            f"Failed to execute function, linked account is disabled, "
-            f"function_name={function_name} app_name={function.app.name} user_id={user_id} linked_account_id={linked_account.id}"
-        )
-        raise LinkedAccountDisabled(
-            f"Linked account with user_id={user_id} is disabled for app={function.app.name},"
-            f"please enable the account"
-        )
-
     security_credentials_response: SecurityCredentialsResponse = await scm.get_security_credentials(
         app_configuration.app, app_configuration, linked_account
     )
