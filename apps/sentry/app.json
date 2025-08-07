@@ -1,7 +1,7 @@
 {
   "name": "SENTRY",
   "display_name": "Sentry",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/sentry.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/sentry.svg",
   "provider": "Sentry",
   "version": "1.0",
   "description": "Sentry API integration for monitoring and error tracking, allowing you to manage issues, events, releases, and more.",

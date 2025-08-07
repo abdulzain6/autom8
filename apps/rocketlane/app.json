@@ -1,7 +1,7 @@
 {
   "name": "ROCKETLANE",
   "display_name": "Rocketlane",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/rocketlane.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/rocketlane.svg",
   "provider": "Rocketlane",
   "version": "1.0.0",
   "description": "Rocketlane API for managing customer onboarding, project management, and client collaboration.",

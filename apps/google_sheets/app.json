@@ -1,7 +1,7 @@
 {
   "name": "GOOGLE_SHEETS",
   "display_name": "Google Sheets",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/google_sheets.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/google_sheets.svg",
   "provider": "Google",
   "version": "4.0.0",
   "description": "The Google Sheets API is a RESTful API that allows programmatic access to spreadsheet data and formatting. It supports CRUD operations, formulas, charts, and collaboration features.",

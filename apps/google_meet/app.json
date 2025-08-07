@@ -1,7 +1,7 @@
 {
     "name": "GOOGLE_MEET",
     "display_name": "Google Meet",
-    "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/google_meet.svg",
+    "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/google_meet.svg",
     "provider": "Google",
     "version": "1.0.0",
     "description": "The Google Meet API allows developers to access and manage Google Meet resources programmatically. It provides information about meetings, participants, and recordings through RESTful HTTP calls including listing conference records, participants, and meeting spaces.",

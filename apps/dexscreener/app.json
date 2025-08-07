@@ -1,7 +1,7 @@
 {
   "name": "DEXSCREENER",
   "display_name": "DexScreener",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/dexscreener.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/dexscreener.svg",
   "provider": "DexScreener",
   "version": "1.0.0",
   "description": "DexScreener API integration for accessing token and pair information from decentralized exchanges.",

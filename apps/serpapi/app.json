@@ -1,7 +1,7 @@
 {
   "name": "SERPAPI",
   "display_name": "SerpApi",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/serpapi.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/serpapi.svg",
   "provider": "SerpApi",
   "version": "1.0",
   "description": "SerpApi integration for web search, images, news, academic papers, and trends, providing access to Google Search, Images, News, Scholar, and Trends APIs.",

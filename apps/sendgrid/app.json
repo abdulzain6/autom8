@@ -1,7 +1,7 @@
 {
   "name": "SENDGRID",
   "display_name": "SendGrid",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/sendgrid.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/sendgrid.svg",
   "provider": "SendGrid",
   "version": "3.0.0",
   "description": "SendGrid is a cloud-based email service that delivers transactional and marketing emails. It provides a robust API for sending emails, managing email templates, and tracking email delivery status.",

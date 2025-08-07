@@ -1,7 +1,7 @@
 {
     "name": "VERCEL",
     "display_name": "Vercel",
-    "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/vercel.png",
+    "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/vercel.png",
     "provider": "https://vercel.com/docs/rest-api/reference",
     "version": "1.0.0",
     "description": "The Vercel API allows programmatic control over deployments, projects, and integrations, including GitHub repository linking and deployment management.",

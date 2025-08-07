@@ -130,8 +130,13 @@ class AppBasic(BaseModel):
     name: str
     description: str
     functions: list[BasicFunctionDefinition] | None = None
-
     model_config = ConfigDict(from_attributes=True)
+    logo: str | None
+    is_linked: bool | None = None
+    categories: list[str]
+    active: bool
+    display_name: str
+    has_default_credentials: bool
 
 
 class AppDetails(BaseModel):

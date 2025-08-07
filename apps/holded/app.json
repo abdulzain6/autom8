@@ -1,7 +1,7 @@
 {
   "name": "HOLDED",
   "display_name": "Holded",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/holded.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/holded.svg",
   "provider": "Holded",
   "version": "1.0.0",
   "description": "Holded API for managing team, employees, payroll, treasury, invoicing and other business operations.",

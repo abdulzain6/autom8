@@ -1,7 +1,7 @@
 {
     "name": "DAYTONA",
     "display_name": "Daytona.io",
-    "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/daytona.svg",
+    "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/daytona.svg",
     "provider": "Daytona.io",
     "version": "1.0.0",
     "description": "Daytona provides secure and elastic infrastructure for running AI-generated code in isolated environments with sub-90ms sandbox creation time.",

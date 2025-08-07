@@ -1,7 +1,7 @@
 {
   "name": "FACTORIAL_HR",
   "display_name": "Factorial HR",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/factorialhr.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/factorialhr.svg",
   "provider": "Factorial",
   "version": "2025-04-01",
   "description": "Factorial HR API provides comprehensive HR management capabilities including employee management, task tracking, webhooks, job catalog, and finance management.",

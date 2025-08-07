@@ -45,5 +45,11 @@ ROUTER_PREFIX_APPS = "/v1/apps"
 ROUTER_PREFIX_FUNCTIONS = "/v1/functions"
 ROUTER_PREFIX_APP_CONFIGURATIONS = "/v1/app-configurations"
 ROUTER_PREFIX_LINKED_ACCOUNTS = "/v1/linked-accounts"
+ROUTER_PREFIX_VOICE_AGENT = "/v1/voice-agent"
 # 8KB
 MAX_LOG_FIELD_SIZE = 8 * 1024
+
+# VOICE AGENT
+LIVEKIT_HOST_URL = check_and_get_env_variable("SERVER_LIVEKIT_HOST_URL")
+LIVEKIT_API_KEY = check_and_get_env_variable("SERVER_LIVEKIT_API_KEY")  
+LIVEKIT_API_SECRET = check_and_get_env_variable("SERVER_LIVEKIT_API_SECRET")

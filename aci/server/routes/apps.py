@@ -53,9 +53,13 @@ async def list_apps(
             categories=app.categories,
             active=app.active,
             security_schemes=list(app.security_schemes.keys()),
-            supported_security_schemes=SecuritySchemesPublic.model_validate(app.security_schemes),
+            supported_security_schemes=SecuritySchemesPublic.model_validate(
+                app.security_schemes
+            ),
             has_default_credentials=app.has_default_credentials,
-            functions=[FunctionDetails.model_validate(function) for function in app.functions],
+            functions=[
+                FunctionDetails.model_validate(function) for function in app.functions
+            ],
             created_at=app.created_at,
             updated_at=app.updated_at,
             is_configured=app.has_configuration,
@@ -75,8 +79,6 @@ async def search_apps(
     Search for Apps.
     Intented to be used by agents to search for apps based on natural language intent.
     """
-    # TODO: currently the search is done across all apps, we might want to add flags to account for below scenarios:
-    # - when clients search for apps, if an app is configured but disabled by client, should it be discoverable?
     intent_embedding = (
         generate_embedding(
             openai_client,
@@ -106,12 +108,37 @@ async def search_apps(
     for app, _ in apps_with_scores:
         if query_params.include_functions:
             functions = [
-                BasicFunctionDefinition(name=function.name, description=function.description)
+                BasicFunctionDefinition(
+                    name=function.name, description=function.description
+                )
                 for function in app.functions
             ]
-            apps.append(AppBasic(name=app.name, description=app.description, functions=functions))
+            apps.append(
+                AppBasic(
+                    name=app.name, 
+                    description=app.description, 
+                    functions=functions,
+                    logo=app.logo,
+                    is_linked=app.has_linked_account(context.user.id),
+                    categories=app.categories,
+                    active=app.active,
+                    display_name=app.display_name,
+                    has_default_credentials=app.has_default_credentials,
+                )
+            )
         else:
-            apps.append(AppBasic(name=app.name, description=app.description))
+            apps.append(
+                AppBasic(
+                    name=app.name, 
+                    description=app.description,
+                    logo=app.logo,
+                    is_linked=app.has_linked_account(context.user.id),
+                    categories=app.categories,
+                    active=app.active,
+                    display_name=app.display_name,
+                    has_default_credentials=app.has_default_credentials,
+                )
+            )
 
     logger.info(
         "Search apps result",
@@ -145,12 +172,7 @@ async def get_app_details(
 
         raise AppNotFound(f"App={app_name} not found")
 
-
-    functions = [
-        function
-        for function in app.functions
-        if function.active
-    ]
+    functions = [function for function in app.functions if function.active]
 
     app_details: AppDetails = AppDetails(
         id=app.id,
@@ -163,7 +185,9 @@ async def get_app_details(
         categories=app.categories,
         active=app.active,
         security_schemes=list(app.security_schemes.keys()),
-        supported_security_schemes=SecuritySchemesPublic.model_validate(app.security_schemes),
+        supported_security_schemes=SecuritySchemesPublic.model_validate(
+            app.security_schemes
+        ),
         has_default_credentials=app.has_default_credentials,
         is_configured=app.has_configuration,
         is_linked=app.has_linked_account(context.user.id),

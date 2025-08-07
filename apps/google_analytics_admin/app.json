@@ -1,7 +1,7 @@
 {
   "name": "GOOGLE_ANALYTICS_ADMIN",
   "display_name": "Google Analytics Admin",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/google_analytics.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/google_analytics.svg",
   "provider": "Google",
   "version": "1.0.0",
   "description": "The Google Analytics Admin API allows for programmatic access to the Google Analytics configuration data and is only compatible with Google Analytics properties.",

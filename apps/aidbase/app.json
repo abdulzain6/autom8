@@ -1,7 +1,7 @@
 {
   "name": "AIDBASE",
   "display_name": "AIDBASE",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/aidbase.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/aidbase.svg",
   "provider": "Aidbase, Inc.",
   "version": "aipolabs_0.0.1",
   "description": "Integration with Aidbase API to manage resources and workflows.",

@@ -1,7 +1,7 @@
 {
   "name": "ACCREDIBLE",
   "display_name": "Accredible",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/accredible.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/accredible.svg",
   "provider": "Accredible",
   "version": "1.0",
   "description": "Accredible integration for managing digital certificates and badges. Create, search, and generate PDFs for credentials.",

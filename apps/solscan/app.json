@@ -1,7 +1,7 @@
 {
   "name": "SOLSCAN",
   "display_name": "SolScan",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/solscan.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/solscan.svg",
   "provider": "SolScan",
   "version": "1.0.0",
   "description": "SolScan integration for Solana blockchain data, providing access to transactions, accounts, and smart contracts.",

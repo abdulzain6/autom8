@@ -12,6 +12,7 @@ from aci.server.routes import (
     apps,
     functions,
     health,
+    voice_agent,
     linked_accounts,
 )
 
@@ -79,4 +80,10 @@ app.include_router(
     linked_accounts.router,
     prefix=config.ROUTER_PREFIX_LINKED_ACCOUNTS,
     tags=[config.ROUTER_PREFIX_LINKED_ACCOUNTS.split("/")[-1]],
+)
+
+app.include_router(
+    voice_agent.router,
+    prefix=config.ROUTER_PREFIX_VOICE_AGENT,
+    tags=[config.ROUTER_PREFIX_VOICE_AGENT.split("/")[-1]],
 )

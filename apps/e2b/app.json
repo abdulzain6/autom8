@@ -1,7 +1,7 @@
 {
     "name": "E2B",
     "display_name": "E2B",
-    "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/e2b.svg",
+    "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/e2b.svg",
     "provider": "FoundryLabs, Inc.",
     "version": "aipolabs_0.0.1",
     "description": "E2B is an open-source runtime for executing AI-generated code in secure cloud sandboxes.",

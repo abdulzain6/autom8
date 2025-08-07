@@ -1,0 +1,36 @@
+name: aci
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    restart: always
+    command: /bin/sh start.sh
+    ports:
+      # Expose the FastAPI server directly on port 8000
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:8000/v1/health"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - ./aci/server:/workdir/aci/server
+      - ./aci/common:/workdir/aci/common
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: livekit
+    restart: always
+    # Use the --dev flag for local development
+    command: --config /etc/livekit.yaml --dev
+    ports:
+      # Expose the LiveKit WebSocket port
+      - "7880:7880"
+      # Expose the LiveKit RTC (TCP) port
+      - "7881:7881"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+

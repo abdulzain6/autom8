@@ -1,0 +1,16 @@
+# livekit.yaml
+# Corrected configuration for the latest LiveKit server versions
+
+port: 7880
+
+# This section is crucial for running behind a reverse proxy in Docker.
+rtc:
+  tcp_port: 7881
+
+# The 'keys' block is where you define your API credentials.
+# The format is a map of YOUR_API_KEY: YOUR_API_SECRET
+keys:
+  APIf7b1a9c3e4d5a6b7: aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890aBcDeF
+
+logging:
+  level: info

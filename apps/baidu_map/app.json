@@ -1,7 +1,7 @@
 {
   "name": "BAIDU_MAP",
   "display_name": "Baidu Map",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/baidu_map.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/baidu_map.svg",
   "provider": "Baidu",
   "version": "1.0.0",
   "description": "Baidu Map API is a set of map-based application interfaces for developers, providing services such as location search, geocoding, route planning, and real-time traffic conditions.",

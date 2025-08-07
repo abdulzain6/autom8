@@ -1,7 +1,7 @@
 {
   "name": "TINES",
   "display_name": "Tines",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/tines.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/tines.svg",
   "provider": "Tines",
   "version": "1.0.0",
   "description": "Tines is a no-code automation platform that allows security and operations teams to automate any manual workflow with a drag-and-drop interface. It provides powerful API capabilities for team management and workflow automation.",

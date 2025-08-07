@@ -1,7 +1,7 @@
 {
   "name": "DIFY",
   "display_name": "Dify",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/dify.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/dify.svg",
   "provider": "Dify",
   "version": "1.0.0",
   "description": "Dify API for managing AI-driven tasks and workflows.",

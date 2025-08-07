@@ -1,7 +1,7 @@
 {
   "name": "POSTHOG",
   "display_name": "PostHog",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/posthog.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/posthog.svg",
   "provider": "PostHog",
   "version": "2025-03-07",
   "description": "The PostHog API",

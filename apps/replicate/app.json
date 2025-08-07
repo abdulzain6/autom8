@@ -1,7 +1,7 @@
 {
   "name": "REPLICATE",
   "display_name": "Replicate",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/replicate.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/replicate.svg",
   "provider": "Replicate",
   "version": "1.0.0",
   "description": "The Replicate API allows you to build applications that use AI models to generate images, audio, and more.",

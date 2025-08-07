@@ -1,7 +1,7 @@
 {
   "name": "ETHERSCAN",
   "display_name": "Etherscan",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/etherscan.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/etherscan.svg",
   "provider": "Etherscan",
   "version": "1.0",
   "description": "The Etherscan API provides access to Ethereum blockchain data, including account balances, transactions, smart contracts, and network statistics.",

@@ -1,7 +1,7 @@
 {
   "name": "FRANKFURTER_API",
   "display_name": "Frankfurter Currency Exchange",
-  "logo": "https://avatars.githubusercontent.com/u/6885590?s=48&v=4",
+  "logo": "ttps://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/frankfurter.png",
   "provider": "Frankfurter.app",
   "version": "1.0.0",
   "description": "A free, open-source API for current and historical foreign exchange rates published by the European Central Bank. It's fast, reliable, and requires no authentication.",

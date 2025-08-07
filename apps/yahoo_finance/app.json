@@ -1,7 +1,7 @@
 {
   "name": "YAHOO_FINANCE",
   "display_name": "Yahoo Finance Data",
-  "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Yahoo%21_Finance_logo_2021.png/1200px-Yahoo%21_Finance_logo_2021.png?20220131010522",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/yahoo_finance.png",
   "provider": "yfinance (Unofficial)",
   "version": "1.0.0",
   "description": "Provides access to stock market data from Yahoo Finance, including current prices, historical data, company fundamentals, and the latest news. This connector uses the unofficial yfinance library.",

@@ -6,19 +6,25 @@ services:
     container_name: traefik
     restart: always
     command:
+      # Enable Docker provider
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      # Define Entrypoints
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.rtc.address=:7881" # Entrypoint for LiveKit RTC traffic
+      # Configure Let's Encrypt
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.myresolver.acme.email=abdulzain6@gmail.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # Enable Dashboard
       - "--api.dashboard=true"
     ports:
-      - "80:80"
+     # - "80:80"
       - "443:443"
       - "8080:8080"
+      - "7881:7881" # Expose LiveKit's RTC port
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "traefik-data:/letsencrypt"
@@ -44,23 +50,50 @@ services:
       - web_proxy
     labels:
       - "traefik.enable=true"
-      
-      # --- HTTP Router with the CORRECTED rule syntax ---
+      # HTTP Router (redirects to HTTPS)
       - "traefik.http.routers.aci-server-http.rule=Host(`api.getautom8.app`) || Host(`getautom8.app`)"
       - "traefik.http.routers.aci-server-http.entrypoints=web"
       - "traefik.http.routers.aci-server-http.middlewares=https-redirect@docker"
-      
-      # --- Middleware Definition ---
+      # Middleware for HTTPS redirect
       - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      
-      # --- Secure Router with the CORRECTED rule syntax ---
+      # Secure Router (handles HTTPS)
       - "traefik.http.routers.aci-server-secure.rule=Host(`api.getautom8.app`) || Host(`getautom8.app`)"
       - "traefik.http.routers.aci-server-secure.entrypoints=websecure"
       - "traefik.http.routers.aci-server-secure.tls.certresolver=myresolver"
       - "traefik.http.routers.aci-server-secure.service=aci-server-service"
-
-      # --- Service Definition ---
+      # Service Definition
       - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: livekit
+    restart: always
+    command: --config /etc/livekit.yaml
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+    networks:
+      - web_proxy
+    labels:
+      - "traefik.enable=true"
+      # --- LiveKit WebSocket (WSS) Router ---
+      # This handles the main secure connection from clients (wss://lk.getautom8.app)
+      - "traefik.http.routers.livekit-secure.rule=Host(`lk.getautom8.app`)"
+      - "traefik.http.routers.livekit-secure.entrypoints=websecure"
+      - "traefik.http.routers.livekit-secure.tls.certresolver=myresolver"
+      - "traefik.http.routers.livekit-secure.service=livekit-ws-service"
+      - "traefik.http.services.livekit-ws-service.loadbalancer.server.port=7880"
+      
+      # --- LiveKit RTC (TCP) Router ---
+      # This handles the real-time media traffic over TCP.
+      - "traefik.tcp.routers.livekit-rtc.rule=HostSNI(`*`)" # Catches all TCP traffic on the entrypoint
+      - "traefik.tcp.routers.livekit-rtc.entrypoints=rtc"
+      - "traefik.tcp.routers.livekit-rtc.service=livekit-rtc-service"
+      - "traefik.tcp.services.livekit-rtc-service.loadbalancer.server.port=7881"
+      # --- LiveKit HTTP Router (for ACME challenge and redirect) ---
+      - "traefik.http.routers.livekit-http.rule=Host(`lk.getautom8.app`)"
+      - "traefik.http.routers.livekit-http.entrypoints=web"
+      - "traefik.http.routers.livekit-http.middlewares=https-redirect@docker"
+
 networks:
   web_proxy:
     driver: bridge

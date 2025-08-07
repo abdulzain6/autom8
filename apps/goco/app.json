@@ -1,7 +1,7 @@
 {
   "name": "GOCO",
   "display_name": "GoCo",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/goco.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/goco.svg",
   "provider": "GoCo",
   "version": "1.0.0",
   "description": "GoCo API for managing HR, benefits, and payroll operations.",

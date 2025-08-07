@@ -1,7 +1,7 @@
 {
   "name": "LMNT",
   "display_name": "LMNT",
-  "logo": "https://raw.githubusercontent.com/aipotheosis-labs/aipolabs-icons/refs/heads/main/apps/lmnt.jpg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/lmnt.jpg",
   "provider": "LMNT Inc.",
   "version": "aipolabs_0.0.1",
   "description": "LMNT is an API for text-to-speech and voice cloning.",
