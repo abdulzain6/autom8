@@ -19,7 +19,7 @@ async def start_session(
     """
     Generates a user token AND dispatches a job for an agent using create_dispatch.
     """
-    unique_id = uuid.uuid4().hex[:8] 
+    unique_id = uuid.uuid4().hex[:8]
     room_name = f"voice-ai-session-{context.user.id}-{unique_id}"
 
     # 1. Generate a token for the human user
@@ -30,14 +30,14 @@ async def start_session(
     )
     user_token = (
         api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
-        .with_identity(context.user.id)
+        .with_identity(str(context.user.id)) # Ensure identity is a string
         .with_grants(video_grant)
         .to_jwt()
     )
 
     # 2. Prepare metadata for the agent
     agent_metadata = {
-        "user_id": context.user.id,
+        "user_id": str(context.user.id), # Ensure user_id is a string for JSON
     }
 
     # 3. Dispatch the job using the new, correct method names
@@ -46,11 +46,15 @@ async def start_session(
             api.CreateAgentDispatchRequest(
                 room=room_name,
                 metadata=json.dumps(agent_metadata),
-                agent_name="Autom8 AI"
+                agent_name="Autom8 AI",
             )
         )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Could not dispatch agent: {e}")
 
-    # Return the user's token to the client application
-    return {"user_token": user_token}
+    # Return the full ConnectionDetails object
+    return {
+        "roomName": room_name,
+        "participantName": str(context.user.id),
+        "participantToken": user_token,
+    }
