@@ -64,6 +64,7 @@ async def list_apps(
             updated_at=app.updated_at,
             is_configured=app.has_configuration,
             is_linked=app.has_linked_account(context.user.id),
+            linked_account_id=app.get_linked_account(context.user.id)
         )
         response.append(app_details)
 
@@ -124,6 +125,7 @@ async def search_apps(
                     active=app.active,
                     display_name=app.display_name,
                     has_default_credentials=app.has_default_credentials,
+                    linked_account_id=app.get_linked_account(context.user.id)
                 )
             )
         else:
@@ -137,6 +139,7 @@ async def search_apps(
                     active=app.active,
                     display_name=app.display_name,
                     has_default_credentials=app.has_default_credentials,
+                    linked_account_id=app.get_linked_account(context.user.id)
                 )
             )
 
@@ -194,6 +197,7 @@ async def get_app_details(
         functions=[FunctionDetails.model_validate(function) for function in functions],
         created_at=app.created_at,
         updated_at=app.updated_at,
+        linked_account_id=app.get_linked_account(context.user.id)
     )
 
     return app_details

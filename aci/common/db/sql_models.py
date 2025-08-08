@@ -243,6 +243,12 @@ class App(Base):
             linked_account.user_id == user_id for linked_account in self.linked_accounts
         )
     
+    def get_linked_account(self, user_id: str):
+        for linked_account in self.linked_accounts:
+            if user_id == user_id:
+                return linked_account.id
+        return None
+
 
 class AppConfiguration(Base):
     """

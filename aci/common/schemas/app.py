@@ -137,6 +137,7 @@ class AppBasic(BaseModel):
     active: bool
     display_name: str
     has_default_credentials: bool
+    linked_account_id: str | None
 
 
 class AppDetails(BaseModel):
@@ -159,3 +160,4 @@ class AppDetails(BaseModel):
     created_at: datetime
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
+    linked_account_id: str | None

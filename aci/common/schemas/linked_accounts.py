@@ -47,11 +47,10 @@ class LinkedAccountPublic(BaseModel):
     app_name: str
     user_id: str
     security_scheme: SecurityScheme
-    enabled: bool
     created_at: datetime
     updated_at: datetime
     last_used_at: datetime | None = None
-
+    disabled_functions: list[str]
     model_config = ConfigDict(from_attributes=True)
 
 
