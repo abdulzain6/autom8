@@ -8,7 +8,6 @@ services:
   # --- 1. Edge Router / Reverse Proxy ---
   traefik:
     image: traefik:v3.0
-    container_name: traefik
     restart: always
     command:
       - "--providers.docker=true"
@@ -70,7 +69,6 @@ services:
   # --- 3. LiveKit Server (Public Facing) ---
   livekit:
     image: livekit/livekit-server:latest
-    container_name: livekit
     restart: always
     command: --config /etc/livekit.yaml
     volumes:
@@ -97,7 +95,6 @@ services:
     build:
       context: ./code_executor
       dockerfile: Dockerfile
-    container_name: code-executor
     restart: always
     # This service is ONLY on the executor network.
     networks:
@@ -106,7 +103,6 @@ services:
   # --- General Services Network ---
   searxng:
     image: searxng/searxng:latest
-    container_name: searxng
     restart: always
     volumes:
       - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
@@ -117,7 +113,6 @@ services:
   # --- Storage Network ---
   seaweedfs-master:
     image: chrislusf/seaweedfs
-    container_name: seaweedfs-master
     command: "master -ip=seaweedfs-master"
     networks:
       - storage_network
@@ -125,7 +120,6 @@ services:
 
   seaweedfs-volume:
     image: chrislusf/seaweedfs
-    container_name: seaweedfs-volume
     command: 'volume -mserver="seaweedfs-master:9333" -ip="seaweedfs-volume"'
     volumes:
       - seaweedfs_data:/data
@@ -137,7 +131,6 @@ services:
 
   seaweedfs-filer:
     image: chrislusf/seaweedfs
-    container_name: seaweedfs-filer
     command: 'filer -master="seaweedfs-master:9333"'
     depends_on:
       - seaweedfs-master
