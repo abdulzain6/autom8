@@ -1,0 +1,30 @@
+{
+  "apps": {
+    "layer4": {
+      "servers": {
+        "default": {
+          "listen": [":7881/udp"],
+          "routes": [
+            {
+              "match": [
+                {
+                  "protocol": "udp"
+                }
+              ],
+              "handle": [
+                {
+                  "handler": "proxy",
+                  "upstreams": [
+                    {
+                      "dial": "livekit:7881"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
