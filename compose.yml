@@ -39,19 +39,21 @@ services:
       - services_network
     labels:
       - "traefik.enable=true"
-      # HTTP Router (redirects to HTTPS)
-      - "traefik.http.routers.aci-server-http.rule=Host(`api.getautom8.app`) || Host(`getautom8.app`)"
+      # This router handles the redirect from HTTP to HTTPS
+      - "traefik.http.routers.aci-server-http.rule=Host(`getautom8.app`) || Host(`api.getautom8.app`)"
       - "traefik.http.routers.aci-server-http.entrypoints=web"
       - "traefik.http.routers.aci-server-http.middlewares=https-redirect@docker"
-      # Middleware for HTTPS redirect
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      # Secure Router (handles HTTPS)
-      - "traefik.http.routers.aci-server-secure.rule=Host(`api.getautom8.app`) || Host(`getautom8.app`)"
+      
+      # This is the main router that handles secure traffic
+      - "traefik.http.routers.aci-server-secure.rule=Host(`getautom8.app`) || Host(`api.getautom8.app`)"
       - "traefik.http.routers.aci-server-secure.entrypoints=websecure"
       - "traefik.http.routers.aci-server-secure.tls.certresolver=myresolver"
       - "traefik.http.routers.aci-server-secure.service=aci-server-service"
-      # Service Definition
+      
+      # This defines the service that points to your container
       - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
+      
+      # This tells Traefik which network to use to communicate with this container
       - "traefik.docker.network=web_proxy"
 
   # --- 3. LiveKit Server (Public Facing) ---
