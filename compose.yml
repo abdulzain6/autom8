@@ -1,34 +1,22 @@
 version: "3.8"
 
 services:
-  # --- 1. Edge Router / Reverse Proxy (Now Nginx) ---
-  nginx:
-    image: nginx:latest
+  # --- 1. Edge Router / Reverse Proxy (Now Caddy) ---
+  caddy:
+    image: caddy:latest
     restart: always
     ports:
       - "80:80"
       - "443:443"
       - "7881:7881/udp"
     volumes:
-      # Mount your custom config file
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Shared volumes for SSL certificates
-      - certbot_etc:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
+      # Mount your Caddyfile from the 'caddy' directory
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      # Named volumes for Caddy's state and certificates
+      - caddy_data:/data
+      - caddy_config:/config
     networks:
       - web_proxy
-    depends_on:
-      - server
-      - livekit
-
-  # --- New service for SSL Certificate Management ---
-  certbot:
-    image: certbot/certbot
-    # This command runs every 12 hours to renew certificates if needed
-    command: certonly --webroot --webroot-path=/var/www/certbot --email abdulzain6@gmail.com --agree-tos --no-eff-email -d getautom8.app -d api.getautom8.app -d lk.getautom8.app --keep-until-expiring
-    volumes:
-      - certbot_etc:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
 
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
@@ -51,7 +39,11 @@ services:
       - executor_network
       - storage_network
       - services_network
-    # All Traefik labels have been removed
+    depends_on:
+      code-executor
+      seaweedfs-filer
+      searxng
+      redis
 
   # --- 3. LiveKit Server (Public Facing) ---
   livekit:
@@ -62,7 +54,6 @@ services:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     networks:
       - web_proxy
-    # All Traefik labels have been removed
 
   # --- 4. Internal Services (Grouped by Isolated Networks) ---
   code-executor:
@@ -70,8 +61,6 @@ services:
       context: ./code_executor
       dockerfile: Dockerfile
     restart: always
-    dns:
-      - 8.8.8.8
     networks:
       - executor_network
 
@@ -97,6 +86,8 @@ services:
     command: 'volume -mserver="seaweedfs-master:9333" -ip="seaweedfs-volume"'
     volumes:
       - seaweedfs_data:/data
+    depends_on:
+      - seaweedfs-master
     networks:
       - storage_network
     restart: always
@@ -104,6 +95,9 @@ services:
   seaweedfs-filer:
     image: chrislusf/seaweedfs
     command: 'filer -master="seaweedfs-master:9333"'
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
     restart: always
     networks:
       - storage_network
@@ -133,6 +127,5 @@ networks:
 volumes:
   seaweedfs_data:
   redis-data:
-  # New volumes for Certbot
-  certbot_etc:
-  certbot_www:
+  caddy_data:
+  caddy_config:

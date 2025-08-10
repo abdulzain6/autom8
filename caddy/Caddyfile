@@ -1,0 +1,23 @@
+# Main API and frontend domains
+(main_hosts) {
+    getautom8.app api.getautom8.app
+}
+
+# LiveKit domain
+(livekit_host) {
+    lk.getautom8.app
+}
+
+# Main server configuration
+handle_path /* {
+    reverse_proxy server:8000
+}
+
+# LiveKit configuration
+handle_path / {
+    reverse_proxy livekit:7880
+}
+
+# Import the configurations for your domains
+import main_hosts
+import livekit_host
