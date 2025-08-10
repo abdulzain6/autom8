@@ -39,12 +39,6 @@ services:
       dockerfile: Dockerfile.server
     restart: always
     command: /bin/sh start.sh
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/health || exit 1"]
-      interval: 10s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
     volumes:
       - ./aci/server:/workdir/aci/server
       - ./aci/common:/workdir/aci/common
