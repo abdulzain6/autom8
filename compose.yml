@@ -1,4 +1,7 @@
 # docker-compose.yml (Production Ready - Corrected)
+# This configuration uses Traefik for reverse proxying and multiple internal
+# networks to provide strong isolation between services.
+
 version: "3.8"
 
 services:
@@ -11,36 +14,23 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      # FIX: Correctly define the RTC entrypoint for both TCP and UDP
-      - "--entrypoints.rtc-udp.address=:7881/udp"
-      - "--entrypoints.rtc-tcp.address=:7881/tcp"
+      - "--entrypoints.rtc.address=:7881/udp"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.myresolver.acme.email=abdulzain6@gmail.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--api.dashboard=true"
-      # FIX: Define a global middleware for redirecting HTTP to HTTPS. This is cleaner.
+      # Global middleware for redirecting HTTP to HTTPS
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
       - "80:80"
       - "443:443"
       - "7881:7881/udp"
-      - "7881:7881/tcp"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "traefik-data:/letsencrypt"
     networks:
       - web_proxy
-    labels:
-      # Labels for the Traefik dashboard itself
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.getautom8.app`)"
-      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
-      - "traefik.http.routers.traefik-dashboard.tls.certresolver=myresolver"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      - "traefik.http.routers.traefik-dashboard.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=user:$$apr1$$...your_hash_here..."
 
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
@@ -67,12 +57,18 @@ services:
       - code-executor
       - seaweedfs-filer
       - searxng
+      - redis
     labels:
       - "traefik.enable=true"
-      # FIX: Correct Host rule syntax for multiple domains. Use backticks and ||
-      - "traefik.http.routers.aci-server-secure.rule=Host(`getautom8.app`) || Host(`www.getautom8.app`) || Host(`api.getautom8.app`)"
+      # Define the router
+      - "traefik.http.routers.aci-server-secure.rule=Host(`getautom8.app`) || Host(`api.getautom8.app`)"
       - "traefik.http.routers.aci-server-secure.entrypoints=websecure"
       - "traefik.http.routers.aci-server-secure.tls.certresolver=myresolver"
+      
+      # This is the missing line that links the router to the service
+      - "traefik.http.routers.aci-server-secure.service=aci-server-service"
+      
+      # Define the service
       - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
 
   # --- 3. LiveKit Server (Public Facing) ---
@@ -86,17 +82,21 @@ services:
       - web_proxy
     labels:
       - "traefik.enable=true"
+      # --- LiveKit WebSocket (WSS) Router ---
       - "traefik.http.routers.livekit-secure.rule=Host(`lk.getautom8.app`)"
       - "traefik.http.routers.livekit-secure.entrypoints=websecure"
       - "traefik.http.routers.livekit-secure.tls.certresolver=myresolver"
+      # This line links the router to the service
+      - "traefik.http.routers.livekit-secure.service=livekit-ws-service"
+      # This line defines the service
       - "traefik.http.services.livekit-ws-service.loadbalancer.server.port=7880"
-      # FIX: Use the correct TCP entrypoint for the RTC router
-      - "traefik.tcp.routers.livekit-rtc-tcp.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.livekit-rtc-tcp.entrypoints=rtc-tcp"
-      - "traefik.tcp.services.livekit-rtc-tcp-service.loadbalancer.server.port=7881"
-      # FIX: Use the correct UDP entrypoint for the RTC router
-      - "traefik.udp.routers.livekit-rtc-udp.entrypoints=rtc-udp"
-      - "traefik.udp.services.livekit-rtc-udp-service.loadbalancer.server.port=7881"
+      
+      # --- LiveKit RTC (UDP) Router ---
+      - "traefik.udp.routers.livekit-rtc.entrypoints=rtc"
+      # This line links the UDP router to the UDP service
+      - "traefik.udp.routers.livekit-rtc.service=livekit-rtc-service"
+      # This line defines the UDP service
+      - "traefik.udp.services.livekit-rtc-service.loadbalancer.server.port=7881"
 
   # --- 4. Internal Services (Grouped by Isolated Networks) ---
 
@@ -105,6 +105,8 @@ services:
       context: ./code_executor
       dockerfile: Dockerfile
     restart: always
+    dns:
+      - 8.8.8.8
     networks:
       - executor_network
 
@@ -113,6 +115,8 @@ services:
     restart: always
     volumes:
       - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
+    dns:
+      - 8.8.8.8
     networks:
       - services_network
 
@@ -125,7 +129,6 @@ services:
 
   seaweedfs-volume:
     image: chrislusf/seaweedfs
-    # FIX: Corrected the master server port from 19333 to 9333
     command: 'volume -mserver="seaweedfs-master:9333" -ip="seaweedfs-volume"'
     volumes:
       - seaweedfs_data:/data
@@ -145,6 +148,20 @@ services:
     networks:
       - storage_network
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    networks:
+      - services_network
+    volumes:
+      - redis-data:/data
+    # FIX: Add a healthcheck to ensure Redis is ready before other services connect
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 # --- Networks Definition ---
 networks:
   web_proxy:
@@ -157,9 +174,9 @@ networks:
     internal: true
   services_network:
     driver: bridge
-    internal: true
 
 # --- Volumes Definition ---
 volumes:
   traefik-data:
   seaweedfs_data:
+  redis-data:

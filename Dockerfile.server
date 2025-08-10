@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install pygooglenews --no-deps
 
+RUN apt-get update && apt-get install -y libmagic1
 # Now copy the rest of the app — only reruns this layer when code changes
 COPY . .
 

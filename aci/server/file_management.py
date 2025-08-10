@@ -1,6 +1,7 @@
 import re
 import uuid
 import io
+import magic
 import requests
 import logging
 import requests_mock
@@ -28,7 +29,7 @@ class FileManager:
         user_id: str,
         file_object: BinaryIO,
         filename: str,
-        content_type: str,
+        content_type: str, 
         ttl_seconds: int,
     ) -> str:
         """Uploads a file to a unique path and returns its database ID."""
@@ -36,13 +37,25 @@ class FileManager:
         target_url = f"{self.filer_url}{filer_path}"
 
         try:
-            response = self.session.post(
-                target_url, data=file_object, headers={"Content-Type": content_type}
-            )
+            initial_bytes = file_object.read(2048)
+            # Reset the file pointer back to the beginning for the upload.
+            file_object.seek(0) 
+            
+            # Detect the MIME type from the file's content.
+            detected_mime_type = magic.from_buffer(initial_bytes, mime=True)
+            
+            # Use the detected type, or fall back to the user-provided one if needed.
+            final_content_type = detected_mime_type or content_type
+            logger.info(f"Detected MIME type: {final_content_type} for file {filename}")
+
+            files = {"file": (filename, file_object, final_content_type)}
+            response = self.session.post(target_url, files=files)
+            
             response.raise_for_status()
             upload_data = response.json()
         except requests.RequestException as e:
-            raise RuntimeError(f"Could not upload file to SeaweedFS Filer: {e}")
+            error_details = e.response.text if e.response else str(e)
+            raise RuntimeError(f"Could not upload file to SeaweedFS Filer: {error_details}")
 
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
 
@@ -50,7 +63,7 @@ class FileManager:
             filer_path=filer_path,
             filename=filename,
             user_id=user_id,
-            mime_type=content_type,
+            mime_type=final_content_type, # Use the reliably detected MIME type
             size_bytes=upload_data["size"],
             expires_at=expires_at,
         )
@@ -59,7 +72,7 @@ class FileManager:
         self.db.refresh(temp_file)
 
         return str(temp_file.id)
-
+    
     def read(self, file_id: str) -> Tuple[Generator[bytes, None, None], str]:
         """Retrieves a file's content as a memory-efficient stream generator."""
         current_time = datetime.now(timezone.utc)
