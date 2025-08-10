@@ -5,6 +5,7 @@ services:
   caddy:
     image: initdc/caddy-l4
     restart: always
+    command: run --config /etc/caddy/Caddyfile --adapter caddyfile  # <-- Added this to force-load your Caddyfile
     ports:
       - "80:80"
       - "443:443"
