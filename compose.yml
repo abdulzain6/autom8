@@ -40,10 +40,11 @@ services:
       - storage_network
       - services_network
     depends_on:
-      code-executor
-      seaweedfs-filer
-      searxng
-      redis
+      - code-executor
+      - seaweedfs-filer
+      - searxng
+      - redis
+
 
   # --- 3. LiveKit Server (Public Facing) ---
   livekit:
