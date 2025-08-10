@@ -172,7 +172,6 @@ networks:
   # A dedicated, internal network for other services
   services_network:
     driver: bridge
-    internal: true
 
 # --- Volumes Definition ---
 volumes:
