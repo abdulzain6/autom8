@@ -55,6 +55,7 @@ def get_db_engine(db_url: str) -> Engine:
         pool_timeout=30,
         pool_recycle=3600,  # recycle connections after 1 hour
         pool_pre_ping=True,
+        connect_args={"prepare_threshold": None},  # Disable prepared statements
     )
 
 
@@ -68,7 +69,6 @@ def get_sessionmaker(db_url: str) -> sessionmaker:
 def create_db_session(db_url: str) -> Session:
     SessionMaker = get_sessionmaker(db_url)
     session: Session = SessionMaker()
-
     return session
 
 

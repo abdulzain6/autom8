@@ -1,0 +1,96 @@
+[
+  {
+    "name": "SEARXNG__SEARCH_GENERAL",
+    "description": "Performs a general web search using a SearXNG instance.",
+    "tags": ["searxng", "search", "web", "general", "internet"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The keyword or phrase to search for."
+        },
+        "time_range": {
+          "type": "string",
+          "description": "An optional time filter for the search results.",
+          "enum": ["day", "week", "month", "year"]
+        }
+      },
+      "required": ["query"],
+      "visible": ["query", "time_range"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SEARXNG__SEARCH_IMAGES",
+    "description": "Performs an image-only search using a SearXNG instance.",
+    "tags": ["searxng", "search", "images", "pictures", "photos"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search term for the images."
+        }
+      },
+      "required": ["query"],
+      "visible": ["query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SEARXNG__SEARCH_VIDEOS",
+    "description": "Performs a video-only search using a SearXNG instance.",
+    "tags": ["searxng", "search", "videos", "movies", "clips"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search term for the videos."
+        }
+      },
+      "required": ["query"],
+      "visible": ["query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SEARXNG__SEARCH_NEWS",
+    "description": "Performs a news-only search using a SearXNG instance.",
+    "tags": ["searxng", "search", "news", "headlines", "articles"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search term for news articles."
+        },
+        "time_range": {
+          "type": "string",
+          "description": "An optional time filter for the news results. Defaults to 'month'.",
+          "enum": ["day", "week", "month", "year"]
+        }
+      },
+      "required": ["query"],
+      "visible": ["query", "time_range"],
+      "additionalProperties": false
+    }
+  }
+]

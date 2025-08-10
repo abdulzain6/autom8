@@ -1,7 +1,7 @@
 {
   "name": "WIKIPEDIA_API",
   "display_name": "Wikipedia API",
-  "logo": "ttps://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/wikipedia.png",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/wikipedia.png",
   "provider": "MediaWiki",
   "version": "1.0.0",
   "description": "The Wikipedia API (MediaWiki) allows you to search, retrieve, and parse content from Wikipedia articles. It supports multiple languages, query formats, and content extraction features.",

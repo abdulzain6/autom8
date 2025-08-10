@@ -53,3 +53,10 @@ MAX_LOG_FIELD_SIZE = 8 * 1024
 LIVEKIT_HOST_URL = check_and_get_env_variable("SERVER_LIVEKIT_HOST_URL")
 LIVEKIT_API_KEY = check_and_get_env_variable("SERVER_LIVEKIT_API_KEY")  
 LIVEKIT_API_SECRET = check_and_get_env_variable("SERVER_LIVEKIT_API_SECRET")
+
+
+# SearXNG
+SEARXNG_INSTANCE_URL = check_and_get_env_variable("SERVER_SEARXNG_INSTANCE_URL")
+
+# SeaweedFS
+SEAWEEDFS_URL = check_and_get_env_variable("SERVER_SEAWEEDFS_URL")

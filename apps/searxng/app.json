@@ -1,0 +1,20 @@
+{
+  "name": "SEARXNG",
+  "display_name": "SearXNG",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/searxng.svg",
+  "provider": "Self-Hosted",
+  "version": "1.0.0",
+  "description": "A connector for the SearXNG metasearch engine. Enables general web searches as well as category-specific searches for images, news, and videos. Connects to a user-configured public or private instance.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Search",
+    "Web",
+    "Information",
+    "Privacy"
+  ],
+  "visibility": "public",
+  "active": true
+}

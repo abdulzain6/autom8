@@ -18,9 +18,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Dict, List, Optional
 from uuid import uuid4
+import uuid
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    TIMESTAMP,
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -76,7 +79,12 @@ class SupabaseUser(Base):
 class UserProfile(Base):
     __tablename__ = "profiles"
 
-    id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True, default_factory=lambda: str(uuid4()), init=False)
+    id: Mapped[str] = mapped_column(
+        ForeignKey("users.id"),
+        primary_key=True,
+        default_factory=lambda: str(uuid4()),
+        init=False,
+    )
     name: Mapped[Optional[str]] = mapped_column(String(100))
     avatar_url: Mapped[Optional[str]] = mapped_column(String(255))
 
@@ -92,9 +100,7 @@ class Function(Base):
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default_factory=lambda: str(uuid4()), init=False
     )
-    app_id: Mapped[str] = mapped_column(
-        String, ForeignKey("apps.id"), nullable=False
-    )
+    app_id: Mapped[str] = mapped_column(String, ForeignKey("apps.id"), nullable=False)
     # Note: the function name is unique across the platform and should have app information, e.g., "GITHUB_CLONE_REPO"
     # ideally this should just be <app name>_<function name> (uppercase)
     name: Mapped[str] = mapped_column(
@@ -222,12 +228,10 @@ class App(Base):
         Returns True if default credentials exist, False otherwise.
         """
         return self.default_credentials is not None
-    
 
     @property
     def has_configuration(self) -> bool:
         return self.configuration is not None
-    
 
     def has_linked_account(self, user_id: str) -> bool:
         """
@@ -242,7 +246,7 @@ class App(Base):
         return any(
             linked_account.user_id == user_id for linked_account in self.linked_accounts
         )
-    
+
     def get_linked_account(self, user_id: str):
         for linked_account in self.linked_accounts:
             if user_id == user_id:
@@ -355,13 +359,9 @@ class LinkedAccount(Base):
         String, primary_key=True, default_factory=lambda: str(uuid4()), init=False
     )
 
-    user_id: Mapped[str] = mapped_column(
-        String, ForeignKey("users.id"), nullable=False
-    )
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
 
-    app_id: Mapped[str] = mapped_column(
-        String, ForeignKey("apps.id"), nullable=False
-    )
+    app_id: Mapped[str] = mapped_column(String, ForeignKey("apps.id"), nullable=False)
 
     security_scheme: Mapped[SecurityScheme] = mapped_column(
         SqlEnum(SecurityScheme), nullable=False
@@ -379,7 +379,7 @@ class LinkedAccount(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), server_default=func.now(), nullable=False, init=False
     )
-    
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
         server_default=func.now(),
@@ -441,6 +441,22 @@ class Secret(Base):
     )
 
 
+class TempFile(Base):
+    """SQLAlchemy model for a temporary file record."""
+    __tablename__ = "temp_files"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    filer_path = Column(String, unique=True, nullable=False)
+    filename = Column(String, nullable=False)
+    mime_type = Column(String, nullable=False)
+    size_bytes = Column(BigInteger, nullable=False)
+    expires_at = Column(TIMESTAMP(timezone=True), nullable=False)
+
+    def __init__(self, **kwargs):
+        """Initializes the model instance, allowing keyword arguments."""
+        super().__init__(**kwargs)
+
+
 __all__ = [
     "App",
     "AppConfiguration",
@@ -448,4 +464,5 @@ __all__ = [
     "Function",
     "LinkedAccount",
     "Secret",
+    "TempFile",
 ]

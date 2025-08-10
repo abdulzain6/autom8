@@ -1,7 +1,7 @@
 {
   "name": "JOKE_API",
   "display_name": "JokeAPI",
-  "logo": "ttps://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/jokes_api.png",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/jokes_api.png",
   "provider": "Sv443",
   "version": "2.0.0",
   "description": "A free, open-source REST API that serves a wide range of jokes. It supports filtering by category, type, and content flags, and can deliver jokes in multiple formats.",

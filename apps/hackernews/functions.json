@@ -1,157 +1,69 @@
 [
   {
-    "name": "HACKERNEWS__TOP_STORIES_GET",
-    "description": "Fetch the top stories from HackerNews.",
-    "tags": ["stories", "top"],
+    "name": "HACKERNEWS__GET_STORIES",
+    "description": "Fetches a list of stories from Hacker News based on a specified category (e.g., top, new, best).",
+    "tags": ["hacker news", "stories", "top", "new", "best", "tech"],
     "visibility": "public",
     "active": true,
-    "protocol": "rest",
-    "protocol_data": {
-      "method": "GET",
-      "path": "/topstories.json",
-      "server_url": "https://hacker-news.firebaseio.com/v0"
-    },
+    "protocol": "connector",
+    "protocol_data": {},
     "parameters": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "story_type": {
+          "type": "string",
+          "description": "The category of stories to fetch. Defaults to 'top'.",
+          "enum": ["top", "new", "best", "ask", "show", "job"]
+        },
+        "limit": {
+          "type": "integer",
+          "description": "The maximum number of stories to return. Defaults to 10."
+        }
+      },
       "required": [],
-      "visible": [],
+      "visible": ["story_type", "limit"],
       "additionalProperties": false
     }
   },
   {
-    "name": "HACKERNEWS__ITEM_GET",
-    "description": "Fetch a specific item (story or comment) by ID.",
-    "tags": ["item", "story", "comment"],
+    "name": "HACKERNEWS__GET_USER_DETAILS",
+    "description": "Fetches public details for a specific Hacker News user, including their karma and creation date.",
+    "tags": ["hacker news", "user", "profile", "karma"],
     "visibility": "public",
     "active": true,
-    "protocol": "rest",
-    "protocol_data": {
-      "method": "GET",
-      "path": "/item/{id}.json",
-      "server_url": "https://hacker-news.firebaseio.com/v0"
-    },
+    "protocol": "connector",
+    "protocol_data": {},
     "parameters": {
       "type": "object",
       "properties": {
-        "path": {
-          "type": "object",
-          "description": "Path parameters for the request.",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "The ID of the item (story or comment) to retrieve."
-            }
-          },
-          "required": ["id"],
-          "visible": ["id"],
-          "additionalProperties": false
+        "username": {
+          "type": "string",
+          "description": "The case-sensitive Hacker News username to look up (e.g., 'pg')."
         }
       },
-      "required": ["path"],
-      "visible": ["path"],
+      "required": ["username"],
+      "visible": ["username"],
       "additionalProperties": false
     }
   },
   {
-    "name": "HACKERNEWS__USER_GET",
-    "description": "Fetch user information by user ID.",
-    "tags": ["user"],
+    "name": "HACKERNEWS__SEARCH_STORIES",
+    "description": "Searches Hacker News stories using the Algolia Search API for a specific query.",
+    "tags": ["hacker news", "search", "stories", "algolia"],
     "visibility": "public",
     "active": true,
-    "protocol": "rest",
-    "protocol_data": {
-      "method": "GET",
-      "path": "/user/{id}.json",
-      "server_url": "https://hacker-news.firebaseio.com/v0"
-    },
+    "protocol": "connector",
+    "protocol_data": {},
     "parameters": {
       "type": "object",
       "properties": {
-        "path": {
-          "type": "object",
-          "description": "Path parameters for the request.",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "The ID of the user to retrieve."
-            }
-          },
-          "required": ["id"],
-          "visible": ["id"],
-          "additionalProperties": false
+        "query": {
+          "type": "string",
+          "description": "The keyword or phrase to search for (e.g., 'generative ai')."
         }
       },
-      "required": ["path"],
-      "visible": ["path"],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "HACKERNEWS__USER_STORIES_GET",
-    "description": "Fetch stories submitted by a user.",
-    "tags": ["user", "stories"],
-    "visibility": "public",
-    "active": true,
-    "protocol": "rest",
-    "protocol_data": {
-      "method": "GET",
-      "path": "/user/{id}/submitted.json",
-      "server_url": "https://hacker-news.firebaseio.com/v0"
-    },
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "path": {
-          "type": "object",
-          "description": "Path parameters for the request.",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "The ID of the user whose submitted stories to retrieve."
-            }
-          },
-          "required": ["id"],
-          "visible": ["id"],
-          "additionalProperties": false
-        }
-      },
-      "required": ["path"],
-      "visible": ["path"],
-      "additionalProperties": false
-    }
-  },
-  {
-    "name": "HACKERNEWS__USER_RECEIVED_GET",
-    "description": "Fetch stories received (comments) by a user.",
-    "tags": ["user", "comments"],
-    "visibility": "public",
-    "active": true,
-    "protocol": "rest",
-    "protocol_data": {
-      "method": "GET",
-      "path": "/user/{id}/received.json",
-      "server_url": "https://hacker-news.firebaseio.com/v0"
-    },
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "path": {
-          "type": "object",
-          "description": "Path parameters for the request.",
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "The ID of the user whose received stories/comments to retrieve."
-            }
-          },
-          "required": ["id"],
-          "visible": ["id"],
-          "additionalProperties": false
-        }
-      },
-      "required": ["path"],
-      "visible": ["path"],
+      "required": ["query"],
+      "visible": ["query"],
       "additionalProperties": false
     }
   }

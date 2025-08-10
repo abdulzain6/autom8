@@ -411,7 +411,6 @@ async def linked_accounts_oauth2_callback(
     return linked_account
 
 
-# TODO: add pagination
 @router.get("", response_model=list[LinkedAccountPublic])
 async def list_linked_accounts(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],

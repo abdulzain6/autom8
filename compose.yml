@@ -1,6 +1,11 @@
-name: aci
+# docker-compose.yml (Production Ready - Enhanced Security)
+# This configuration uses Traefik for reverse proxying and multiple internal
+# networks to provide strong isolation between services.
+
+version: "3.8"
 
 services:
+  # --- 1. Edge Router / Reverse Proxy ---
   traefik:
     image: traefik:v3.0
     container_name: traefik
@@ -10,24 +15,23 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.rtc.address=:7881"
+      - "--entrypoints.rtc.address=:7881/udp"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.myresolver.acme.email=abdulzain6@gmail.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--api.dashboard=true"
+      - "--api.dashboard=false"
     ports:
-      # This port MUST be open for Let's Encrypt to work
       - "80:80"
       - "443:443"
-      - "8080:8080"
-      - "7881:7881" # Expose LiveKit's RTC port
+      - "7881:7881/udp"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "traefik-data:/letsencrypt"
     networks:
       - web_proxy
 
+  # --- 2. Main Application Server (The Secure Bridge) ---
   server:
     build:
       context: .
@@ -35,7 +39,7 @@ services:
     restart: always
     command: /bin/sh start.sh
     healthcheck:
-      test: ["CMD-SHELL", "curl http://localhost:8000/v1/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/health || exit 1"]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -43,60 +47,123 @@ services:
     volumes:
       - ./aci/server:/workdir/aci/server
       - ./aci/common:/workdir/aci/common
+    # This server is on ALL networks, allowing it to act as a controlled gateway.
     networks:
       - web_proxy
+      - executor_network # Can talk to the code-executor
+      - storage_network  # Can talk to SeaweedFS
+      - services_network # Can talk to other internal services like SearXNG
+    depends_on:
+      - code-executor
+      - seaweedfs-filer
     labels:
       - "traefik.enable=true"
-      # HTTP Router (redirects to HTTPS)
-      - "traefik.http.routers.aci-server-http.rule=Host(`api.getautom8.app`) || Host(`getautom8.app`)"
+      - "traefik.http.routers.aci-server-http.rule=Host(`getautom8.app`, `www.getautom8.app`, `api.getautom8.app`)"
       - "traefik.http.routers.aci-server-http.entrypoints=web"
       - "traefik.http.routers.aci-server-http.middlewares=https-redirect@docker"
-      # Middleware for HTTPS redirect
       - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      # Secure Router (handles HTTPS)
-      - "traefik.http.routers.aci-server-secure.rule=Host(`api.getautom8.app`) || Host(`getautom8.app`)"
+      - "traefik.http.routers.aci-server-secure.rule=Host(`getautom8.app`, `www.getautom8.app`, `api.getautom8.app`)"
       - "traefik.http.routers.aci-server-secure.entrypoints=websecure"
       - "traefik.http.routers.aci-server-secure.tls.certresolver=myresolver"
-      - "traefik.http.routers.aci-server-secure.service=aci-server-service"
-      # Service Definition
       - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
 
+  # --- 3. LiveKit Server (Public Facing) ---
   livekit:
     image: livekit/livekit-server:latest
     container_name: livekit
     restart: always
     command: --config /etc/livekit.yaml
     volumes:
-      - ./livekit.yaml:/etc/livekit.yaml
+      - ./livekit/livekit.yaml:/etc/livekit.yaml
     networks:
       - web_proxy
     labels:
       - "traefik.enable=true"
-      # --- LiveKit WebSocket (WSS) Router ---
-      - "traefik.http.routers.livekit-secure.rule=Host(`lk.getautom8.app`)"
-      - "traefik.http.routers.livekit-secure.entrypoints=websecure"
-      - "traefik.http.routers.livekit-secure.tls.certresolver=myresolver"
-      - "traefik.http.routers.livekit-secure.service=livekit-ws-service"
-      - "traefik.http.services.livekit-ws-service.loadbalancer.server.port=7880"
-      
-      # --- LiveKit RTC (TCP) Router ---
-      - "traefik.tcp.routers.livekit-rtc.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.livekit-rtc.entrypoints=rtc"
-      - "traefik.tcp.routers.livekit-rtc.service=livekit-rtc-service"
-      - "traefik.tcp.services.livekit-rtc-service.loadbalancer.server.port=7881"
-
-      # --- LiveKit HTTP Router (for ACME challenge and redirect) ---
       - "traefik.http.routers.livekit-http.rule=Host(`lk.getautom8.app`)"
       - "traefik.http.routers.livekit-http.entrypoints=web"
       - "traefik.http.routers.livekit-http.middlewares=https-redirect@docker"
-      
-      # --- Middleware Definition for LiveKit ---
-      # This was missing. You must define the middleware for the service that uses it.
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.livekit-secure.rule=Host(`lk.getautom8.app`)"
+      - "traefik.http.routers.livekit-secure.entrypoints=websecure"
+      - "traefik.http.routers.livekit-secure.tls.certresolver=myresolver"
+      - "traefik.http.services.livekit-ws-service.loadbalancer.server.port=7880"
+      - "traefik.tcp.routers.livekit-rtc.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.livekit-rtc.entrypoints=rtc"
+      - "traefik.tcp.services.livekit-rtc-service.loadbalancer.server.port=7881"
 
+  # --- 4. Internal Services (Grouped by Isolated Networks) ---
+
+  # --- Code Execution Network ---
+  code-executor:
+    build:
+      context: ./code_executor
+      dockerfile: Dockerfile
+    container_name: code-executor
+    restart: always
+    # This service is ONLY on the executor network.
+    networks:
+      - executor_network
+
+  # --- General Services Network ---
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    restart: always
+    volumes:
+      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
+    # This service is ONLY on the general services network.
+    networks:
+      - services_network
+
+  # --- Storage Network ---
+  seaweedfs-master:
+    image: chrislusf/seaweedfs
+    container_name: seaweedfs-master
+    command: "master -ip=seaweedfs-master"
+    networks:
+      - storage_network
+    restart: always
+
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs
+    container_name: seaweedfs-volume
+    command: 'volume -mserver="seaweedfs-master:9333" -ip="seaweedfs-volume"'
+    volumes:
+      - seaweedfs_data:/data
+    depends_on:
+      - seaweedfs-master
+    networks:
+      - storage_network
+    restart: always
+
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs
+    container_name: seaweedfs-filer
+    command: 'filer -master="seaweedfs-master:9333"'
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
+    restart: always
+    networks:
+      - storage_network
+
+# --- Networks Definition ---
 networks:
   web_proxy:
     driver: bridge
+  # A dedicated, internal network for the code executor
+  executor_network:
+    driver: bridge
+    internal: true
+  # A dedicated, internal network for storage services
+  storage_network:
+    driver: bridge
+    internal: true
+  # A dedicated, internal network for other services
+  services_network:
+    driver: bridge
+    internal: true
 
+# --- Volumes Definition ---
 volumes:
   traefik-data:
+  seaweedfs_data:

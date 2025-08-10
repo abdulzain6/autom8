@@ -10,6 +10,7 @@ from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 
 from aci.common.db.sql_models import Base
 
@@ -85,12 +86,12 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = _get_db_url()
-    connectable = engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
+    # FIX: We bypass engine_from_config and create the engine directly
+    # to ensure our connection arguments are respected.
+    connectable = create_engine(
+        _get_db_url(),
         poolclass=pool.NullPool,
+        connect_args={"prepare_threshold": None},  # Disable prepared statements
     )
 
     with connectable.connect() as connection:
@@ -98,7 +99,6 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()
