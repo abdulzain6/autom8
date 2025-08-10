@@ -117,15 +117,6 @@ onnxruntime==1.22.1
 openai==1.98.0
 openapi-schema-validator==0.6.3
 openapi-spec-validator==0.7.2
-opentelemetry-api==1.36.0
-opentelemetry-exporter-otlp==1.36.0
-opentelemetry-exporter-otlp-proto-common==1.36.0
-opentelemetry-exporter-otlp-proto-grpc==1.36.0
-opentelemetry-exporter-otlp-proto-http==1.36.0
-opentelemetry-instrumentation==0.57b0
-opentelemetry-proto==1.36.0
-opentelemetry-sdk==1.36.0
-opentelemetry-semantic-conventions==0.57b0
 orderly-set==5.5.0
 packaging==25.0
 pandas==2.3.1
@@ -141,8 +132,6 @@ postgrest==1.1.1
 posthog==6.3.2
 prometheus_client==0.22.1
 propcache==0.3.2
-propelauth-fastapi==4.2.8
-propelauth-py==4.2.8
 proto-plus==1.26.1
 protobuf==5.29.5
 psutil==7.0.0
@@ -195,10 +184,8 @@ sse-starlette==3.0.2
 starlette==0.47.2
 storage3==0.12.0
 StrEnum==0.4.15
-stripe==12.4.0
 supabase==2.17.0
 supafunc==0.10.1
-svix==1.70.0
 sympy==1.14.0
 tenacity==8.5.0
 tokenizers==0.21.4
