@@ -6,11 +6,13 @@
 
 # Layer 4 proxy for LiveKit UDP
 layer4 {
-    listen :7881
-    proxy {
-        # Docker networking handles UDP proxying
-        upstream livekit:7881
-    }
+    server { # <-- ADDED THIS 'server' WRAPPER
+        listen :7881
+        proxy {
+            # Docker networking handles UDP proxying
+            upstream livekit:7881
+        }
+    } # <-- AND CLOSED IT HERE
 }
 
 # LiveKit WebRTC endpoint (HTTP/S)
