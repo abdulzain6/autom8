@@ -21,40 +21,10 @@ services:
       - ./autom8/common:/autom8/aci/common
     # The server depends on SearXNG being available
     depends_on:
-      - searxng
-      - code-executor
       - seaweedfs-master
       - seaweedfs-filer
       - seaweedfs-volume
-      - livekit
 
-  livekit:
-    image: livekit/livekit-server:latest
-    container_name: livekit
-    restart: always
-    # Use the --dev flag for local development
-    command: --config /etc/livekit.yaml --dev
-    ports:
-      # Expose the LiveKit WebSocket port
-      - "7880:7880"
-      # Expose the LiveKit RTC (TCP) port
-      - "7881:7881"
-    volumes:
-      - ./livekit/livekit.yaml:/etc/livekit.yaml
-
-  searxng:
-    image: searxng/searxng:latest
-    container_name: searxng
-    restart: always
-    ports:
-      # Expose SearXNG on port 8088 on the host machine
-      - "8088:8080"
-    volumes:
-      # Mount your custom settings file
-      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
-    environment:
-      # Set the base URL if you plan to access it via a domain
-      - SEARXNG_BASE_URL=http://localhost:8088
 
   seaweedfs-master:
     image: chrislusf/seaweedfs
@@ -89,18 +59,6 @@ services:
       - seaweedfs-master
       - seaweedfs-volume
     restart: always
-
-  code-executor:
-    container_name: code-executor
-    build:
-      context: code_executor
-      dockerfile: Dockerfile
-    restart: always
-    volumes:
-      - ./pyodide_sessions:/app/pyodide_sessions
-    ports:
-      - "3000:3000"
-
 
 volumes:
   seaweedfs_data:

@@ -82,12 +82,13 @@ class UserProfile(Base):
     id: Mapped[str] = mapped_column(
         ForeignKey("users.id"),
         primary_key=True,
-        default_factory=lambda: str(uuid4()),
-        init=False,
     )
-    name: Mapped[Optional[str]] = mapped_column(String(100))
-    avatar_url: Mapped[Optional[str]] = mapped_column(String(255))
+    name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    avatar_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
+    def __init__(self, id: str, **kwargs):
+        self.id = id
+        super().__init__(**kwargs)
 
 class Function(Base):
     """
@@ -461,5 +462,5 @@ __all__ = [
     "Function",
     "LinkedAccount",
     "Secret",
-    "TempFile",
+    "Artifact",
 ]

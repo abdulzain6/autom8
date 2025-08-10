@@ -108,7 +108,7 @@ class CodeExecutor(AppConnectorBase):
                     if not artifact:
                         return {"error": f"Artifact with ID {artifact_id} not found."}
 
-                    content_generator, _ = file_manager.read(artifact_id)
+                    content_generator, _ = file_manager.read_artifact(artifact_id)
                     file_buffer = io.BytesIO(b"".join(content_generator))
 
                     upload_url = f"{self.base_url}/sessions/{session_id}/files"
@@ -191,7 +191,7 @@ class CodeExecutor(AppConnectorBase):
                     file_buffer = io.BytesIO(response.content)
                     content_type = response.headers.get("Content-Type", "application/octet-stream")
 
-                    new_artifact_id = file_manager.upload(
+                    new_artifact_id = file_manager.upload_artifact(
                         file_object=file_buffer,
                         filename=filename,
                         content_type=content_type,

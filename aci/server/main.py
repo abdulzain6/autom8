@@ -17,6 +17,7 @@ from aci.server.routes import (
     health,
     voice_agent,
     linked_accounts,
+    profile
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
@@ -87,7 +88,7 @@ async def run_cleanup_job():
     db = create_db_session(config.DB_FULL_URL)
     try:
         manager = FileManager(db)
-        deleted, failed = manager.delete_expired_files()
+        deleted, failed = manager.cleanup_expired_artifacts()
         logger.info(f"Cleanup job finished. Deleted: {deleted}, Failed: {failed}")
     except Exception as e:
         logger.error(f"Cleanup job failed with an exception: {e}")
@@ -115,9 +116,13 @@ app.include_router(
     prefix=config.ROUTER_PREFIX_LINKED_ACCOUNTS,
     tags=[config.ROUTER_PREFIX_LINKED_ACCOUNTS.split("/")[-1]],
 )
-
 app.include_router(
     voice_agent.router,
     prefix=config.ROUTER_PREFIX_VOICE_AGENT,
     tags=[config.ROUTER_PREFIX_VOICE_AGENT.split("/")[-1]],
+)
+app.include_router(
+    profile.router,
+    prefix=config.ROUTER_PREFIX_PROFILE,
+    tags=[config.ROUTER_PREFIX_PROFILE.split("/")[-1]],
 )

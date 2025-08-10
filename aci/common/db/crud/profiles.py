@@ -1,89 +1,70 @@
-from typing import Optional
-from aci.common.db.sql_models import UserProfile
-from aci.common.schemas.profiles import UserProfileCreate, UserProfileUpdate
 from sqlalchemy.orm import Session
+from typing import Optional
+
+from aci.common.db.sql_models import UserProfile
+from aci.common.schemas.profiles import UserProfileUpdate
 
 
-def get_user_profile(db_session: Session, user_id: str) -> Optional[UserProfile]:
+def get_profile(db: Session, user_id: str) -> Optional[UserProfile]:
     """
-    Retrieve a user profile by their user ID.
+    Retrieves a user's profile by their user ID.
 
     Args:
-        db_session: The database session.
-        user_id: The UUID of the user.
+        db: The SQLAlchemy database session.
+        user_id: The ID of the user.
 
     Returns:
-        The UserProfile object or None if not found.
+        The UserProfile object if found, otherwise None.
     """
-    return db_session.get(UserProfile, user_id)
+    return db.query(UserProfile).filter(UserProfile.id == user_id).first()
 
 
-def create_user_profile(
-    db_session: Session, user_id: str, profile_in: UserProfileCreate
+def create_profile(
+    db: Session, user_id: str, profile_in: UserProfileUpdate
 ) -> UserProfile:
     """
-    Create a new user profile.
-    This assumes the associated user in 'auth.users' already exists.
+    Creates a new profile for a user.
 
     Args:
-        db_session: The database session.
-        user_id: The UUID of the user to associate the profile with.
+        db: The SQLAlchemy database session.
+        user_id: The ID of the user to create a profile for.
         profile_in: The Pydantic schema with the profile data.
 
     Returns:
         The newly created UserProfile object.
     """
-    # Create a new UserProfile object, linking it to the user's ID
-    new_profile = UserProfile(
-        name=profile_in.name,
-        avatar_url=profile_in.avatar_url
-    )
-    db_session.add(new_profile)
-    db_session.commit()
-    db_session.refresh(new_profile)
+    new_profile = UserProfile(id=user_id, **profile_in.model_dump())
+    db.add(new_profile)
+    db.commit()
+    db.refresh(new_profile)
     return new_profile
 
 
-def update_user_profile(
-    db_session: Session, user_profile: UserProfile, profile_in: UserProfileUpdate
+def update_profile(
+    db: Session, user_id: str, profile_in: UserProfileUpdate
 ) -> UserProfile:
     """
-    Update an existing user profile.
+    Updates an existing user's profile. If the profile does not exist,
+    it creates a new one (upsert behavior).
 
     Args:
-        db_session: The database session.
-        user_profile: The existing UserProfile ORM object to update.
-        profile_in: A Pydantic schema with the fields to update.
+        db: The SQLAlchemy database session.
+        user_id: The ID of the user whose profile is being updated.
+        profile_in: The Pydantic schema with the new profile data.
 
     Returns:
-        The updated UserProfile object.
+        The updated or newly created UserProfile object.
     """
-    # Get a dictionary of the fields that were actually set in the update request
+    profile = get_profile(db, user_id)
+    if not profile:
+        # If the profile doesn't exist, create it.
+        return create_profile(db, user_id, profile_in)
+
+    # Update the existing profile with non-null values from the input schema
     update_data = profile_in.model_dump(exclude_unset=True)
-    
-    # Update the model's attributes with the new data
     for key, value in update_data.items():
-        setattr(user_profile, key, value)
+        setattr(profile, key, value)
 
-    db_session.add(user_profile)
-    db_session.commit()
-    db_session.refresh(user_profile)
-    return user_profile
-
-
-def delete_user_profile(db_session: Session, user_id: str) -> Optional[UserProfile]:
-    """
-    Delete a user profile by their user ID.
-
-    Args:
-        db_session: The database session.
-        user_id: The UUID of the user whose profile should be deleted.
-    
-    Returns:
-        The deleted profile object or None if it was not found.
-    """
-    profile_to_delete = get_user_profile(db_session, user_id)
-    if profile_to_delete:
-        db_session.delete(profile_to_delete)
-        db_session.commit()
-    return profile_to_delete
+    db.commit()
+    db.refresh(profile)
+    return profile
