@@ -444,16 +444,13 @@ class Secret(Base):
 class Artifact(Base):
     __tablename__ = "artifacts"
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    filer_path = Column(String, unique=True, nullable=False)
-    filename = Column(String, nullable=False)
-    mime_type = Column(String, nullable=False)
-    size_bytes = Column(BigInteger, nullable=False)
-    expires_at = Column(TIMESTAMP(timezone=True), nullable=False)
+    filer_path: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    filename: Mapped[str] = mapped_column(String, nullable=False)
+    mime_type: Mapped[str] = mapped_column(String, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
 
-    def __init__(self, **kwargs):
-        """Initializes the model instance, allowing keyword arguments."""
-        super().__init__(**kwargs)
 
 
 __all__ = [

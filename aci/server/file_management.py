@@ -9,7 +9,7 @@ import requests_mock
 from datetime import datetime, timedelta, timezone
 from typing import BinaryIO, Generator, Tuple
 from sqlalchemy.orm import Session
-from aci.common.db.sql_models import TempFile
+from aci.common.db.sql_models import Artifact
 from aci.common import utils
 from aci.server import config
 from aci.server.config import SEAWEEDFS_URL
@@ -47,7 +47,7 @@ class FileManager:
 
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
 
-        temp_file = TempFile(
+        temp_file = Artifact(
             filer_path=filer_path,
             filename=filename,
             mime_type=content_type,
@@ -64,8 +64,8 @@ class FileManager:
         """Retrieves a file's content as a memory-efficient stream generator."""
         current_time = datetime.now(timezone.utc)
         file_record = (
-            self.db.query(TempFile)
-            .filter(TempFile.id == file_id, TempFile.expires_at > current_time)
+            self.db.query(Artifact)
+            .filter(Artifact.id == file_id, Artifact.expires_at > current_time)
             .first()
         )
 
@@ -91,7 +91,7 @@ class FileManager:
         try:
             current_time = datetime.now(timezone.utc)
             expired_files = (
-                self.db.query(TempFile).filter(TempFile.expires_at <= current_time).all()
+                self.db.query(Artifact).filter(Artifact.expires_at <= current_time).all()
             )
 
             if not expired_files:
@@ -172,7 +172,7 @@ if __name__ == "__main__":
             print("\n--- Testing File Cleanup ---")
             # Manually create an expired file record in the DB
             expired_path = f"/temp_files/{uuid.uuid4()}/expired.txt"
-            expired_file = TempFile(
+            expired_file = Artifact(
                 filer_path=expired_path,
                 filename="expired.txt",
                 mime_type="text/plain",
@@ -190,7 +190,7 @@ if __name__ == "__main__":
             assert failed == 0
 
             # Verify the expired file is gone from the DB
-            verified_record = db.query(TempFile).filter(TempFile.id == expired_file.id).first()
+            verified_record = db.query(Artifact).filter(Artifact.id == expired_file.id).first()
             assert verified_record is None
             print("✅ Verified that the expired record was deleted from the database.")
 
