@@ -1,19 +1,18 @@
-
-# Main application server (handles multiple domains)
-getautom8.app, api.getautom8.app {
-    reverse_proxy server:8000
+{
+    order layer4 first
 }
 
-# LiveKit server
+layer4 {
+    listen :7881
+    proxy {
+        upstream livekit:7881
+    }
+}
+
 lk.getautom8.app {
-    # This handles the WebSocket connection
     reverse_proxy livekit:7880
 }
 
-# This separate block is for LiveKit's UDP traffic (RTC)
-lk.getautom8.app:7881 {
-    reverse_proxy {
-        to livekit:7881
-        transport udp
-    }
+getautom8.app, api.getautom8.app {
+    reverse_proxy server:8000
 }
