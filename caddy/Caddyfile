@@ -1,6 +1,8 @@
+# Global options
 {
     # Enable debug logging temporarily
     debug
+    # Ensure layer4 is processed before HTTP
     order layer4 first
 }
 
@@ -8,38 +10,40 @@
 layer4 {
     listen :7881
     proxy {
+        # Docker networking handles UDP proxying
         upstream livekit:7881
     }
 }
 
-# LiveKit WebRTC endpoint
+# LiveKit WebRTC endpoint (HTTP/S)
 lk.getautom8.app {
+    # Add CORS headers for WebRTC. This handles OPTIONS preflight automatically.
+    @options method OPTIONS
+    respond @options 204
+    header {
+        Access-Control-Allow-Origin *
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Access-Control-Allow-Headers *
+        -Server
+    }
+
     reverse_proxy livekit:7880 {
         header_up Host {host}
-        header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
-    
-    # Add CORS headers for WebRTC
-    header Access-Control-Allow-Origin *
-    header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-    header Access-Control-Allow-Headers "Content-Type, Authorization"
-    
-    # Handle preflight requests
-    respond /options 204
 }
 
 # Main API endpoints
 getautom8.app, api.getautom8.app {
-    # Add health check endpoint for debugging
-    handle /health {
-        respond "Caddy OK" 200
+    # Log to stdout/stderr in JSON format so 'docker-compose logs' can capture it
+    log {
+        output stderr
+        format json
     }
-    
-    # Main reverse proxy
+
+    # Main reverse proxy to your application server
     reverse_proxy server:8000 {
-        # Health check settings
+        # Active health checks
         health_uri /v1/health
         health_interval 10s
         health_timeout 5s
@@ -49,18 +53,5 @@ getautom8.app, api.getautom8.app {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
         header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-Port {server_port}
-        
-        # Timeout settings
-        transport http {
-            dial_timeout 10s
-            response_header_timeout 10s
-        }
-    }
-    
-    # Enable access logs for debugging
-    log {
-        output file /var/log/caddy/access.log
-        format json
     }
 }
