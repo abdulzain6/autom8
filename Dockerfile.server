@@ -7,6 +7,7 @@ COPY requirements.txt ./
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
+    pip install requests \ 
     pip install pygooglenews --no-deps
 
 # Now copy the rest of the app — only reruns this layer when code changes
