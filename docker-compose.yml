@@ -3,9 +3,10 @@ version: "3.8"
 services:
   # --- 1. Edge Router / Reverse Proxy (Caddy) ---
   caddy:
-    image: initdc/caddy-l4
+    build:
+      context: ./caddy
+      dockerfile: Dockerfile
     restart: always
-    # REMOVED: The command directive. The image's entrypoint will auto-detect /etc/caddy/Caddyfile.
     ports:
       - "80:80"
       - "443:443"
@@ -16,6 +17,7 @@ services:
       - caddy_config:/config
     networks:
       - web_proxy
+
 
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
