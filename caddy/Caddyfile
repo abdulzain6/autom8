@@ -1,23 +1,19 @@
-# Main API and frontend domains
-(main_hosts) {
-    getautom8.app api.getautom8.app
-}
 
-# LiveKit domain
-(livekit_host) {
-    lk.getautom8.app
-}
-
-# Main server configuration
-handle_path /* {
+# Main application server (handles multiple domains)
+getautom8.app, api.getautom8.app {
     reverse_proxy server:8000
 }
 
-# LiveKit configuration
-handle_path / {
+# LiveKit server
+lk.getautom8.app {
+    # This handles the WebSocket connection
     reverse_proxy livekit:7880
 }
 
-# Import the configurations for your domains
-import main_hosts
-import livekit_host
+# This separate block is for LiveKit's UDP traffic (RTC)
+lk.getautom8.app:7881 {
+    reverse_proxy {
+        to livekit:7881
+        transport udp
+    }
+}
