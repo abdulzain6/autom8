@@ -5,7 +5,6 @@ services:
   caddy:
     image: initdc/caddy-l4
     restart: always
-    command: run --config /etc/caddy/Caddyfile --adapter caddyfile  # <-- Added this to force-load your Caddyfile
     ports:
       - "80:80"
       - "443:443"
@@ -14,9 +13,17 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      - caddy_logs:/var/log/caddy  # Add logging volume
     networks:
       - web_proxy
-
+    depends_on:
+      server:
+        condition: service_healthy  # Wait for server to be healthy
+    healthcheck:
+      test: ["CMD-SHELL", "caddy version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
@@ -36,6 +43,9 @@ services:
       - executor_network
       - storage_network
       - services_network
+    depends_on:
+      - redis
+      - seaweedfs-filer
 
   # --- 3. LiveKit Server (Public Facing) ---
   livekit:
@@ -46,6 +56,11 @@ services:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     networks:
       - web_proxy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:7880 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # --- 4. Internal Services (Grouped by Isolated Networks) ---
   code-executor:
@@ -55,8 +70,14 @@ services:
     restart: always
     dns:
       - 8.8.8.8
+      - 8.8.4.4
     networks:
       - executor_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   searxng:
     image: searxng/searxng:latest
@@ -65,31 +86,59 @@ services:
       - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
     dns:
       - 8.8.8.8
+      - 8.8.4.4
     networks:
       - services_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # SeaweedFS cluster with proper startup order
   seaweedfs-master:
     image: chrislusf/seaweedfs
-    command: "master -ip=seaweedfs-master"
+    command: "master -ip=seaweedfs-master -port=9333"
     networks:
       - storage_network
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9333 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   seaweedfs-volume:
     image: chrislusf/seaweedfs
-    command: 'volume -mserver="seaweedfs-master:9333" -ip="seaweedfs-volume"'
+    command: 'volume -mserver="seaweedfs-master:9333" -ip="seaweedfs-volume" -port=8080'
     volumes:
       - seaweedfs_data:/data
     networks:
       - storage_network
     restart: always
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   seaweedfs-filer:
     image: chrislusf/seaweedfs
-    command: 'filer -master="seaweedfs-master:9333"'
+    command: 'filer -master="seaweedfs-master:9333" -ip="seaweedfs-filer"'
     restart: always
     networks:
       - storage_network
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8888 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:7-alpine
@@ -98,23 +147,41 @@ services:
       - services_network
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 # --- Networks Definition ---
 networks:
   web_proxy:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
   executor_network:
     driver: bridge
     internal: true
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
   storage_network:
     driver: bridge
     internal: true
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
   services_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
 
 # --- Volumes Definition ---
 volumes:
   caddy_data:
   caddy_config:
+  caddy_logs:  # Add logging volume
   seaweedfs_data:
   redis-data:
