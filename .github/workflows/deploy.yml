@@ -1,5 +1,3 @@
-# .github/workflows/deploy.yml
-
 name: Deploy and Build on Production VM
 
 on:
@@ -23,11 +21,16 @@ jobs:
             # Pull the latest changes from the master branch
             git pull origin master
 
-            # Build the new image locally. --no-cache ensures it uses the latest code.
-            sudo docker compose build --no-cache
+            # Perform a zero-downtime rolling update for the 'server' service.
+            # --no-deps ensures that other services (like Traefik) are not touched.
+            # --build tells Compose to rebuild the image for this service.
+            echo "Performing rolling update for the 'server'..."
+            sudo docker compose up -d --no-deps --build server
 
-            # Stop and restart the services to use the new image
-            sudo docker compose up -d --force-recreate
+            # Perform a zero-downtime rolling update for the 'code-executor' service.
+            echo "Performing rolling update for the 'code-executor'..."
+            sudo docker compose up -d --no-deps --build code-executor
 
             # Clean up old, unused Docker images to save space
+            echo "Cleaning up old images..."
             sudo docker image prune -af
