@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Check if docker-compose is installed
-if ! [ -x "$(command -v docker-compose)" ]; then
-  echo 'Error: docker-compose is not installed.' >&2
-  exit 1
-fi
-
 # Your domains
 domains=(getautom8.app api.getautom8.app lk.getautom8.app)
 rsa_key_size=4096
