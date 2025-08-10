@@ -33,7 +33,7 @@ RATE_LIMIT_IP_PER_DAY = int(check_and_get_env_variable("SERVER_RATE_LIMIT_IP_PER
 
 # APP
 APP_TITLE = "Autom8"
-APP_VERSION = "0.0.1"
+APP_VERSION = "0.0.2"
 APP_DOCS_URL = "/docs"
 APP_REDOC_URL = "/redoc"
 APP_OPENAPI_URL = "/openapi.json"
