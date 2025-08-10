@@ -1,6 +1,19 @@
+# Global options
 {
-  import /etc/caddy/layer4_config.json
+    # Enable debug logging temporarily
+    debug
+    
+    # Layer4 app configuration - this is required for the L4 plugin
+    layer4 {
+        # UDP listener for LiveKit
+        :7881 {
+            route {
+                proxy livekit:7881
+            }
+        }
+    }
 }
+
 # LiveKit WebRTC endpoint (HTTP/S)
 lk.getautom8.app {
     # Add CORS headers for WebRTC. This handles OPTIONS preflight automatically.
