@@ -441,9 +441,8 @@ class Secret(Base):
     )
 
 
-class TempFile(Base):
-    """SQLAlchemy model for a temporary file record."""
-    __tablename__ = "temp_files"
+class Artifact(Base):
+    __tablename__ = "artifacts"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     filer_path = Column(String, unique=True, nullable=False)

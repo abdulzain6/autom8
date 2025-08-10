@@ -67,7 +67,7 @@ class GoogleNews(AppConnectorBase):
         try:
             gn = PyGoogleNews(lang=lang, country=country)
             stories = gn.top_news()
-            return self._format_entries(stories["entries"])
+            return self._format_entries(stories["entries"]) # type: ignore
         except Exception as e:
             logger.error(f"Failed to get top headlines: {e}")
             raise Exception(f"Failed to retrieve top headlines: {e}") from e
@@ -95,7 +95,7 @@ class GoogleNews(AppConnectorBase):
             # Now uses the provided lang and country parameters instead of being locked to US/en.
             gn = PyGoogleNews(lang=lang, country=country)
             search_result = gn.search(query, when=period)
-            return self._format_entries(search_result["entries"])
+            return self._format_entries(search_result["entries"]) # type: ignore
         except Exception as e:
             logger.error(f"Failed to search for topic '{query}': {e}")
             raise Exception(f"Failed to search for topic '{query}': {e}") from e

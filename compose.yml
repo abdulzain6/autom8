@@ -50,6 +50,13 @@ services:
       - ./aci/common:/workdir/aci/common
     networks:
       - web_proxy
+      - executor_network
+      - storage_network
+      - services_network
+    depends_on:
+      - code-executor
+      - seaweedfs-filer
+      - searxng
     labels:
       - "traefik.enable=true"
       # HTTP Router (redirects to HTTPS)
