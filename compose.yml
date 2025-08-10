@@ -1,29 +1,34 @@
 version: "3.8"
 
 services:
-  # --- 1. Edge Router / Reverse Proxy ---
-  traefik:
-    image: traefik:v3.0
+  # --- 1. Edge Router / Reverse Proxy (Now Nginx) ---
+  nginx:
+    image: nginx:latest
     restart: always
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.rtc.address=:7881"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.email=abdulzain6@gmail.com"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
       - "443:443"
       - "7881:7881/udp"
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "traefik-data:/letsencrypt"
+      # Mount your custom config file
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Shared volumes for SSL certificates
+      - certbot_etc:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
     networks:
       - web_proxy
+    depends_on:
+      - server
+      - livekit
+
+  # --- New service for SSL Certificate Management ---
+  certbot:
+    image: certbot/certbot
+    # This command runs every 12 hours to renew certificates if needed
+    command: certonly --webroot --webroot-path=/var/www/certbot --email abdulzain6@gmail.com --agree-tos --no-eff-email -d getautom8.app -d api.getautom8.app -d lk.getautom8.app --keep-until-expiring
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
 
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
@@ -38,29 +43,15 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
+    volumes:
+      - ./aci/server:/workdir/aci/server
+      - ./aci/common:/workdir/aci/common
     networks:
       - web_proxy
       - executor_network
       - storage_network
       - services_network
-    labels:
-      - "traefik.enable=true"
-      # This router handles the redirect from HTTP to HTTPS
-      - "traefik.http.routers.aci-server-http.rule=Host(`getautom8.app`) || Host(`api.getautom8.app`)"
-      - "traefik.http.routers.aci-server-http.entrypoints=web"
-      - "traefik.http.routers.aci-server-http.middlewares=https-redirect@docker"
-      
-      # This is the main router that handles secure traffic
-      - "traefik.http.routers.aci-server-secure.rule=Host(`getautom8.app`) || Host(`api.getautom8.app`)"
-      - "traefik.http.routers.aci-server-secure.entrypoints=websecure"
-      - "traefik.http.routers.aci-server-secure.tls.certresolver=myresolver"
-      - "traefik.http.routers.aci-server-secure.service=aci-server-service"
-      
-      # This defines the service that points to your container
-      - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
-      
-      # This tells Traefik which network to use to communicate with this container
-      - "traefik.docker.network=web_proxy"
+    # All Traefik labels have been removed
 
   # --- 3. LiveKit Server (Public Facing) ---
   livekit:
@@ -71,33 +62,9 @@ services:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     networks:
       - web_proxy
-    labels:
-      - "traefik.enable=true"
-      # --- LiveKit WebSocket (WSS) Router ---
-      - "traefik.http.routers.livekit-secure.rule=Host(`lk.getautom8.app`)"
-      - "traefik.http.routers.livekit-secure.entrypoints=websecure"
-      - "traefik.http.routers.livekit-secure.tls.certresolver=myresolver"
-      - "traefik.http.routers.livekit-secure.service=livekit-ws-service"
-      - "traefik.http.services.livekit-ws-service.loadbalancer.server.port=7880"
-      
-      # --- LiveKit RTC (TCP) Router ---
-      - "traefik.tcp.routers.livekit-rtc.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.livekit-rtc.entrypoints=rtc"
-      - "traefik.tcp.routers.livekit-rtc.service=livekit-rtc-service"
-      - "traefik.tcp.services.livekit-rtc-service.loadbalancer.server.port=7881"
-
-      # --- LiveKit HTTP Router (for ACME challenge and redirect) ---
-      - "traefik.http.routers.livekit-http.rule=Host(`lk.getautom8.app`)"
-      - "traefik.http.routers.livekit-http.entrypoints=web"
-      - "traefik.http.routers.livekit-http.middlewares=https-redirect@docker"
-      
-      # --- Middleware Definition for LiveKit ---
-      # This was missing. You must define the middleware for the service that uses it.
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.docker.network=web_proxy"
+    # All Traefik labels have been removed
 
   # --- 4. Internal Services (Grouped by Isolated Networks) ---
-
   code-executor:
     build:
       context: ./code_executor
@@ -134,7 +101,6 @@ services:
       - storage_network
     restart: always
 
-
   seaweedfs-filer:
     image: chrislusf/seaweedfs
     command: 'filer -master="seaweedfs-master:9333"'
@@ -165,6 +131,8 @@ networks:
 
 # --- Volumes Definition ---
 volumes:
-  traefik-data:
   seaweedfs_data:
   redis-data:
+  # New volumes for Certbot
+  certbot_etc:
+  certbot_www:
