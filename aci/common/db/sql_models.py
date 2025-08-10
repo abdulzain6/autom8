@@ -449,8 +449,9 @@ class Artifact(Base):
     mime_type: Mapped[str] = mapped_column(String, nullable=False)
     size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     expires_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-
+    id: Mapped[str] = mapped_column(String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
+    user: Mapped[SupabaseUser] = relationship("SupabaseUser", lazy="select", init=False)
 
 
 __all__ = [

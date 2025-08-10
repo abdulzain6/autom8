@@ -10,7 +10,6 @@ import {
   Res,
   StreamableFile,
   NotFoundException,
-  BadRequestException,
   HttpCode,
   HttpStatus,
   ParseFilePipe,
@@ -37,7 +36,7 @@ import {
 } from './dtos';
 
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
-const EXECUTION_TIMEOUT_MS = 15000; // 15 seconds
+const EXECUTION_TIMEOUT_MS = 6000; // 6 seconds
 
 @ApiTags('Pyodide Sessions')
 @Controller('sessions')
@@ -60,13 +59,12 @@ export class PyodideSessionController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a file to a session (max 100MB)' })
   @ApiResponse({ status: 201, type: UploadFileResponseDto })
-  // --- FIX: ADD THIS DECORATOR ---
   @ApiBody({
     description: 'File to upload',
     schema: {
       type: 'object',
       properties: {
-        file: { // <-- This key MUST match the one in FileInterceptor('file')
+        file: { 
           type: 'string',
           format: 'binary',
         },

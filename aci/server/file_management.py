@@ -1,7 +1,5 @@
 import re
 import uuid
-import dotenv
-dotenv.load_dotenv()
 import io
 import requests
 import logging
@@ -27,6 +25,7 @@ class FileManager:
 
     def upload(
         self,
+        user_id: str,
         file_object: BinaryIO,
         filename: str,
         content_type: str,
@@ -50,6 +49,7 @@ class FileManager:
         temp_file = Artifact(
             filer_path=filer_path,
             filename=filename,
+            user_id=user_id,
             mime_type=content_type,
             size_bytes=upload_data["size"],
             expires_at=expires_at,
@@ -157,6 +157,7 @@ if __name__ == "__main__":
                 filename="test.txt",
                 content_type="text/plain",
                 ttl_seconds=3600,
+                user_id="test_user"
             )
             print(f"✅ File uploaded successfully. DB ID: {file_id}")
 
@@ -178,6 +179,7 @@ if __name__ == "__main__":
                 mime_type="text/plain",
                 size_bytes=100,
                 expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+                user_id="test_user"
             )
             db.add(expired_file)
             db.commit()

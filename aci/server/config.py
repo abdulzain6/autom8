@@ -60,3 +60,7 @@ SEARXNG_INSTANCE_URL = check_and_get_env_variable("SERVER_SEARXNG_INSTANCE_URL")
 
 # SeaweedFS
 SEAWEEDFS_URL = check_and_get_env_variable("SERVER_SEAWEEDFS_URL")
+
+REDIS_URL = check_and_get_env_variable("SERVER_REDIS_URL")
+
+CODE_EXECUTOR_URL = check_and_get_env_variable("SERVER_CODE_EXECUTOR_URL")

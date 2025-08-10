@@ -114,7 +114,8 @@ services:
       context: ./code_executor
       dockerfile: Dockerfile
     restart: always
-    # This service is ONLY on the executor network.
+    dns:
+      - 8.8.8.8
     networks:
       - executor_network
 
@@ -124,6 +125,8 @@ services:
     restart: always
     volumes:
       - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
+    dns:
+      - 8.8.8.8
     # This service is ONLY on the general services network.
     networks:
       - services_network
@@ -164,7 +167,6 @@ networks:
   # A dedicated, internal network for the code executor
   executor_network:
     driver: bridge
-    internal: true
   # A dedicated, internal network for storage services
   storage_network:
     driver: bridge

@@ -15,10 +15,10 @@ import * as fs from 'fs';
 
 const SESSIONS_BASE_PATH = './pyodide_sessions';
 if (process.env.NUM_WORKERS){
-  var NUM_WORKERS = parseInt(process.env.NUM_WORKERS) || 2
+  var NUM_WORKERS = parseInt(process.env.NUM_WORKERS) || 1;
 }
 else {
-  var NUM_WORKERS = 2;
+  var NUM_WORKERS = 1;
 }
 
 

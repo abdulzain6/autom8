@@ -1,0 +1,19 @@
+{
+  "name": "CODE_EXECUTOR",
+  "display_name": "Code Executor",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/code-executor.png",
+  "provider": "Self-Hosted Pyodide",
+  "version": "1.0.0",
+  "description": "Provides a secure and sandboxed environment for executing Python code.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Utilities",
+    "Development",
+    "Code Execution"
+  ],
+  "visibility": "public",
+  "active": true
+}

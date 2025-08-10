@@ -1,3 +1,4 @@
+from aci.server import config
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -7,7 +8,6 @@ from starlette.middleware.cors import CORSMiddleware
 from aci.common.exceptions import ACIException
 from aci.server.file_management import FileManager
 from aci.common.logging_setup import setup_logging
-from aci.server import config
 from aci.common.utils import create_db_session
 from aci.server.log_schema_filter import LogSchemaFilter
 from aci.server.middleware.ratelimit import RateLimitMiddleware
