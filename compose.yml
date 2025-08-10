@@ -155,12 +155,6 @@ services:
       - services_network
     volumes:
       - redis-data:/data
-    # FIX: Add a healthcheck to ensure Redis is ready before other services connect
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
 # --- Networks Definition ---
 networks:
