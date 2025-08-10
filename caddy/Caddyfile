@@ -2,8 +2,6 @@
 {
     # Enable debug logging temporarily
     debug
-    # Ensure layer4 is processed before HTTP
-    order layer4 first
 }
 
 # Layer 4 proxy for LiveKit UDP
