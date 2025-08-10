@@ -86,6 +86,7 @@ services:
       # --- Middleware Definition for LiveKit ---
       # This was missing. You must define the middleware for the service that uses it.
       - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.docker.network=web_proxy"
 
   # --- 4. Internal Services (Grouped by Isolated Networks) ---
 
