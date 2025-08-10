@@ -64,11 +64,7 @@ services:
       - "traefik.http.routers.aci-server-secure.rule=Host(`getautom8.app`) || Host(`api.getautom8.app`)"
       - "traefik.http.routers.aci-server-secure.entrypoints=websecure"
       - "traefik.http.routers.aci-server-secure.tls.certresolver=myresolver"
-      
-      # This is the missing line that links the router to the service
       - "traefik.http.routers.aci-server-secure.service=aci-server-service"
-      
-      # Define the service
       - "traefik.http.services.aci-server-service.loadbalancer.server.port=8000"
 
   # --- 3. LiveKit Server (Public Facing) ---
