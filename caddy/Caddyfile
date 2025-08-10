@@ -4,14 +4,12 @@
     debug
 }
 
-# Correct Layer 4 block for the caddy-l4 plugin
 l4 :7881/udp {
-    # This handle block catches all traffic coming to this l4 listener
     handle {
-        # Proxy all incoming UDP traffic to the LiveKit service
-        proxy upstream livekit:7881
+        udp_proxy livekit:7881
     }
 }
+
 
 # LiveKit WebRTC endpoint (HTTP/S)
 lk.getautom8.app {
