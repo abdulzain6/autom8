@@ -13,7 +13,6 @@ services:
       - "7881:7881/udp"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy/layer4_config.json:/etc/caddy/layer4_config.json
       - caddy_data:/data
       - caddy_config:/config
     networks:
