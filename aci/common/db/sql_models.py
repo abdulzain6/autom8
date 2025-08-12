@@ -55,7 +55,7 @@ from aci.common.enums import (
     SecurityScheme,
 )
 
-EMBEDDING_DIMENSION = 768
+EMBEDDING_DIMENSION = 1536
 APP_DEFAULT_VERSION = "1.0.0"
 # need app to be shorter because it's used as prefix for function name
 APP_NAME_MAX_LENGTH = 100
