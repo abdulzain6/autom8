@@ -24,7 +24,7 @@ openai_client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BAS
 
 
 @router.get("", response_model_exclude_none=True)
-async def list_apps(
+def list_apps(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     query_params: Annotated[AppsList, Query()],
 ) -> list[AppDetails]:
@@ -72,7 +72,7 @@ async def list_apps(
 
 
 @router.get("/search", response_model_exclude_none=True)
-async def search_apps(
+def search_apps(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     query_params: Annotated[AppsSearch, Query()],
 ) -> list[AppBasic]:
@@ -159,7 +159,7 @@ async def search_apps(
 
 
 @router.get("/{app_name}", response_model_exclude_none=True)
-async def get_app_details(
+def get_app_details(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     app_name: str,
 ) -> AppDetails:

@@ -1,6 +1,8 @@
 from enum import StrEnum
 
 
+
+
 class SecurityScheme(StrEnum):
     """
     security scheme type for an app (or function if support override)

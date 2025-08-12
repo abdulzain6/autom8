@@ -1,6 +1,11 @@
-from typing import Literal, TypeVar
-from pydantic import BaseModel, Field, field_validator
+from typing import Any, Dict, Literal, Optional, TypeVar
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 from aci.common.enums import HttpLocation
+
+
+class TestFunction(BaseModel):
+    function_name: str
+    default_params: Optional[Dict[str, Any]] = None
 
 
 class APIKeyScheme(BaseModel):
@@ -16,6 +21,9 @@ class APIKeyScheme(BaseModel):
         default=None,
         description="The prefix of the API key in the request, e.g., 'Bearer'. If None, no prefix will be used.",
     )
+    instructions: Optional[HttpUrl] = None
+    test: Optional[TestFunction] = None
+    required_fields: Optional[list] = None # For ActiveCampaign's account_name
 
 
 class APIKeySchemePublic(BaseModel):

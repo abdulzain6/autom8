@@ -11,6 +11,7 @@ from aci.common.exceptions import (
     AppConfigurationNotFound,
     AppNotFound,
     AuthenticationError,
+    InvalidCredentials,
     LinkedAccountAlreadyExists,
     LinkedAccountNotFound,
     NoImplementationFound,
@@ -28,12 +29,14 @@ from aci.common.schemas.linked_accounts import (
     LinkedAccountWithCredentials,
 )
 from aci.common.schemas.security_scheme import (
+    APIKeyScheme,
     APIKeySchemeCredentials,
     NoAuthSchemeCredentials,
 )
 from aci.server import config
 from aci.server import dependencies as deps
 from aci.server import security_credentials_manager as scm
+from aci.server.function_executors.rest_api_key_function_executor import RestAPIKeyFunctionExecutor
 from aci.server.oauth2_manager import OAuth2Manager
 
 router = APIRouter()
@@ -44,7 +47,7 @@ LINKED_ACCOUNTS_OAUTH2_CALLBACK_ROUTE_NAME = "linked_accounts_oauth2_callback"
 
 
 @router.post("/no-auth", response_model=LinkedAccountPublic)
-async def link_account_with_no_auth(
+def link_account_with_no_auth(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     body: LinkedAccountNoAuthCreate,
 ) -> LinkedAccount:
@@ -108,75 +111,102 @@ async def link_account_with_no_auth(
 
 
 @router.post("/api-key", response_model=LinkedAccountPublic)
-async def link_account_with_api_key(
+def link_account_with_api_key(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     body: LinkedAccountAPIKeyCreate,
 ) -> LinkedAccount:
     """
-    Create a linked account under an API key based App.
+    Create a linked account for an API key-based App, verifying the credentials first.
     """
     logger.info(
-        f"Linking api_key account, app_name={body.app_name}, "
-        f"user_id={context.user.id}"
+        f"Linking api_key account, app_name={body.app_name}, user_id={context.user.id}"
     )
-    app_configuration = crud.app_configurations.get_app_configuration(
-        context.db_session, body.app_name
-    )
-    if not app_configuration:
+
+    # 1. Fetch the App to get security scheme details
+    app = crud.apps.get_app(context.db_session, body.app_name, True)
+    if not app:
+        logger.error(f"Failed to link account, app not found, app_name={body.app_name}")
+        raise AppNotFound(f"App with name={body.app_name} not found")
+
+    # 2. Validate that the app uses an API key and get the scheme config
+    api_key_scheme_config = app.security_schemes.get(SecurityScheme.API_KEY)
+    if not api_key_scheme_config:
         logger.error(
-            f"Failed to link api_key account, app configuration not found, app_name={body.app_name}"
+            f"Failed to link account, app does not have an API key security scheme, app_name={body.app_name}"
         )
-        raise AppConfigurationNotFound(
-            f"configuration for app={body.app_name} not found"
-        )
-    # TODO: for now we require the security_schema used for accounts under an App must be the same as the security_schema configured in the app
-    # configuration. But in the future, we might lift this restriction and allow any security_schema as long as the App supports it.
-    if app_configuration.security_scheme != SecurityScheme.API_KEY:
-        logger.error(
-            f"Failed to link api_key account, app configuration security scheme is, "
-            f"{app_configuration.security_scheme} instead of api_key "
-            f"app_name={body.app_name} security_scheme={app_configuration.security_scheme}"
-        )
-        # TODO: consider choosing a different exception type?
         raise NoImplementationFound(
-            f"the security_scheme configured for app={body.app_name} is "
-            f"{app_configuration.security_scheme}, not api_key"
+            f"API Key security scheme not configured for app={body.app_name}"
         )
+
+    # 3. Prepare credentials for testing
+    security_credentials = APIKeySchemeCredentials(secret_key=body.api_key)
+    api_key_scheme = APIKeyScheme.model_validate(api_key_scheme_config)
+
+    # 4. Verify credentials using the static test method if a test is configured
+    test_config = api_key_scheme.test
+    if test_config and test_config.function_name:
+        logger.info(
+            f"Verifying API key for app={body.app_name} using test function={test_config.function_name}"
+        )
+        test_function = crud.functions.get_function(
+            context.db_session, test_config.function_name, True
+        )
+        if not test_function:
+            logger.error(
+                f"Credential test function '{test_config.function_name}' not found for app '{body.app_name}'"
+            )
+            raise AppConfigurationNotFound(
+                f"Test function for {body.app_name} is misconfigured or missing."
+            )
+
+        # Call the static method to test the key
+        test_result = RestAPIKeyFunctionExecutor.test_credentials(
+            test_function=test_function,
+            security_scheme=api_key_scheme,
+            security_credentials=security_credentials,
+        )
+
+        if not test_result.success:
+            logger.error(
+                f"API key verification failed for app={body.app_name}. Error: {test_result.error}"
+            )
+            raise InvalidCredentials(
+                f"The provided API key for {body.app_name} is invalid. Service responded: {test_result.error}"
+            )
+
+        logger.info(f"API key successfully verified for app={body.app_name}")
+
+    # 5. Check if an account already exists
     linked_account = crud.linked_accounts.get_linked_account(
         context.db_session,
         context.user.id,
         body.app_name,
     )
-    security_credentials = APIKeySchemeCredentials(
-        secret_key=body.api_key,
-    )
-
     if linked_account:
         logger.error(
-            f"Failed to link api_key account, linked account already exists, "
-            f"user_id={context.user.id} app_name={body.app_name}"
+            f"Failed to link api_key account, linked account already exists, user_id={context.user.id} app_name={body.app_name}"
         )
         raise LinkedAccountAlreadyExists(
-            f"linked account with user_id={context.user.id} already exists for app={body.app_name}"
+            f"A linked account for {body.app_name} already exists for this user."
         )
-    else:
-        logger.info(
-            f"Creating api_key linked account, "
-            f"user_id={context.user.id}, "
-            f"app_name={body.app_name}"
-        )
-        linked_account = crud.linked_accounts.create_linked_account(
-            context.db_session,
-            context.user.id,
-            body.app_name,
-            SecurityScheme.API_KEY,
-            security_credentials,
-            enabled=True,
-        )
+
+    # 6. Create the new linked account if credentials are valid and no account exists
+    logger.info(
+        f"Creating api_key linked account, user_id={context.user.id}, app_name={body.app_name}"
+    )
+    new_linked_account = crud.linked_accounts.create_linked_account(
+        db_session=context.db_session,
+        user_id=context.user.id,
+        app_name=body.app_name,
+        security_scheme=SecurityScheme.API_KEY,
+        security_credentials=security_credentials,
+        enabled=True,
+    )
 
     context.db_session.commit()
+    context.db_session.refresh(new_linked_account)
 
-    return linked_account
+    return new_linked_account
 
 
 @router.get("/oauth2")
@@ -412,7 +442,7 @@ async def linked_accounts_oauth2_callback(
 
 
 @router.get("", response_model=list[LinkedAccountPublic])
-async def list_linked_accounts(
+def list_linked_accounts(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     query_params: Annotated[LinkedAccountsList, Query()],
 ) -> list[LinkedAccount]:
@@ -482,7 +512,7 @@ async def get_linked_account(
 
 
 @router.delete("/{linked_account_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_linked_account(
+def delete_linked_account(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     linked_account_id: str,
 ) -> None:
@@ -503,7 +533,7 @@ async def delete_linked_account(
 
 
 @router.patch("/{linked_account_id}", response_model=LinkedAccountPublic)
-async def update_linked_account(
+def update_linked_account(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     linked_account_id: str,
     body: LinkedAccountUpdate,

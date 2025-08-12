@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post("/start-session")
-async def start_session(
+def start_session(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
 ):
     """

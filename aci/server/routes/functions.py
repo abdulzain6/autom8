@@ -45,7 +45,7 @@ openai_client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BAS
 
 
 @router.get("", response_model=list[FunctionDetails])
-async def list_functions(
+def list_functions(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     query_params: Annotated[FunctionsList, Query()],
 ) -> list[Function]:
@@ -59,7 +59,7 @@ async def list_functions(
     )
 
 
-async def search_functions(
+def search_functions(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     query_params: Annotated[FunctionsSearch, Query()],
 ) -> list[
@@ -115,7 +115,7 @@ async def search_functions(
     return function_definitions
 
 
-async def get_function_definition(
+def get_function_definition(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     function_name: str,
     format: FunctionDefinitionFormat = Query(  # noqa: B008 # TODO: need to fix this later
@@ -385,7 +385,7 @@ async def execute_function(
     return execution_result
 
 
-async def get_functions_definitions(
+def get_functions_definitions(
     db_session: Session,
     function_names: list[str],
     format: FunctionDefinitionFormat = FunctionDefinitionFormat.BASIC,

@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("", response_model=UserProfileResponse)
-async def get_my_profile(
+def get_my_profile(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
 ):
     """
@@ -29,7 +29,7 @@ async def get_my_profile(
 
 
 @router.put("", response_model=UserProfileResponse)
-async def update_my_profile(
+def update_my_profile(
     profile_update: UserProfileUpdate,
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
 ):
@@ -47,7 +47,7 @@ async def update_my_profile(
 
 
 @router.post("/avatar")
-async def upload_my_avatar(
+def upload_my_avatar(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     file: UploadFile = File(...),
 ):
@@ -90,7 +90,7 @@ async def upload_my_avatar(
 
 
 @router.get("/avatar")
-async def get_my_avatar(
+def get_my_avatar(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
 ):
     """

@@ -6,10 +6,16 @@
     "version": "1.0",
     "description": "The open platform for modern hospitality. Hotel and apartment businesses run more efficiently on Apaleo today and use innovative apps to be ready for tomorrow.",
     "security_schemes": {
-        "api_key": {
+        "oauth2": {
             "location": "header",
             "name": "Authorization",
-            "prefix": "Bearer"
+            "prefix": "Bearer",
+            "client_id": "{{ AIPOLABS_APALEO_CLIENT_ID }}",
+            "client_secret": "{{ AIPOLABS_APALEO_CLIENT_SECRET }}",
+            "scope": "openid offline_access inventory.read booking.read booking.write rateplan.read",
+            "authorize_url": "https://identity.apaleo.com/connect/authorize",
+            "access_token_url": "https://identity.apaleo.com/connect/token",
+            "refresh_token_url": "https://identity.apaleo.com/connect/token"
         }
     },
     "default_security_credentials_by_scheme": {},

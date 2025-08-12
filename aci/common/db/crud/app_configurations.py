@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from aci.common.db.sql_models import App, AppConfiguration
@@ -10,6 +10,15 @@ from aci.common.schemas.app_configurations import (
 
 logger = get_logger(__name__)
 
+
+def delete_app_configurations_by_app_id(db_session: Session, app_id: str) -> None:
+    """
+    Delete all app configurations associated with a specific app_id.
+    """
+    logger.info(f"Deleting all app configurations for app_id='{app_id}'")
+    statement = delete(AppConfiguration).where(AppConfiguration.app_id == app_id)
+    db_session.execute(statement)
+    db_session.flush()
 
 def create_app_configuration(
     db_session: Session, app_configuration_create: AppConfigurationCreate

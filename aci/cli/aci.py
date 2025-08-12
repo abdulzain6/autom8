@@ -7,7 +7,7 @@ from aci.cli.commands import (
     upsert_app,
     upsert_functions,
     default_credentials,
-    app_configs
+    app_configs,
 )
 from aci.common.logging_setup import setup_logging
 

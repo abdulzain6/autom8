@@ -9,7 +9,11 @@
     "api_key": {
       "location": "header",
       "name": "Authorization",
-      "prefix": "Token"
+      "prefix": "Token",
+      "test": {
+        "function_name": "ACCREDIBLE__SEARCH_CREDENTIALS"
+      },
+      "instructions": "https://help.accredible.com/s/article/how-do-i-find-my-integration-api-key?language=en_US"
     }
   },
   "default_security_credentials_by_scheme": {},

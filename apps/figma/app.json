@@ -6,11 +6,6 @@
   "version": "1.0.0",
   "description": "Figma is a browser-based collaborative interface design tool. This integration allows access to and processing of Figma design files and resources.",
   "security_schemes": {
-    "api_key": {
-      "location": "header",
-      "name": "X-Figma-Token",
-      "prefix": null
-    },
     "oauth2": {
       "location": "header",
       "name": "Authorization",

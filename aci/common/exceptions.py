@@ -263,6 +263,19 @@ class UserNotFound(ACIException):
         )
 
 
+class InvalidCredentials(ACIException):
+    """
+    Exception raised when the provided credentials are invalid
+    """
+
+    def __init__(self, message: str | None = None):
+        super().__init__(
+            title="Invalid credentials",
+            message=message,
+            error_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+
 class FunctionNotFound(ACIException):
     """
     Exception raised when a function is not found

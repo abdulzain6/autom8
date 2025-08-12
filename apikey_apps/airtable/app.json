@@ -6,10 +6,16 @@
   "version": "1.0.0",
   "description": "Airtable is a cloud-based platform that combines the functionality of a database with the visual interface of a spreadsheet. It allows users to organize and track information, collaborate with team members, and create custom applications.",
   "security_schemes": {
-    "api_key": {
+    "oauth2": {
       "location": "header",
       "name": "Authorization",
-      "prefix": "Bearer"
+      "prefix": "Bearer",
+      "client_id": "{{ AIPOLABS_AIRTABLE_CLIENT_ID }}",
+      "client_secret": "{{ AIPOLABS_AIRTABLE_CLIENT_SECRET }}",
+      "scope": "data.records:read data.records:write schema.bases:read schema.bases:write",
+      "authorize_url": "https://airtable.com/oauth2/v1/authorize",
+      "access_token_url": "https://airtable.com/oauth2/v1/token",
+      "refresh_token_url": "https://airtable.com/oauth2/v1/token"
     }
   },
   "default_security_credentials_by_scheme": {},
