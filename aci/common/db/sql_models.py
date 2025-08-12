@@ -249,8 +249,9 @@ class App(Base):
         )
 
     def get_linked_account(self, user_id: str):
+        print(f"Getting linked account for user_id={user_id}")
         for linked_account in self.linked_accounts:
-            if user_id == user_id:
+            if linked_account.user_id == user_id:
                 return linked_account.id
         return None
 
