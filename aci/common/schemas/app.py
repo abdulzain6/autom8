@@ -138,6 +138,7 @@ class AppBasic(BaseModel):
     display_name: str
     has_default_credentials: bool
     linked_account_id: str | None
+    security_schemes: list[SecurityScheme]
 
 
 class AppDetails(BaseModel):

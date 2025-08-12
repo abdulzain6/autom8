@@ -125,7 +125,8 @@ async def search_apps(
                     active=app.active,
                     display_name=app.display_name,
                     has_default_credentials=app.has_default_credentials,
-                    linked_account_id=app.get_linked_account(context.user.id)
+                    linked_account_id=app.get_linked_account(context.user.id),
+                    security_schemes=list(app.security_schemes.keys())
                 )
             )
         else:
@@ -139,7 +140,8 @@ async def search_apps(
                     active=app.active,
                     display_name=app.display_name,
                     has_default_credentials=app.has_default_credentials,
-                    linked_account_id=app.get_linked_account(context.user.id)
+                    linked_account_id=app.get_linked_account(context.user.id),
+                    security_schemes=list(app.security_schemes.keys())
                 )
             )
 
