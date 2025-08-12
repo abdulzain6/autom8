@@ -47,7 +47,7 @@ def update_my_profile(
 
 
 @router.post("/avatar")
-def upload_my_avatar(
+async def upload_my_avatar(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     file: UploadFile = File(...),
 ):
