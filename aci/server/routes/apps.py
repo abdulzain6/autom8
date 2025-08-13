@@ -18,6 +18,7 @@ from aci.common.schemas.function import BasicFunctionDefinition, FunctionDetails
 from aci.common.schemas.security_scheme import SecuritySchemesPublic
 from aci.server import config
 from aci.server import dependencies as deps
+from aci.server.routes import functions
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -58,7 +59,7 @@ def list_apps(
                 app.security_schemes
             ),
             has_default_credentials=app.has_default_credentials,
-            functions=None,
+            functions=[FunctionDetails.model_validate(function) for function in app.functions],
             created_at=app.created_at,
             updated_at=app.updated_at,
             is_configured=app.has_configuration,
