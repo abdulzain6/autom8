@@ -171,7 +171,7 @@ def link_account_with_api_key(
                 f"API key verification failed for app={body.app_name}. Error: {test_result.error}"
             )
             raise InvalidCredentials(
-                f"The provided API key for {body.app_name} is invalid. Service responded: {test_result.error}"
+                f"The provided API key for {body.app_name} is invalid."
             )
 
         logger.info(f"API key successfully verified for app={body.app_name}")

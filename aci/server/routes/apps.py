@@ -5,6 +5,7 @@ from openai import OpenAI
 
 from aci.common.db import crud
 from aci.common.embeddings import generate_embedding
+from aci.common.enums import SecurityScheme
 from aci.common.exceptions import AppNotFound
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import (
@@ -57,14 +58,13 @@ def list_apps(
                 app.security_schemes
             ),
             has_default_credentials=app.has_default_credentials,
-            functions=[
-                FunctionDetails.model_validate(function) for function in app.functions
-            ],
+            functions=None,
             created_at=app.created_at,
             updated_at=app.updated_at,
             is_configured=app.has_configuration,
             is_linked=app.has_linked_account(context.user.id),
-            linked_account_id=app.get_linked_account(context.user.id)
+            linked_account_id=app.get_linked_account(context.user.id),
+            instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get("instructions", None)
         )
         response.append(app_details)
 
@@ -199,7 +199,8 @@ def get_app_details(
         functions=[FunctionDetails.model_validate(function) for function in functions],
         created_at=app.created_at,
         updated_at=app.updated_at,
-        linked_account_id=app.get_linked_account(context.user.id)
+        linked_account_id=app.get_linked_account(context.user.id),
+        instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get("instructions", None)
     )
 
     return app_details

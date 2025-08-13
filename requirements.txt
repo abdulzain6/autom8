@@ -213,3 +213,4 @@ yfinance==0.2.65
 zipp==3.23.0
 redis==6.4.0
 python-magic==0.4.27
+the-python-bay==1.2.3

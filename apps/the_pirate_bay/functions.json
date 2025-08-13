@@ -1,0 +1,55 @@
+[
+  {
+    "name": "THE_PIRATE_BAY__SEARCH",
+    "description": "Searches The Pirate Bay for torrents based on a query.",
+    "tags": ["search", "torrents", "files", "movies", "tv shows"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search term or topic (e.g., 'ubuntu 22.04')."
+        }
+      },
+      "required": ["query"],
+      "visible": ["query"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "THE_PIRATE_BAY__GET_TOP_MOVIES",
+    "description": "Retrieves the current top 100 movie torrents from The Pirate Bay.",
+    "tags": ["movies", "top 100", "torrents", "entertainment"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "visible": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "THE_PIRATE_BAY__GET_TOP_TV_SHOWS",
+    "description": "Retrieves the current top 100 TV show torrents from The Pirate Bay.",
+    "tags": ["tv shows", "top 100", "series", "torrents", "entertainment"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "visible": [],
+      "additionalProperties": false
+    }
+  }
+]

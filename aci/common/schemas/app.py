@@ -157,8 +157,9 @@ class AppDetails(BaseModel):
     has_default_credentials: bool
     is_configured: bool
     is_linked: bool | None = None
-    functions: list[FunctionDetails]
+    functions: list[FunctionDetails] | None = None
     created_at: datetime
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
     linked_account_id: str | None
+    instructions: str | None = None

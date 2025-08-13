@@ -9,7 +9,11 @@
     "api_key": {
       "location": "header",
       "name": "Authorization",
-      "prefix": ""
+      "prefix": "",
+      "instructions": "https://cal.com/docs/api-reference/v1/authentication",
+      "test": {
+        "function_name": "CAL__GET_SCHEDULES"
+      }
     }
   },
   "default_security_credentials_by_scheme": {},

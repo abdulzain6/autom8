@@ -1,0 +1,19 @@
+{
+  "name": "THE_PIRATE_BAY",
+  "display_name": "The Pirate Bay",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/the-pirate-bay.png",
+  "provider": "the-python-bay (Unofficial)",
+  "version": "1.0.0",
+  "description": "Searches and retrieves data from The Pirate Bay using the unofficial the-python-bay library. Allows searching for torrents and fetching top movies and TV shows. Note: This tool provides access to torrent magnet links. Downloading copyrighted material may be illegal in your country. Please use responsibly.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Entertainment",
+    "Files",
+    "Search"
+  ],
+  "visibility": "public",
+  "active": true
+}

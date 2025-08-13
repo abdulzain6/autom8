@@ -12,7 +12,7 @@
       "prefix": "Bearer",
       "client_id": "{{ AIPOLABS_AIRTABLE_CLIENT_ID }}",
       "client_secret": "{{ AIPOLABS_AIRTABLE_CLIENT_SECRET }}",
-      "scope": "data.records:read data.records:write schema.bases:read schema.bases:write",
+      "scope": "data.records:read data.records:write schema.bases:read schema.bases:write webhook:manage",
       "authorize_url": "https://airtable.com/oauth2/v1/authorize",
       "access_token_url": "https://airtable.com/oauth2/v1/token",
       "refresh_token_url": "https://airtable.com/oauth2/v1/token"

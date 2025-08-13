@@ -5,7 +5,6 @@ from aci.common.enums import HttpLocation
 
 class TestFunction(BaseModel):
     function_name: str
-    default_params: Optional[Dict[str, Any]] = None
 
 
 class APIKeyScheme(BaseModel):
@@ -23,7 +22,6 @@ class APIKeyScheme(BaseModel):
     )
     instructions: Optional[HttpUrl] = None
     test: Optional[TestFunction] = None
-    required_fields: Optional[list] = None # For ActiveCampaign's account_name
 
 
 class APIKeySchemePublic(BaseModel):

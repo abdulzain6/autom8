@@ -9,7 +9,11 @@
     "api_key": {
       "location": "header",
       "name": "Authorization",
-      "prefix": "Bearer"
+      "prefix": "Bearer",
+      "instructions": "https://posthog.com/docs/api#private-endpoint-authentication",
+      "test": {
+        "function_name": "POSTHOG__ORGANIZATIONS"
+      }
     }
   },
   "default_security_credentials_by_scheme": {},
