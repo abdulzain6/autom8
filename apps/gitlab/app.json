@@ -1,7 +1,7 @@
 {
   "name": "GITLAB",
   "display_name": "GitLab",
-  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/gitlab.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/gitlab.png",
   "provider": "GitLab",
   "version": "2024-01-01",
   "description": "The GitLab API allows you to interact with GitLab programmatically, including repository management, merge requests, issues, commits, pipelines, and more.",
