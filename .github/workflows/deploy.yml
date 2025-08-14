@@ -31,6 +31,8 @@ jobs:
             echo "Performing rolling update for the 'code-executor'..."
             sudo docker compose up -d --no-deps --build code-executor
 
+            sudo docker compose up -d --no-deps --build cycletls-server
+            
             # Clean up old, unused Docker images to save space
             echo "Cleaning up old images..."
             sudo docker image prune -af

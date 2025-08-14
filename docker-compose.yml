@@ -69,6 +69,16 @@ services:
     networks:
       - services_network
 
+  cycletls-server:
+    build:
+      context: ./cycletls-server
+      dockerfile: Dockerfile
+    restart: always
+    dns:
+      - 8.8.8.8
+    networks:
+      - services_network
+
   seaweedfs-master:
     image: chrislusf/seaweedfs
     command: "master -ip=seaweedfs-master"

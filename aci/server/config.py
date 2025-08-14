@@ -1,3 +1,4 @@
+import os
 from aci.common.utils import check_and_get_env_variable, construct_db_url
 import dotenv
 
@@ -66,3 +67,8 @@ SEAWEEDFS_URL = check_and_get_env_variable("SERVER_SEAWEEDFS_URL")
 REDIS_URL = check_and_get_env_variable("SERVER_REDIS_URL")
 
 CODE_EXECUTOR_URL = check_and_get_env_variable("SERVER_CODE_EXECUTOR_URL")
+
+
+# CycleTLS Server Configuration
+CYCLE_TLS_SERVER_URL = check_and_get_env_variable("SERVER_CYCLE_TLS_SERVER_URL")
+HTTP_PROXY = os.getenv("SERVER_HTTP_PROXY")
