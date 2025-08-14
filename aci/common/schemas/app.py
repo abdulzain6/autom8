@@ -139,7 +139,7 @@ class AppBasic(BaseModel):
     has_default_credentials: bool
     linked_account_id: str | None
     security_schemes: list[SecurityScheme]
-
+    instructions: str | None = None
 
 class AppDetails(BaseModel):
     """A detailed public representation of an App."""

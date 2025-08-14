@@ -127,7 +127,8 @@ def search_apps(
                     display_name=app.display_name,
                     has_default_credentials=app.has_default_credentials,
                     linked_account_id=app.get_linked_account(context.user.id),
-                    security_schemes=list(app.security_schemes.keys())
+                    security_schemes=list(app.security_schemes.keys()),
+                    instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get("instructions", None)
                 )
             )
         else:
