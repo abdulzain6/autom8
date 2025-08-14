@@ -215,3 +215,4 @@ redis==6.4.0
 python-magic==0.4.27
 the-python-bay==1.2.3
 html2text==2025.4.15
+pytrends==4.9.2

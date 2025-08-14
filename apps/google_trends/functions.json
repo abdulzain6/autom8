@@ -1,0 +1,120 @@
+[
+  {
+    "name": "GOOGLE_TRENDS__GET_INTEREST_OVER_TIME",
+    "description": "Fetches the interest for a list of keywords over a specified time period. The interest is on a scale of 0 to 100.",
+    "tags": ["google", "trends", "interest", "history", "search", "keyword"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of up to 5 keywords to compare (e.g., ['Python', 'JavaScript'])."
+        },
+        "timeframe": {
+          "type": "string",
+          "description": "The time period to analyze. Defaults to 'today 3-m'. Examples: 'now 7-d', '2023-01-01 2023-12-31'."
+        },
+        "geo": {
+          "type": "string",
+          "description": "The geographical region as a two-letter country code (e.g., 'US', 'PK'). Defaults to worldwide."
+        }
+      },
+      "required": ["keywords"],
+      "visible": ["keywords", "timeframe", "geo"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "GOOGLE_TRENDS__GET_TRENDING_SEARCHES",
+    "description": "Fetches the top daily trending search queries for a specific country.",
+    "tags": ["google", "trends", "trending", "hot", "search", "daily"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "country_code": {
+          "type": "string",
+          "description": "The two-letter country code (e.g., 'US', 'GB', 'PK'). Defaults to 'US'."
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "The maximum number of trending searches to return. Defaults to 10."
+        }
+      },
+      "required": [],
+      "visible": ["country_code", "max_results"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "GOOGLE_TRENDS__GET_RELATED_QUERIES",
+    "description": "Finds 'top' and 'rising' search queries related to a given keyword.",
+    "tags": ["google", "trends", "related", "queries", "keyword", "seo"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "description": "The keyword to find related queries for (e.g., 'artificial intelligence')."
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "The maximum number of results to return for both 'top' and 'rising' categories. Defaults to 10."
+        }
+      },
+      "required": ["keyword"],
+      "visible": ["keyword", "max_results"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "GOOGLE_TRENDS__GET_INTEREST_BY_REGION",
+    "description": "Compares search interest for keywords by geographical region.",
+    "tags": ["google", "trends", "region", "geo", "interest", "map"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of keywords to compare."
+        },
+        "timeframe": {
+          "type": "string",
+          "description": "The time period to analyze. Defaults to 'today 3-m'."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "The level of regional detail. Can be 'COUNTRY', 'REGION', 'CITY', or 'DMA'. Defaults to 'COUNTRY'."
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "The maximum number of regions to return. Defaults to 20."
+        }
+      },
+      "required": ["keywords"],
+      "visible": ["keywords", "timeframe", "resolution", "max_results"],
+      "additionalProperties": false
+    }
+  }
+]

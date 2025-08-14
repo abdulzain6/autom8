@@ -1,0 +1,19 @@
+{
+  "name": "GOOGLE_TRENDS",
+  "display_name": "Google Trends",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/google-trends.png",
+  "provider": "Google",
+  "version": "1.0.0",
+  "description": "An interface for Google Trends, allowing programmatic access to analyze the popularity of search queries in Google Search across various regions and languages.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Data",
+    "Marketing",
+    "Research"
+  ],
+  "visibility": "public",
+  "active": true
+}
