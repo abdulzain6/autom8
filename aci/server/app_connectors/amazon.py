@@ -182,10 +182,12 @@ class Amazon(AppConnectorBase):
         """Extracts all product data from a single search result page."""
         product_divs = soup.find_all("div", {"data-component-type": "s-search-result"})
         products = [self._parse_product_div(div) for div in product_divs]
-        return [p for p in products if p is not None]  # Filter out failed parses
+        return [p for p in products if p is not None] # Filter out failed parses
 
     def _parse_product_div(self, div: Tag) -> Optional[Product]:
-        """Parses a single product div from a search results page."""
+        """
+        Parses a single product div from a search results page with robust price extraction.
+        """
         asin = self._safe_extract(lambda: div.get("data-asin"), "")
         if not asin:
             return None
@@ -197,6 +199,22 @@ class Amazon(AppConnectorBase):
         if self.affiliate_tag and full_url:
             full_url = transform_to_affiliate_link(full_url, self.affiliate_tag)
 
+        # --- ROBUST PRICE EXTRACTION LOGIC ---
+        price_str = "N/A"
+        price_container = self._safe_extract(lambda: div.find("span", class_="a-price"))
+        if price_container:
+            # Primary method: Look for the screen-reader friendly price.
+            offscreen_price = self._safe_extract(lambda: price_container.find("span", class_="a-offscreen").text)
+            if offscreen_price:
+                price_str = offscreen_price
+            else:
+                # Fallback method: Reconstruct the price from its visual parts.
+                symbol = self._safe_extract(lambda: price_container.find("span", class_="a-price-symbol").text, "")
+                whole = self._safe_extract(lambda: price_container.find("span", class_="a-price-whole").text, "")
+                fraction = self._safe_extract(lambda: price_container.find("span", class_="a-price-fraction").text, "")
+                if whole:  # Only construct if the main part exists
+                    price_str = f"{symbol}{whole}{fraction}"
+        
         rating_text = self._safe_extract(
             lambda: div.find("span", class_="a-icon-alt").text.split()[0], "0.0"
         )
@@ -210,9 +228,7 @@ class Amazon(AppConnectorBase):
                     lambda: div.find("h2").get_text(strip=True), "N/A"
                 ),
                 url=full_url,
-                price=self._safe_extract(
-                    lambda: div.find("span", class_="a-offscreen").text, "N/A"
-                ),
+                price=price_str,  # Use the robustly extracted price string
                 rating=float(rating_text),
                 review_count=int(re.sub(r"[^\d]", "", review_count_text)),
                 asin=asin,
@@ -223,61 +239,41 @@ class Amazon(AppConnectorBase):
         except (ValueError, TypeError):
             return None
 
+
     def _parse_detailed_product_page(self, soup: BeautifulSoup) -> DetailedProduct:
         """Parses the main content of a detailed product page."""
-        review_count_text = self._safe_extract(
-            lambda: soup.find(id="acrCustomerReviewText").get_text(strip=True), "0"
-        )
-        review_count_match = re.search(r"[\d,]+", review_count_text)
+        review_count_text = self._safe_extract(lambda: soup.find(id="acrCustomerReviewText").get_text(strip=True), "0")
+        review_count_match = re.search(r'[\d,]+', review_count_text)
+
+        # --- ROBUST PRICE EXTRACTION FOR DETAIL PAGE ---
+        price_str = "N/A"
+        # Look for the main price container div
+        price_div = self._safe_extract(lambda: soup.find(id="corePrice_feature_div"))
+        if price_div:
+            price_container = self._safe_extract(lambda: price_div.find("span", class_="a-price"))
+            if price_container:
+                # Primary method: Look for the screen-reader friendly price.
+                offscreen_price = self._safe_extract(lambda: price_container.find("span", class_="a-offscreen").text)
+                if offscreen_price:
+                    price_str = offscreen_price
+                else:
+                    # Fallback method: Reconstruct the price from its visual parts.
+                    symbol = self._safe_extract(lambda: price_container.find("span", class_="a-price-symbol").text, "")
+                    whole = self._safe_extract(lambda: price_container.find("span", class_="a-price-whole").text, "")
+                    fraction = self._safe_extract(lambda: price_container.find("span", class_="a-price-fraction").text, "")
+                    if whole:
+                        price_str = f"{symbol}{whole}{fraction}"
 
         return DetailedProduct(
-            title=self._safe_extract(
-                lambda: soup.find(id="productTitle").get_text(strip=True), ""
-            ),
-            price=self._safe_extract(
-                lambda: soup.find(class_="priceToPay").get_text(strip=True), "N/A"
-            ),
-            rating=self._safe_extract(
-                lambda: float(
-                    soup.select_one(
-                        "#acrPopover .a-size-base.a-color-base"
-                    ).text.split()[0]
-                ),
-                0.0,
-            ),
-            review_count=(
-                int(review_count_match.group().replace(",", ""))
-                if review_count_match
-                else 0
-            ),
-            description=self._safe_extract(
-                lambda: soup.find(id="productDescription").get_text(strip=True), ""
-            ),
+            title=self._safe_extract(lambda: soup.find(id="productTitle").get_text(strip=True), ""),
+            price=price_str, # Use the robustly extracted price
+            rating=self._safe_extract(lambda: float(soup.select_one("#acrPopover .a-size-base.a-color-base").text.split()[0]), 0.0),
+            review_count=int(review_count_match.group().replace(',', '')) if review_count_match else 0,
+            description=self._safe_extract(lambda: soup.find(id="productDescription").get_text(strip=True), ""),
             image_url=self._safe_extract(lambda: soup.find(id="landingImage")["src"]),
-            product_info=self._safe_extract(
-                lambda: self.text_converter.handle(
-                    str(soup.find(id="centerCol"))
-                ).strip(),
-                "",
-            ),
-            features=self._safe_extract(
-                lambda: self.text_converter.handle(
-                    str(soup.find(id="aplus_feature_div"))
-                ).strip(),
-                "",
-            ),
-            seller_name=self._safe_extract(
-                lambda: soup.find(id="bylineInfo").get_text(strip=True), "" # type: ignore
-            ),
-            seller_link=self._safe_extract(
-                lambda: f"{self.base_url}{soup.find(id='bylineInfo')['href']}" # type: ignore
-            ),
-            video_urls=self._safe_extract(
-                lambda: [
-                    a["href"]
-                    for a in soup.select("#vse-cards-vw-dp a")
-                    if "vdp" in a.get("href", "") # type: ignore
-                ],
-                [],
-            ),
+            product_info=self._safe_extract(lambda: self.text_converter.handle(str(soup.find(id="centerCol"))).strip(), ""),
+            features=self._safe_extract(lambda: self.text_converter.handle(str(soup.find(id="aplus_feature_div"))).strip(), ""),
+            seller_name=self._safe_extract(lambda: soup.find(id="bylineInfo").get_text(strip=True), ""),
+            seller_link=self._safe_extract(lambda: f"{self.base_url}{soup.find(id='bylineInfo')['href']}"),
+            video_urls=self._safe_extract(lambda: [a['href'] for a in soup.select("#vse-cards-vw-dp a") if 'vdp' in a.get('href', '')], [])
         )

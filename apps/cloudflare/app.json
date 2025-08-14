@@ -9,7 +9,11 @@
         "api_key": {
             "location": "header",
             "name": "Authorization",
-            "prefix": "Bearer"
+            "prefix": "Bearer",
+            "instructions": "https://developers.cloudflare.com/fundamentals/api/get-started/create-token/",
+            "test": {
+                "function_name": "CLOUDFLARE__LIST_ZONES"
+            }
         }
     },
     "default_security_credentials_by_scheme": {},
