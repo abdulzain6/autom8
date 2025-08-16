@@ -36,6 +36,8 @@ services:
       - storage_network
       - services_network
       - web_proxy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # --- 3. LiveKit Server (Public Facing) ---
   livekit:
