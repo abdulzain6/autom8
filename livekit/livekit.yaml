@@ -1,4 +1,4 @@
-# livekit.yaml - Final Corrected Version
+# livekit.yaml - Final Simplified Version
 
 port: 7880
 
@@ -8,11 +8,12 @@ rtc:
   tcp_port: 7881
   port_range_start: 50000
   port_range_end: 60000
+  # This tells LiveKit to automatically discover its public IP for media.
   use_external_ip: true
-
 
 turn:
   enabled: true
+  # This tells the TURN server its public domain for relaying.
   domain: getautom8.app
   udp_port: 3478
 

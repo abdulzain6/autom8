@@ -10,14 +10,15 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "7881:7881/udp"
+      - "7881:7881/tcp" 
+      - "3478:3478/udp"
+      - "50000-60000:50000-60000/udp"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
     networks:
       - web_proxy
-
 
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
