@@ -1,23 +1,23 @@
-# livekit.yaml - Final Version
+# livekit.yaml - Final Corrected Version
 
 port: 7880
+
+log_level: info
 
 rtc:
   tcp_port: 7881
   port_range_start: 50000
   port_range_end: 60000
+  # This tells LiveKit to automatically discover its public IP.
   use_external_ip: true
-  nat_1_to_1_ip: "getautom8.app"
 
 turn:
   enabled: true
-  udp_port: 3478
-  # Explicitly set the domain for the TURN server
+  # The domain must point to your server's public IP.
   domain: getautom8.app
+  # Standard TURN port (must be open in firewall and Caddy).
+  udp_port: 3478
 
 keys:
   # Replace with your actual API key and secret
   APIf7b1a9c3e4d5a6b7: aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890aBcDeF
-
-logging:
-  level: info
