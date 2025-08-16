@@ -1,4 +1,4 @@
-# livekit.yaml - Final Corrected Version
+# livekit.yaml - Final Version with Agent Framework Enabled
 
 port: 7880
 
@@ -8,15 +8,15 @@ rtc:
   tcp_port: 7881
   port_range_start: 50000
   port_range_end: 60000
-  # This tells LiveKit to automatically discover its public IP.
   use_external_ip: true
 
 turn:
   enabled: true
-  # The domain must point to your server's public IP.
   domain: getautom8.app
-  # Standard TURN port (must be open in firewall and Caddy).
   udp_port: 3478
+
+# ADD THIS BLOCK to enable the agent framework on the server
+agent: {}
 
 keys:
   # Replace with your actual API key and secret
