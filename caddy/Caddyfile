@@ -1,17 +1,15 @@
 # Global options
 {
-    # Enable debug logging temporarily
     debug
     
-    # Layer4 app configuration - this is required for the L4 plugin
+    # Corrected Layer4 app configuration
     layer4 {
-        # ADD THIS BLOCK: This is the essential range for LiveKit's UDP media.
+        # This block handles the UDP media range.
         udp :50000-60000 {
             proxy livekit
         }
 
-        
-        # This is for TCP fallback, not primary UDP media.
+        # This block handles the TCP fallback.
         tcp :7881 {
             proxy livekit:7881
         }
