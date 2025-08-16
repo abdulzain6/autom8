@@ -1,22 +1,23 @@
-# livekit.yaml
-# Corrected configuration for the latest LiveKit server versions
+# livekit.yaml - Final Version
 
 port: 7880
 
-# This section is crucial for running behind a reverse proxy in Docker.
 rtc:
   tcp_port: 7881
   port_range_start: 50000
   port_range_end: 60000
-
-# The 'keys' block is where you define your API credentials.
-# The format is a map of YOUR_API_KEY: YOUR_API_SECRET
-keys:
-  APIf7b1a9c3e4d5a6b7: aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890aBcDeF
-
-logging:
-  level: info
+  use_external_ip: true
+  nat_1_to_1_ip: "getautom8.app"
 
 turn:
   enabled: true
   udp_port: 3478
+  # Explicitly set the domain for the TURN server
+  domain: getautom8.app
+
+keys:
+  # Replace with your actual API key and secret
+  APIf7b1a9c3e4d5a6b7: aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890aBcDeF
+
+logging:
+  level: info
