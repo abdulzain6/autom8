@@ -33,7 +33,6 @@ services:
       start_period: 30s
       timeout: 10s
     networks:
-      - web_proxy
       - executor_network
       - storage_network
       - services_network
@@ -46,8 +45,6 @@ services:
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     network_mode: "host"
-    networks:
-      - web_proxy
 
   # --- 4. Internal Services (Grouped by Isolated Networks) ---
   code-executor:
