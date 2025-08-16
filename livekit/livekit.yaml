@@ -8,7 +8,7 @@ rtc:
   tcp_port: 7881
   port_range_start: 50000
   port_range_end: 60000
-  
+
 # The 'keys' block is where you define your API credentials.
 # The format is a map of YOUR_API_KEY: YOUR_API_SECRET
 keys:
@@ -16,3 +16,7 @@ keys:
 
 logging:
   level: info
+
+turn:
+  enabled: true
+  udp_port: 3478

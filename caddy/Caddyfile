@@ -17,6 +17,12 @@
                 proxy livekit:7881
             }
         }
+
+        udp/:3478 {
+            route {
+                proxy livekit:3478
+            }
+        }
     }
 }
 
