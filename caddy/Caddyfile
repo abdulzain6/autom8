@@ -9,7 +9,7 @@ lk.getautom8.app {
         -Server
     }
 
-    reverse_proxy livekit:7880 {
+    reverse_proxy host.docker.internal:7880 {
         header_up Host {host}
         header_up X-Forwarded-For {remote_host}
     }
