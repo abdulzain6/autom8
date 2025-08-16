@@ -5,11 +5,14 @@
     
     # Layer4 app configuration - this is required for the L4 plugin
     layer4 {
-        # UDP listener for LiveKit
-        :7881 {
-            route {
-                proxy livekit:7881
-            }
+        # ADD THIS BLOCK: This is the essential range for LiveKit's UDP media.
+        udp :50000-60000 {
+            proxy livekit:50000-60000
+        }
+        
+        # This is for TCP fallback, not primary UDP media.
+        tcp :7881 {
+            proxy livekit:7881
         }
     }
 }
