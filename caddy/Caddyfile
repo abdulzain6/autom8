@@ -7,8 +7,9 @@
     layer4 {
         # ADD THIS BLOCK: This is the essential range for LiveKit's UDP media.
         udp :50000-60000 {
-            proxy livekit:50000-60000
+            proxy livekit
         }
+
         
         # This is for TCP fallback, not primary UDP media.
         tcp :7881 {
