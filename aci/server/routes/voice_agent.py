@@ -46,7 +46,6 @@ async def start_session(
             api.CreateAgentDispatchRequest(
                 room=room_name,
                 metadata=json.dumps(agent_metadata),
-                agent_name="Autom8 AI",
             )
         )
     except Exception as e:

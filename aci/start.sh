@@ -1,6 +1,7 @@
 #!/bin/sh
 
 echo "Database is up. Running migrations..."
+
 alembic upgrade head
 echo "Database migrations completed."
 

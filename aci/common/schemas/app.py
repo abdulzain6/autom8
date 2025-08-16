@@ -17,24 +17,27 @@ from aci.common.schemas.security_scheme import (
 
 class DefaultAppCredentialCreate(BaseModel):
     """Schema for creating default app credentials."""
+
     security_scheme: SecurityScheme
-    credentials: APIKeySchemeCredentials | OAuth2SchemeCredentials | NoAuthSchemeCredentials
+    credentials: (
+        APIKeySchemeCredentials | OAuth2SchemeCredentials | NoAuthSchemeCredentials
+    )
 
 
 class AppUpsert(BaseModel, extra="ignore"):
     """
     Schema for creating or updating an App.
     """
+
     name: str
     display_name: str
     provider: str
     version: str
     description: str
-    logo: str | None # Changed to optional to be more flexible
+    logo: str | None  # Changed to optional to be more flexible
     categories: list[str]
     active: bool
     security_schemes: dict[SecurityScheme, APIKeyScheme | OAuth2Scheme | NoAuthScheme]
-
 
     @field_validator("name")
     def validate_name(cls, v: str) -> str:
@@ -52,15 +55,21 @@ class AppUpsert(BaseModel, extra="ignore"):
             if scheme_type == SecurityScheme.API_KEY and not isinstance(
                 scheme_config, APIKeyScheme
             ):
-                raise ValueError(f"Invalid configuration for API_KEY scheme: {scheme_config}")
+                raise ValueError(
+                    f"Invalid configuration for API_KEY scheme: {scheme_config}"
+                )
             elif scheme_type == SecurityScheme.OAUTH2 and not isinstance(
                 scheme_config, OAuth2Scheme
             ):
-                raise ValueError(f"Invalid configuration for OAUTH2 scheme: {scheme_config}")
+                raise ValueError(
+                    f"Invalid configuration for OAUTH2 scheme: {scheme_config}"
+                )
             elif scheme_type == SecurityScheme.NO_AUTH and not isinstance(
                 scheme_config, NoAuthScheme
             ):
-                raise ValueError(f"Invalid configuration for NO_AUTH scheme: {scheme_config}")
+                raise ValueError(
+                    f"Invalid configuration for NO_AUTH scheme: {scheme_config}"
+                )
         return v
 
 
@@ -68,6 +77,7 @@ class AppEmbeddingFields(BaseModel):
     """
     Fields used to generate app embedding.
     """
+
     name: str
     display_name: str
     provider: str
@@ -79,6 +89,7 @@ class AppsSearch(BaseModel):
     """
     Parameters for searching applications.
     """
+
     intent: str | None = Field(
         default=None,
         description="Natural language intent for vector similarity sorting. Results will be sorted by relevance to the intent.",
@@ -118,7 +129,10 @@ class AppsList(BaseModel):
     """
     Parameters for listing Apps.
     """
-    app_names: list[str] | None = Field(default=None, description="List of app names to filter by.")
+
+    app_names: list[str] | None = Field(
+        default=None, description="List of app names to filter by."
+    )
     limit: int = Field(
         default=100, ge=1, le=1000, description="Maximum number of Apps per response."
     )
@@ -127,6 +141,7 @@ class AppsList(BaseModel):
 
 class AppBasic(BaseModel):
     """A minimal representation of an App."""
+
     name: str
     description: str
     functions: list[BasicFunctionDefinition] | None = None
@@ -141,8 +156,10 @@ class AppBasic(BaseModel):
     security_schemes: list[SecurityScheme]
     instructions: str | None = None
 
+
 class AppDetails(BaseModel):
     """A detailed public representation of an App."""
+
     id: str
     name: str
     display_name: str

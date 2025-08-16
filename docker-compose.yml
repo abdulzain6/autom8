@@ -22,8 +22,8 @@ services:
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
     build:
-      context: .
-      dockerfile: Dockerfile.server
+      context: ./aci
+      dockerfile: Dockerfile
     restart: always
     command: /bin/sh start.sh
     healthcheck:
