@@ -1,32 +1,3 @@
-# Global options
-{
-    debug
-    
-    # Corrected Layer4 app configuration
-    layer4 {
-        # This block handles the UDP media range using the correct syntax.
-        udp/:50000-60000 {
-            route {
-                proxy livekit
-            }
-        }
-
-        # This block handles the TCP fallback.
-        tcp/:7881 {
-            route {
-                proxy livekit:7881
-            }
-        }
-
-        udp/:3478 {
-            route {
-                proxy livekit:3478
-            }
-        }
-    }
-}
-
-# LiveKit WebRTC endpoint (HTTP/S)
 lk.getautom8.app {
     # Add CORS headers for WebRTC. This handles OPTIONS preflight automatically.
     @options method OPTIONS
