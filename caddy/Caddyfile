@@ -4,16 +4,15 @@
     
     # Corrected Layer4 app configuration
     layer4 {
-        # This block handles the UDP media range.
-        # The 'proxy' directive MUST be inside a 'route' block.
-        udp :50000-60000 {
+        # This block handles the UDP media range using the correct syntax.
+        udp/:50000-60000 {
             route {
                 proxy livekit
             }
         }
 
         # This block handles the TCP fallback.
-        tcp :7881 {
+        tcp/:7881 {
             route {
                 proxy livekit:7881
             }
