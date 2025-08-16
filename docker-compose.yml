@@ -16,7 +16,8 @@ services:
       - caddy_config:/config
     networks:
       - web_proxy
-
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
     build:
@@ -34,6 +35,7 @@ services:
       - executor_network
       - storage_network
       - services_network
+      - web_proxy
 
   # --- 3. LiveKit Server (Public Facing) ---
   livekit:
