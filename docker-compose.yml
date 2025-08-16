@@ -45,6 +45,7 @@ services:
     command: --config /etc/livekit.yaml
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
+    network_mode: "host"
     networks:
       - web_proxy
 
