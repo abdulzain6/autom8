@@ -10,15 +10,6 @@ rtc:
   port_range_end: 60000
   use_external_ip: true
 
-# Redis is REQUIRED for the Agent Framework to work.
-redis:
-  # This should be the service name of your redis container in docker-compose.yml
-  address: redis:6379 
-
-  # The agent block MUST be nested inside the redis block.
-  agent:
-    # Set to true to enable the agent framework.
-    enabled: true
 
 turn:
   enabled: true
