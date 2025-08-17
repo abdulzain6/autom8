@@ -36,8 +36,6 @@ services:
       - storage_network
       - services_network
       - web_proxy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   # --- 3. LiveKit Server (Public Facing) ---
   livekit:
@@ -46,8 +44,6 @@ services:
     command: --config /etc/livekit.yaml
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
     - web_proxy
 
@@ -56,8 +52,6 @@ services:
       context: ./voice_agent
       dockerfile: Dockerfile
     restart: always
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - web_proxy
 
