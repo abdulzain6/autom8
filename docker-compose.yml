@@ -48,13 +48,18 @@ services:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+    - web_proxy
 
   voice_agent:
     build:
       context: ./voice_agent
       dockerfile: Dockerfile
     restart: always
-    network_mode: "host"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - web_proxy
 
   # --- 4. Internal Services (Grouped by Isolated Networks) ---
   code-executor:
