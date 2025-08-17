@@ -42,6 +42,13 @@ services:
     image: livekit/livekit-server:latest
     restart: always
     command: --config /etc/livekit.yaml
+    ports:
+      # RTC Media Port Range (UDP) for audio/video streams
+      - "50000-60000:50000-60000/udp"
+      # TURN Port (UDP) for relaying media through difficult networks
+      - "3478:3478/udp"
+      # RTC Fallback Port (TCP) for clients on restrictive networks
+      - "7881:7881/tcp"
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     networks:
