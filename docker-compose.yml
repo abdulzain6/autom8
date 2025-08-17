@@ -46,7 +46,8 @@ services:
     command: --config /etc/livekit.yaml
     volumes:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
-    network_mode: "host"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   voice_agent:
     build:
