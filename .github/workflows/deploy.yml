@@ -22,7 +22,7 @@ jobs:
             git pull origin master
 
             # Perform a zero-downtime rolling update for the 'server' service.
-            # --no-deps ensures that other services (like Traefik) are not touched.
+            # --no-deps ensures that other services are not touched.
             # --build tells Compose to rebuild the image for this service.
             echo "Performing rolling update for the 'server'..."
             sudo docker compose up -d --no-deps --build server
@@ -30,9 +30,15 @@ jobs:
             # Perform a zero-downtime rolling update for the 'code-executor' service.
             echo "Performing rolling update for the 'code-executor'..."
             sudo docker compose up -d --no-deps --build code-executor
-
+            
+            # Perform a zero-downtime rolling update for the 'cycletls-server' service.
+            echo "Performing rolling update for the 'cycletls-server'..."
             sudo docker compose up -d --no-deps --build cycletls-server
             
+            # Perform a zero-downtime rolling update for the 'voice_agent' service.
+            echo "Performing rolling update for the 'voice_agent'..."
+            sudo docker compose up -d --no-deps --build voice_agent
+
             # Clean up old, unused Docker images to save space
             echo "Cleaning up old images..."
             sudo docker image prune -af
