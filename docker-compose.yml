@@ -49,7 +49,7 @@ services:
     ports:
       - "7881:7881/tcp"            # WebRTC TCP
       - "3478:3478/udp"            # STUN/TURN
-      - "20000-22000:20000-22000/udp"
+      - "20000-21000:20000-21000/udp"
     networks:
       - web_proxy
 

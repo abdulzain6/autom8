@@ -7,8 +7,7 @@ log_level: info
 rtc:
   tcp_port: 7881
   port_range_start: 20000
-  port_range_end: 22000
-  # This tells LiveKit to automatically discover its public IP for media.
+  port_range_end: 21000
   use_external_ip: true
 
 turn:
