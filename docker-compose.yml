@@ -49,7 +49,7 @@ services:
     ports:
       - "7881:7881/tcp"            # WebRTC TCP
       - "3478:3478/udp"            # STUN/TURN
-      - "50000-60000:50000-60000/udp"  # Media relay range
+      - "20000-30000:20000-30000/udp"
     networks:
       - web_proxy
 
