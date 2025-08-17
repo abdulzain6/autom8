@@ -13,11 +13,12 @@ from livekit.agents import (
     RoomInputOptions,
 )
 from livekit.plugins import (
-    openai,
+    assemblyai,
     noise_cancellation,
     silero,
+    openai,
+    inworld
 )
-from gemini_tts import TTS as GeminiTTS
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 
@@ -33,19 +34,25 @@ You are a Autom8 an AI voice assistant talking to users through voice only.
 Speak naturally, like a real person. No lists, no summaries, no robotic tone.
 Keep replies short, clear, and conversational. Just talk—dont write.
 Avoid punctuation thats hard to speak or sounds unnatural.
+If something the user says does not make sense, they maybe speaking differnt language.
+If a user speaks in a different language, respond in english. Do what they as you to do though, let them know you only know english.
 """,
-            stt=openai.STT(
-                detect_language=True,
-                model=os.getenv("OPENAI_STT_MODEL", "gpt-4o-mini-transcribe")
+            stt=assemblyai.STT(
+                api_key=os.environ["ASSEMBLYAI_API_KEY"],
+                format_turns=False,
+                max_turn_silence=1000,
+                min_end_of_turn_silence_when_confident=100,
+                end_of_turn_confidence_threshold=0.6
             ),
             llm=openai.LLM(
-                model="Qwen/Qwen3-235B-A22B-Instruct-2507-tput",
-                base_url=os.environ["TOGETHERAI_BASE_URL"],
-                api_key=os.environ["TOGETHERAI_API_KEY"],
+                model="Qwen/Qwen3-235B-A22B-Instruct-2507",
+                base_url=os.environ["DEEPINFRA_BASE_URL"],
+                api_key=os.environ["DEEPINFRA_API_KEY"],
+                reasoning_effort="low"
             ),
-            tts=GeminiTTS(
-                model=os.getenv("GOOGLE_TTS_MODEL", "gemini-1.5-flash-latest"),
-                api_key=os.environ["GOOGLE_API_KEY"],
+            tts=inworld.TTS(
+                model="inworld-tts-1",
+                api_key=os.environ["INWORLD_API_KEY"],
             ),
             turn_detection=MultilingualModel(),
         )
@@ -88,7 +95,7 @@ async def entrypoint(ctx: JobContext):
         room=ctx.room,
         agent=Assistant(),
         room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
+           noise_cancellation=noise_cancellation.BVC(),
         ),
     )
 

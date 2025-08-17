@@ -48,6 +48,13 @@ services:
       - ./livekit/livekit.yaml:/etc/livekit.yaml
     network_mode: "host"
 
+  voice_agent:
+    build:
+      context: ./voice_agent
+      dockerfile: Dockerfile
+    restart: always
+    network_mode: "host"
+
   # --- 4. Internal Services (Grouped by Isolated Networks) ---
   code-executor:
     build:
