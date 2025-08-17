@@ -13,6 +13,8 @@ COPY requirements.txt .
 # This step will use the cache as long as requirements.txt hasn't changed.
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY agent.py .
+
 RUN python agent.py download-files
 # 3. Copy the rest of your application code.
 # This layer now only changes if your source files change.
