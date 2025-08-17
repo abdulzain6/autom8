@@ -49,15 +49,9 @@ services:
     ports:
       - "7881:7881/tcp"            # WebRTC TCP
       - "3478:3478/udp"            # STUN/TURN
-      - "50000-60000:50000-60000/udp"  # Media relay range
+      - "50000-50100:50000-50100/udp"  # Media relay range
     networks:
       - web_proxy
-    healthcheck: 
-      test: ["CMD", "curl", "-f", "http://localhost:7880/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
 
   # --- 4. Voice Agent ---
   voice_agent:
@@ -67,9 +61,6 @@ services:
     restart: always
     networks:
       - web_proxy
-    depends_on:
-      livekit:
-        condition: service_healthy
 
   # --- 5. Internal Services ---
   code-executor:
