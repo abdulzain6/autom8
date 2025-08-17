@@ -49,7 +49,7 @@ services:
     ports:
       - "7881:7881/tcp"            # WebRTC TCP
       - "3478:3478/udp"            # STUN/TURN
-      - "50000-50100:50000-50100/udp"  # Media relay range
+      - "50000-60000:50000-60000/udp"  # Media relay range
     networks:
       - web_proxy
 
@@ -99,12 +99,7 @@ services:
     networks:
       - storage_network
     restart: always
-    healthcheck: 
-      test: ["CMD", "curl", "-f", "http://localhost:9333/dir/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+
 
   seaweedfs-volume:
     image: chrislusf/seaweedfs
@@ -114,9 +109,6 @@ services:
     networks:
       - storage_network
     restart: always
-    depends_on: 
-      seaweedfs-master:
-        condition: service_healthy
 
   seaweedfs-filer:
     image: chrislusf/seaweedfs
@@ -124,9 +116,6 @@ services:
     restart: always
     networks:
       - storage_network
-    depends_on: 
-      seaweedfs-master:
-        condition: service_healthy
 
   redis:
     image: redis:7-alpine
