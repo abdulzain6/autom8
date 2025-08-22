@@ -12,7 +12,6 @@ rtc:
 
 turn:
   enabled: true
-  # This tells the TURN server its public domain for relaying.
   domain: getautom8.app
   udp_port: 3478
 

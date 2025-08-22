@@ -12,7 +12,6 @@ for example,
    (https://github.com/pgvector/pgvector)
 """
 
-# TODO: ideally shouldn't need it in python 3.12 for forward reference?
 from __future__ import annotations
 
 from datetime import datetime
@@ -22,13 +21,16 @@ import uuid
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    JSON,
     TIMESTAMP,
     BigInteger,
     Boolean,
     Column,
     DateTime,
+    Enum,
     ForeignKey,
     String,
+    Table,
     Text,
     UniqueConstraint,
     func,
@@ -52,6 +54,7 @@ from aci.common.db.custom_sql_types import (
 )
 from aci.common.enums import (
     Protocol,
+    RunStatus,
     SecurityScheme,
 )
 
@@ -89,6 +92,7 @@ class UserProfile(Base):
     def __init__(self, id: str, **kwargs):
         self.id = id
         super().__init__(**kwargs)
+
 
 class Function(Base):
     """
@@ -146,6 +150,16 @@ class Function(Base):
     @property
     def app_name(self) -> str:
         return str(self.app.name)
+
+
+automation_template_apps = Table(
+    "automation_template_apps",
+    Base.metadata,
+    Column(
+        "template_id", String, ForeignKey("automation_templates.id"), primary_key=True
+    ),
+    Column("app_id", String, ForeignKey("apps.id"), primary_key=True),
+)
 
 
 class App(Base):
@@ -450,10 +464,149 @@ class Artifact(Base):
     filename: Mapped[str] = mapped_column(String, nullable=False)
     mime_type: Mapped[str] = mapped_column(String, nullable=False)
     size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    expires_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
-    id: Mapped[str] = mapped_column(String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False)
+    expires_at: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=True
+    )
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
+    )
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
     user: Mapped[SupabaseUser] = relationship("SupabaseUser", lazy="select", init=False)
+
+    automation_runs: Mapped[List["AutomationRun"]] = relationship(
+        "AutomationRun",
+        secondary="automation_run_artifacts",
+        back_populates="artifacts",
+    )
+
+
+class Automation(Base):
+    __tablename__ = "automations"
+
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+    last_run_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    cron_schedule: Mapped[Optional[str]] = mapped_column(String(255))
+    linked_accounts: Mapped[List["AutomationLinkedAccount"]] = relationship(
+        back_populates="automation", cascade="all, delete-orphan"
+    )
+    runs: Mapped[List["AutomationRun"]] = relationship(
+        back_populates="automation", cascade="all, delete-orphan"
+    )
+    goal: Mapped[str] = mapped_column(Text)
+    is_deep: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_recurring: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    last_run_status: Mapped[RunStatus] = mapped_column(
+        Enum(RunStatus), default=RunStatus.never_run
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
+    )
+
+
+class AutomationRun(Base):
+    __tablename__ = "automation_runs"
+
+    automation_id: Mapped[str] = mapped_column(
+        ForeignKey("automations.id"), nullable=False
+    )
+    finished_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), init=False
+    )
+
+    logs: Mapped[Optional[dict]] = mapped_column(JSON, init=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+
+    automation: Mapped["Automation"] = relationship(back_populates="runs", init=False)
+    artifacts: Mapped[List["Artifact"]] = relationship(
+        "Artifact",
+        secondary="automation_run_artifacts",
+        back_populates="automation_runs",
+        init=False,
+    )
+    status: Mapped[RunStatus] = mapped_column(
+        Enum(RunStatus), default=RunStatus.in_progress
+    )
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
+    )
+
+
+class AutomationLinkedAccount(Base):
+    __tablename__ = "automation_linked_accounts"
+
+    automation_id: Mapped[str] = mapped_column(
+        ForeignKey("automations.id", ondelete="CASCADE"), nullable=False
+    )
+    linked_account_id: Mapped[str] = mapped_column(
+        ForeignKey("linked_accounts.id", ondelete="CASCADE"), nullable=False
+    )
+    automation: Mapped["Automation"] = relationship(
+        "Automation", back_populates="linked_accounts", init=False
+    )
+    linked_account: Mapped["LinkedAccount"] = relationship(
+        "LinkedAccount", lazy="select", init=False
+    )
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
+    )
+
+
+# ---------- Link Table ----------
+automation_run_artifacts = Table(
+    "automation_run_artifacts",
+    Base.metadata,
+    Column(
+        "automation_run_id", String, ForeignKey("automation_runs.id"), primary_key=True
+    ),
+    Column("artifact_id", String, ForeignKey("artifacts.id"), primary_key=True),
+)
+
+
+class AutomationTemplate(Base):
+    """
+    Represents a pre-built automation template that users can instantiate.
+    """
+
+    __tablename__ = "automation_templates"
+
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    goal: Mapped[str] = mapped_column(
+        Text, nullable=False, comment="A Jinja2 template for the automation's goal."
+    )
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default_factory=lambda: str(uuid.uuid4())
+    )
+    variable_names: Mapped[List[str]] = mapped_column(
+        ARRAY(String),
+        nullable=False,
+        default_factory=list,
+        comment="List of variable names used in the goal template.",
+    )
+    is_deep: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    tags: Mapped[List[str]] = mapped_column(
+        ARRAY(String), nullable=False, default_factory=list
+    )
+    # Many-to-many relationship with App
+    required_apps: Mapped[List["App"]] = relationship(
+        "App",
+        secondary=automation_template_apps,
+        lazy="selectin",  # Use 'selectin' for efficient loading of related apps
+        init=False,
+    )
 
 
 __all__ = [
@@ -464,4 +617,7 @@ __all__ = [
     "LinkedAccount",
     "Secret",
     "Artifact",
+    "Automation",
+    "AutomationRun",
+    "AutomationLinkedAccount",
 ]

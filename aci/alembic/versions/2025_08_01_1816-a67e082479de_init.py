@@ -5,6 +5,7 @@ Revises:
 Create Date: 2025-08-01 18:16:54.089282+00:00
 
 """
+import pgvector.sqlalchemy
 from typing import Sequence, Union
 from enum import StrEnum
 import json
@@ -17,7 +18,6 @@ import sqlalchemy as sa
 from sqlalchemy import Text, TypeDecorator
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine import Dialect
-import pgvector.sqlalchemy
 
 from aci.common.db.custom_sql_types import EncryptedSecurityCredentials, EncryptedSecurityScheme
 

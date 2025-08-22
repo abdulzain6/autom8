@@ -1,17 +1,12 @@
 from dotenv import load_dotenv
 import os
 
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../.env'))
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
-
-
-import os
 from logging.config import fileConfig
-
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import pool
 from sqlalchemy import create_engine, pool
-
 from aci.common.db.sql_models import Base
 
 

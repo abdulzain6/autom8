@@ -2,6 +2,13 @@ from enum import StrEnum
 
 
 
+# ---------- Enums ----------
+class RunStatus(StrEnum):
+    success = "success"
+    failure = "failure"
+    in_progress = "in_progress"
+    never_run = "never_run"
+
 
 class SecurityScheme(StrEnum):
     """

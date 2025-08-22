@@ -17,7 +17,10 @@ from aci.server.routes import (
     health,
     voice_agent,
     linked_accounts,
-    profile
+    profile,
+    automation_runs,
+    automation_templates,
+    automations,
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
@@ -58,6 +61,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 @app.exception_handler(ACIException)
 async def global_exception_handler(request: Request, exc: ACIException) -> JSONResponse:
     return JSONResponse(
@@ -125,4 +130,19 @@ app.include_router(
     profile.router,
     prefix=config.ROUTER_PREFIX_PROFILE,
     tags=[config.ROUTER_PREFIX_PROFILE.split("/")[-1]],
+)
+app.include_router(
+    automations.router,
+    prefix=config.ROUTER_PREFIX_AUTOMATIONS,
+    tags=[config.ROUTER_PREFIX_AUTOMATIONS.split("/")[-1]],
+)
+app.include_router(
+    automation_templates.router,
+    prefix=config.ROUTER_PREFIX_AUTOMATION_TEMPLATES,
+    tags=[config.ROUTER_PREFIX_AUTOMATION_TEMPLATES.split("/")[-1]],
+)
+app.include_router(
+    automation_runs.router,
+    prefix=config.ROUTER_PREFIX_AUTOMATION_RUNS,
+    tags=[config.ROUTER_PREFIX_AUTOMATION_RUNS.split("/")[-1]],
 )

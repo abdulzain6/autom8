@@ -48,6 +48,9 @@ ROUTER_PREFIX_APP_CONFIGURATIONS = "/v1/app-configurations"
 ROUTER_PREFIX_LINKED_ACCOUNTS = "/v1/linked-accounts"
 ROUTER_PREFIX_VOICE_AGENT = "/v1/voice-agent"
 ROUTER_PREFIX_PROFILE = "/v1/profile"
+ROUTER_PREFIX_AUTOMATIONS = "/v1/automations"
+ROUTER_PREFIX_AUTOMATION_TEMPLATES = "/v1/automation-templates"
+ROUTER_PREFIX_AUTOMATION_RUNS = "/v1/automation-runs"
 
 # 8KB
 MAX_LOG_FIELD_SIZE = 8 * 1024
