@@ -69,6 +69,7 @@ class AutomationCreate(BaseModel):
     is_deep: bool = Field(
         default=False, description="Indicates if the automation is a deep automation.",
     )
+    active: bool = Field(default=True, description="Indicates if the automation is active.")
     linked_account_ids: list[str] = Field(default_factory=list)
     is_recurring: bool = Field(default=False)
     cron_schedule: Optional[str] = Field(
@@ -98,6 +99,7 @@ class AutomationUpdate(BaseModel):
     is_recurring: Optional[bool] = None
     cron_schedule: Optional[str] = None
     is_deep: Optional[bool] = None
+    active: Optional[bool] = None
 
     @model_validator(mode="after")
     def check_cron_format(self) -> "AutomationUpdate":
@@ -119,6 +121,7 @@ class AutomationFromTemplateCreate(BaseModel):
         default_factory=dict,
         description="Key-value pairs for the template's Jinja2 variables.",
     )
+    active: bool = Field(default=True, description="Indicates if the automation is active.")
     linked_account_ids: List[str] = Field(
         ...,
         description="A list of the user's LinkedAccount IDs to be used for this automation.",

@@ -59,6 +59,7 @@ class AutomationExecutor:
                 "3.  Second, I will use the `image_resizing_tool`, providing the `artifact_id` from the previous step "
                 "and specifying the dimensions for a profile picture (e.g., 400x400).\n"
                 "4.  After the second tool call succeeds, the goal is complete."
+                "5. You must return the final message along with any artifacts created."
             ),
         ]
         self.system_prompt = "\n\n---\n\n".join(prompt_components)

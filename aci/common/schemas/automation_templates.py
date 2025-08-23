@@ -52,8 +52,8 @@ class TemplatesFile(BaseModel):
     """Schema to validate the structure of the input JSON file."""
     templates: List[AutomationTemplateUpsert]
 
-
 class AutomationTemplateListParams(BaseModel):
     """Query parameters for listing automation templates."""
+    category: Optional[str] = Field(None, description="Filter templates by a specific category/tag.")
     limit: int = Field(default=100, ge=1, le=1000)
     offset: int = Field(default=0, ge=0)

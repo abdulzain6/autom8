@@ -498,6 +498,7 @@ class Automation(Base):
     is_recurring: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     last_run_status: Mapped[RunStatus] = mapped_column(
         Enum(RunStatus), default=RunStatus.never_run
     )

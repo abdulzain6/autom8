@@ -14,6 +14,20 @@ router = APIRouter()
 
 
 @router.get(
+    "/categories",
+    response_model=List[str],
+)
+def get_all_template_categories(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+):
+    """
+    Retrieve a list of all unique categories (tags) used in automation templates.
+    """
+    categories = crud.automation_templates.get_all_categories(db=context.db_session)
+    return categories
+
+
+@router.get(
     "/",
     response_model=List[AutomationTemplatePublic],
 )
@@ -22,10 +36,13 @@ def list_all_templates(
     params: Annotated[AutomationTemplateListParams, Depends()],
 ):
     """
-    Retrieve a list of all available automation templates.
+    Retrieve a list of all available automation templates, with optional category filtering.
     """
     templates = crud.automation_templates.list_templates(
-        db=context.db_session, limit=params.limit, offset=params.offset
+        db=context.db_session,
+        limit=params.limit,
+        offset=params.offset,
+        category=params.category,
     )
     return templates
 

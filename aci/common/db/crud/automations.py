@@ -1,8 +1,7 @@
 from typing import Optional, List
 from jinja2.sandbox import SandboxedEnvironment
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select
-from aci.common.db import crud
 from aci.common.db.sql_models import (
     App,
     Automation,
@@ -231,6 +230,41 @@ def create_automation_from_template(
         is_recurring=template_data.is_recurring,
         cron_schedule=template_data.cron_schedule,
         is_deep=template.is_deep,
+        active=template_data.active,
     )
 
     return create_automation(db, user_id, automation_to_create)
+
+
+def get_automation_with_eager_loaded_functions(
+    db: Session, automation_id: str
+) -> Optional[Automation]:
+    """
+    Retrieves a single Automation by its ID, eagerly loading all relationships
+    needed to access its functions efficiently.
+
+    This function prevents the "N+1 query problem" by loading the entire object
+    graph (Automation -> LinkedAccounts -> Apps -> Functions) in a minimal
+    number of queries, rather than one query per related object inside a loop.
+
+    Args:
+        db: The SQLAlchemy database session.
+        automation_id: The ID of the automation to retrieve.
+
+    Returns:
+        The Automation object with related functions loaded, or None if not found.
+    """
+    stmt = (
+        select(Automation)
+        .options(
+            # Eagerly load the chain of relationships
+            selectinload(Automation.linked_accounts)
+            .selectinload(AutomationLinkedAccount.linked_account)
+            .selectinload(LinkedAccount.app)
+            .selectinload(App.functions)
+        )
+        .where(Automation.id == automation_id)
+    )
+    
+    # .scalar_one_or_none() is a convenient way to get a single result or None
+    return db.execute(stmt).scalar_one_or_none()
