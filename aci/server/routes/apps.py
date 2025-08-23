@@ -18,7 +18,6 @@ from aci.common.schemas.function import BasicFunctionDefinition, FunctionDetails
 from aci.common.schemas.security_scheme import SecuritySchemesPublic
 from aci.server import config
 from aci.server import dependencies as deps
-from aci.server.routes import functions
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -28,22 +27,23 @@ openai_client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BAS
 @router.get("", response_model_exclude_none=True)
 def list_apps(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
-    query_params: Annotated[AppsList, Query()],
+    query_params: Annotated[AppsList, Depends()],
 ) -> list[AppDetails]:
     """
     Get a list of Apps and their details. Sorted by App name.
     """
-    apps = crud.apps.get_apps(
-        context.db_session,
-        True,
-        True,
-        query_params.app_names,
-        query_params.limit,
-        query_params.offset,
+    app_linked_account_pairs = crud.apps.list_apps_with_user_context(
+        db=context.db_session,
+        user_id=context.user.id,
+        active_only=True,
+        configured_only=True,
+        app_names=query_params.app_names,
+        limit=query_params.limit,
+        offset=query_params.offset,
     )
 
     response: list[AppDetails] = []
-    for app in apps:
+    for app, linked_account in app_linked_account_pairs:
         app_details = AppDetails(
             id=app.id,
             name=app.name,
@@ -59,13 +59,17 @@ def list_apps(
                 app.security_schemes
             ),
             has_default_credentials=app.has_default_credentials,
-            functions=[FunctionDetails.model_validate(function) for function in app.functions],
+            functions=[
+                FunctionDetails.model_validate(function) for function in app.functions
+            ],
             created_at=app.created_at,
             updated_at=app.updated_at,
             is_configured=app.has_configuration,
-            is_linked=app.has_linked_account(context.user.id),
-            linked_account_id=app.get_linked_account(context.user.id),
-            instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get("instructions", None)
+            is_linked=linked_account is not None,
+            linked_account_id=linked_account.id if linked_account else None,
+            instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get(
+                "instructions", None
+            ),
         )
         response.append(app_details)
 
@@ -75,7 +79,7 @@ def list_apps(
 @router.get("/search", response_model_exclude_none=True)
 def search_apps(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
-    query_params: Annotated[AppsSearch, Query()],
+    query_params: Annotated[AppsSearch, Depends()],  # Use Depends()
 ) -> list[AppBasic]:
     """
     Search for Apps.
@@ -91,97 +95,86 @@ def search_apps(
         if query_params.intent
         else None
     )
-    logger.debug(
-        f"Generated intent embedding, intent={query_params.intent}, intent_embedding={intent_embedding}"
-    )
-    apps_with_scores = crud.apps.search_apps(
-        context.db_session,
-        True,
-        True,
-        None,
-        query_params.categories,
-        intent_embedding,
-        query_params.limit,
-        query_params.offset,
+
+    # --- EFFICIENT SINGLE QUERY ---
+    apps_with_context = crud.apps.search_apps(
+        db_session=context.db_session,
+        user_id=context.user.id,
+        active_only=True,
+        configured_only=True,
+        app_names=None,
+        categories=query_params.categories,
+        intent_embedding=intent_embedding,
+        limit=query_params.limit,
+        offset=query_params.offset,
     )
 
-    apps: list[AppBasic] = []
-
-    for app, _ in apps_with_scores:
+    response: list[AppBasic] = []
+    for app, linked_account, _ in apps_with_context:
+        app_data = {
+            "name": app.name,
+            "description": app.description,
+            "logo": app.logo,
+            "is_linked": linked_account is not None,
+            "categories": app.categories,
+            "active": app.active,
+            "display_name": app.display_name,
+            "has_default_credentials": app.has_default_credentials,
+            "linked_account_id": linked_account.id if linked_account else None,
+            "security_schemes": list(app.security_schemes.keys()),
+            "instructions": app.security_schemes.get(SecurityScheme.API_KEY, {}).get(
+                "instructions", None
+            ),
+        }
         if query_params.include_functions:
-            functions = [
+            app_data["functions"] = [
                 BasicFunctionDefinition(
                     name=function.name, description=function.description
                 )
                 for function in app.functions
             ]
-            apps.append(
-                AppBasic(
-                    name=app.name, 
-                    description=app.description, 
-                    functions=functions,
-                    logo=app.logo,
-                    is_linked=app.has_linked_account(context.user.id),
-                    categories=app.categories,
-                    active=app.active,
-                    display_name=app.display_name,
-                    has_default_credentials=app.has_default_credentials,
-                    linked_account_id=app.get_linked_account(context.user.id),
-                    security_schemes=list(app.security_schemes.keys()),
-                    instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get("instructions", None)
-                )
-            )
-        else:
-            apps.append(
-                AppBasic(
-                    name=app.name, 
-                    description=app.description,
-                    logo=app.logo,
-                    is_linked=app.has_linked_account(context.user.id),
-                    categories=app.categories,
-                    active=app.active,
-                    display_name=app.display_name,
-                    has_default_credentials=app.has_default_credentials,
-                    linked_account_id=app.get_linked_account(context.user.id),
-                    security_schemes=list(app.security_schemes.keys())
-                )
-            )
+
+        response.append(AppBasic(**app_data))
 
     logger.info(
         "Search apps result",
         extra={
             "search_apps": {
                 "query_params_json": query_params.model_dump_json(),
-                "app_names": [app.name for app, _ in apps_with_scores],
+                "app_names": [app.name for app, _, __ in apps_with_context],
             },
         },
     )
-
-    return apps
+    return response
 
 
 @router.get("/{app_name}", response_model_exclude_none=True)
 def get_app_details(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     app_name: str,
+    include_functions: bool = Query(
+        True, description="Whether to include function details in the response."
+    ),
 ) -> AppDetails:
     """
     Returns an application (name, description, and functions).
     """
-    app = crud.apps.get_app(
-        context.db_session,
-        app_name,
-        True,
+    result = crud.apps.get_app_with_user_context(
+        db_session=context.db_session,
+        app_name=app_name,
+        user_id=context.user.id,
+        active_only=True,
     )
 
-    if not app:
+    if not result:
         logger.error(f"App not found, app_name={app_name}")
-
         raise AppNotFound(f"App={app_name} not found")
+
+    app, linked_account = result
 
     functions = [function for function in app.functions if function.active]
 
-    app_details: AppDetails = AppDetails(
+    app_details = AppDetails(
         id=app.id,
         name=app.name,
         display_name=app.display_name,
@@ -197,12 +190,17 @@ def get_app_details(
         ),
         has_default_credentials=app.has_default_credentials,
         is_configured=app.has_configuration,
-        is_linked=app.has_linked_account(context.user.id),
-        functions=[FunctionDetails.model_validate(function) for function in functions],
+        is_linked=linked_account is not None,
+        functions=(
+            [FunctionDetails.model_validate(function) for function in functions]
+            if include_functions
+            else None
+        ),
         created_at=app.created_at,
         updated_at=app.updated_at,
-        linked_account_id=app.get_linked_account(context.user.id),
-        instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get("instructions", None)
+        linked_account_id=linked_account.id if linked_account else None,
+        instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get(
+            "instructions", None
+        ),
     )
-
     return app_details

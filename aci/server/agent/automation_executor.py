@@ -7,7 +7,7 @@ from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
 from aci.server.function_executors.function_utils import (
     format_function_definition,
     FunctionDefinitionFormat,
-    execute_function
+    execute_function,
 )
 from sqlalchemy.orm import Session
 
@@ -24,7 +24,7 @@ class AutomationExecutor:
     """Executor for running automations using LangGraph."""
 
     def __init__(
-        self, 
+        self,
         automation: Automation,
         db_session: Session,
     ):
@@ -91,8 +91,11 @@ class AutomationExecutor:
         tools = []
 
         for function in functions:
+
             def execute_tool(**kwargs):
-                return execute_function(self.db_session, function.name, self.automation.user_id, kwargs)
+                return execute_function(
+                    self.db_session, function.name, self.automation.user_id, kwargs
+                )
 
             formatted_function: OpenAIFunction = cast(
                 OpenAIFunctionDefinition,
@@ -107,5 +110,30 @@ class AutomationExecutor:
                 func=execute_tool,
             )
             tools.append(tool)
-        
+
         return tools
+
+    def create_agent(self):
+        agent = create_react_agent(
+            model="",
+            tools=self.get_tools(),
+            response_format=AutomationResult,
+            prompt=self.system_prompt,
+            debug=True,
+        )
+        return agent
+
+    def run(self) -> AutomationResult:
+        """Run the automation using the defined agent."""
+        agent = self.create_agent()
+        result = agent.invoke(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f"Execute the automation: {self.automation.name}\nGoal: {self.automation.goal}. Think step by step.",
+                    }
+                ]
+            }
+        )
+        return AutomationResult.model_validate(result)

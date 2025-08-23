@@ -15,7 +15,7 @@ from aci.common.schemas.automations import (
     AutomationFromTemplateCreate,
     AutomationUpdate,
 )
-from . import automation_templates
+from aci.common.db import crud
 
 # Jinja2 environment for rendering goals from templates
 jinja_env = SandboxedEnvironment()
@@ -71,14 +71,23 @@ def create_automation(
     db: Session, user_id: str, automation_in: AutomationCreate
 ) -> Automation:
     """Creates a new automation and associates linked accounts."""
-    payload = automation_in.model_dump()
+    payload = automation_in.model_dump(exclude={"created_at", "updated_at"})
     linked_account_ids = payload.pop("linked_account_ids", [])
 
     linked_accounts = _validate_and_fetch_linked_accounts(
         db, user_id, linked_account_ids
     )
 
-    new_automation = Automation(user_id=user_id, **payload)
+    new_automation = Automation(
+        user_id=user_id,
+        name=automation_in.name,
+        description=automation_in.description,
+        goal=automation_in.goal,
+        is_recurring=automation_in.is_recurring,
+        cron_schedule=automation_in.cron_schedule,
+        active=automation_in.active,
+        is_deep=automation_in.is_deep,
+    )
     db.add(new_automation)
     db.flush()
 
@@ -181,7 +190,7 @@ def create_automation_from_template(
 ) -> Automation:
     """Validates, renders, and creates an automation from a template."""
     # 1. Fetch and validate template
-    template = automation_templates.get_template(db, template_data.template_id)
+    template = crud.automation_templates.get_template(db, template_data.template_id)
     if not template:
         raise ValueError(f"Template with id '{template_data.template_id}' not found.")
 
@@ -196,41 +205,39 @@ def create_automation_from_template(
             error_parts.append(f"missing required variables: {list(missing)}")
         if extra:
             error_parts.append(f"unexpected variables provided: {list(extra)}")
-        raise ValueError(
-            f"Variable mismatch for template '{template.name}'. Details: "
-            + ", ".join(error_parts)
-        )
+        raise ValueError(f"Variable mismatch for template '{template.name}'. Details: " + ", ".join(error_parts))
 
     # 3. Render the goal
     jinja_template = jinja_env.from_string(template.goal)
-    rendered_goal = jinja_template.render(template_data.variables)
+    
+    # --- FIX: Pass variables as a dictionary named 'variables' ---
+    # This allows templates to access them using bracket notation, e.g., {{ variables['Stock Ticker'] }}
+    rendered_goal = jinja_template.render(variables=template_data.variables)
 
     # 4. Validate linked accounts against template requirements
     required_app_ids = {app.id for app in template.required_apps}
-    if required_app_ids:  # Only validate if the template requires apps
-        linked_accounts = _validate_and_fetch_linked_accounts(
-            db, user_id, template_data.linked_account_ids
-        )
+    if required_app_ids:
+        linked_accounts = _validate_and_fetch_linked_accounts(db, user_id, template_data.linked_account_ids)
         provided_app_ids = {la.app_id for la in linked_accounts}
-
+        
         if not required_app_ids.issubset(provided_app_ids):
             missing_app_ids = required_app_ids - provided_app_ids
-            # Fetch app names for a user-friendly error message
-            missing_apps = db.query(App.name).filter(App.id.in_(missing_app_ids)).all()
-            missing_app_names = [name for (name,) in missing_apps]
-            raise ValueError(
-                f"Missing linked accounts for required apps: {missing_app_names}"
-            )
+            missing_apps_stmt = select(App.name).where(App.id.in_(missing_app_ids))
+            missing_apps = db.execute(missing_apps_stmt).scalars().all()
+            missing_app_names = list(missing_apps)
+            raise ValueError(f"Missing linked accounts for required apps: {missing_app_names}")
 
     # 5. Create the automation object
+    # Assuming your AutomationCreate schema is updated to handle these fields
     automation_to_create = AutomationCreate(
-        name=template_data.name,
+        name=template.name,
         goal=rendered_goal,
         linked_account_ids=template_data.linked_account_ids,
         is_recurring=template_data.is_recurring,
         cron_schedule=template_data.cron_schedule,
         is_deep=template.is_deep,
-        active=template_data.active,
+        active=True,
+        description=template.description,
     )
 
     return create_automation(db, user_id, automation_to_create)

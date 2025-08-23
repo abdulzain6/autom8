@@ -1,20 +1,5 @@
-"""
-TODO:
-Note: try to keep dependencies on other internal packages to a minimum.
-Note: at the time of writing, it's still too early to do optimizations on the database schema,
-but we should keep an eye on it and be prepared for potential future optimizations.
-for example,
-1. should enum where possible, such as Plan, Visibility, etc
-2. create index on embedding and other fields that are frequently used for filtering
-3. materialized views for frequently queried data
-4. limit string length for fields that have string type
-5. Note we might need to set up index for embedding manually for customizing the similarity search algorithm
-   (https://github.com/pgvector/pgvector)
-"""
-
 from __future__ import annotations
-
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from uuid import uuid4
 import uuid
@@ -60,7 +45,6 @@ from aci.common.enums import (
 
 EMBEDDING_DIMENSION = 1536
 APP_DEFAULT_VERSION = "1.0.0"
-# need app to be shorter because it's used as prefix for function name
 APP_NAME_MAX_LENGTH = 100
 MAX_STRING_LENGTH = 255
 MAX_ENUM_LENGTH = 50
@@ -132,12 +116,12 @@ class Function(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), server_default=func.now(), nullable=False, init=False
+        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
         init=False,
     )
@@ -192,12 +176,12 @@ class App(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), server_default=func.now(), nullable=False, init=False
+        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
         init=False,
     )
@@ -248,27 +232,6 @@ class App(Base):
     def has_configuration(self) -> bool:
         return self.configuration is not None
 
-    def has_linked_account(self, user_id: str) -> bool:
-        """
-        Checks if the app has a linked account for the given user.
-
-        Args:
-            user_id: The unique identifier for the user.
-
-        Returns:
-            True if a linked account exists for this app and user, False otherwise.
-        """
-        return any(
-            linked_account.user_id == user_id for linked_account in self.linked_accounts
-        )
-
-    def get_linked_account(self, user_id: str):
-        print(f"Getting linked account for user_id={user_id}")
-        for linked_account in self.linked_accounts:
-            if linked_account.user_id == user_id:
-                return linked_account.id
-        return None
-
 
 class AppConfiguration(Base):
     """
@@ -301,12 +264,12 @@ class AppConfiguration(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), server_default=func.now(), nullable=False, init=False
+        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
         init=False,
     )
@@ -348,12 +311,12 @@ class DefaultAppCredential(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), server_default=func.now(), nullable=False, init=False
+        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
         init=False,
     )
@@ -393,13 +356,13 @@ class LinkedAccount(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), server_default=func.now(), nullable=False, init=False
+        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
     )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default_factory= lambda: datetime.now(timezone.utc),
+        onupdate= lambda: datetime.now(timezone.utc),
         nullable=False,
         init=False,
     )
@@ -442,12 +405,12 @@ class Secret(Base):
     value: Mapped[bytes] = mapped_column(BYTEA, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), server_default=func.now(), nullable=False, init=False
+        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        server_default=func.now(),
-        onupdate=func.now(),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
         init=False,
     )
@@ -484,14 +447,15 @@ class Automation(Base):
     __tablename__ = "automations"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
-    last_run_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_run_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), init=False)
     cron_schedule: Mapped[Optional[str]] = mapped_column(String(255))
     linked_accounts: Mapped[List["AutomationLinkedAccount"]] = relationship(
-        back_populates="automation", cascade="all, delete-orphan"
+        back_populates="automation", cascade="all, delete-orphan", init=False
     )
     runs: Mapped[List["AutomationRun"]] = relationship(
-        back_populates="automation", cascade="all, delete-orphan"
+        back_populates="automation", cascade="all, delete-orphan", init=False
     )
     goal: Mapped[str] = mapped_column(Text)
     is_deep: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -503,10 +467,12 @@ class Automation(Base):
         Enum(RunStatus), default=RunStatus.never_run
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default_factory=lambda: datetime.now(timezone.utc)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
     )
 
     id: Mapped[str] = mapped_column(
@@ -538,7 +504,7 @@ class AutomationRun(Base):
         Enum(RunStatus), default=RunStatus.in_progress
     )
     started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default_factory=lambda: datetime.now(timezone.utc)
     )
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
@@ -584,7 +550,7 @@ class AutomationTemplate(Base):
     __tablename__ = "automation_templates"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    description: Mapped[Optional[str]] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
     goal: Mapped[str] = mapped_column(
         Text, nullable=False, comment="A Jinja2 template for the automation's goal."
     )

@@ -1,5 +1,6 @@
 from datetime import datetime
-from sqlalchemy import select
+from typing import Optional
+from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
 from aci.common import validators
@@ -112,7 +113,7 @@ def create_linked_account(
         security_credentials=(
             security_credentials.model_dump(mode="json") if security_credentials else {}
         ),
-        disabled_functions=[]
+        disabled_functions=[],
     )
     db_session.add(linked_account)
     db_session.flush()
@@ -179,3 +180,50 @@ def delete_linked_accounts_by_app_name(db_session: Session, app_name: str) -> in
         db_session.delete(linked_account)
     db_session.flush()
     return len(linked_accounts_to_delete)
+
+
+def linked_account_exists_for_app_and_user(
+    db: Session, *, app_id: str, user_id: str
+) -> bool:
+    """
+    Efficiently checks if a LinkedAccount exists for a specific app and user.
+
+    This performs a lightweight EXISTS query that is much faster than
+    fetching the full object.
+
+    Args:
+        db: The SQLAlchemy database session.
+        app_id: The ID of the app.
+        user_id: The ID of the user.
+
+    Returns:
+        True if a LinkedAccount exists, otherwise False.
+    """
+    stmt = select(
+        exists().where(LinkedAccount.app_id == app_id, LinkedAccount.user_id == user_id)
+    )
+    result = db.execute(stmt).scalar()
+    return result is True  # Ensure we return a clean boolean
+
+
+def get_linked_account_for_app_and_user(
+    db: Session, *, app_id: str, user_id: str
+) -> Optional[LinkedAccount]:
+    """
+    Efficiently retrieves a single LinkedAccount for a specific app and user.
+
+    This performs a targeted query and avoids loading all linked accounts
+    for an app into memory.
+
+    Args:
+        db: The SQLAlchemy database session.
+        app_id: The ID of the app.
+        user_id: The ID of the user.
+
+    Returns:
+        The LinkedAccount object if found, otherwise None.
+    """
+    stmt = select(LinkedAccount).where(
+        LinkedAccount.app_id == app_id, LinkedAccount.user_id == user_id
+    )
+    return db.execute(stmt).scalar_one_or_none()

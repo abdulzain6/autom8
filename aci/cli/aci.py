@@ -8,6 +8,7 @@ from aci.cli.commands import (
     upsert_functions,
     default_credentials,
     app_configs,
+    automation_templates
 )
 from aci.common.logging_setup import setup_logging
 
@@ -30,6 +31,7 @@ cli.add_command(app_configs.create_config)
 cli.add_command(app_configs.delete_config)
 cli.add_command(app_configs.get_config)
 cli.add_command(app_configs.update_config)
+cli.add_command(automation_templates.upsert_templates)
 
 if __name__ == "__main__":
     cli()

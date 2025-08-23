@@ -23,6 +23,7 @@ class AutomationPublic(BaseModel):
 
     id: str
     name: str
+    description: Optional[str]
     user_id: str
     goal: str
     last_run_at: Optional[datetime]
@@ -63,6 +64,7 @@ class AutomationCreate(BaseModel):
     """Schema to create a new Automation directly."""
 
     name: str = Field(..., max_length=255)
+    description: Optional[str] = Field(None, description="A brief description of the automation.")
     goal: str = Field(
         ..., description="The specific goal or instruction for the automation."
     )
@@ -114,14 +116,10 @@ class AutomationFromTemplateCreate(BaseModel):
     template_id: str = Field(
         ..., description="The ID of the automation template to use."
     )
-    name: str = Field(
-        ..., max_length=255, description="A unique name for the new automation."
-    )
     variables: Dict[str, Any] = Field(
         default_factory=dict,
         description="Key-value pairs for the template's Jinja2 variables.",
     )
-    active: bool = Field(default=True, description="Indicates if the automation is active.")
     linked_account_ids: List[str] = Field(
         ...,
         description="A list of the user's LinkedAccount IDs to be used for this automation.",
@@ -129,9 +127,6 @@ class AutomationFromTemplateCreate(BaseModel):
     is_recurring: bool = Field(default=False)
     cron_schedule: Optional[str] = Field(
         None, description="A valid cron schedule. Required if is_recurring is true."
-    )
-    is_deep: Optional[bool] = Field(
-        None, description="Indicates if the automation is a deep automation."
     )
 
     @model_validator(mode="after")
