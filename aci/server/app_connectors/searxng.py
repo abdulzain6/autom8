@@ -20,11 +20,12 @@ class Searxng(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: NoAuthScheme,
         security_credentials: NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
         """
         Initializes the SearxngConnector.
         """
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.base_url = SEARXNG_INSTANCE_URL.rstrip("/")
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "ACI-SearxngConnector/1.0"})

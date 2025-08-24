@@ -20,11 +20,12 @@ class ThePirateBay(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: NoAuthScheme,
         security_credentials: NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
         """
         Initializes the ThePirateBay connector.
         """
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         logger.info("ThePirateBay connector initialized.")
 
     def _before_execute(self) -> None:

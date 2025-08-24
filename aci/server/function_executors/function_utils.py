@@ -81,6 +81,7 @@ async def execute_function(
     function_name: str,
     user_id: str,
     function_input: dict,
+    run_id: str | None = None,
 ) -> FunctionExecutionResult:
     """
     Execute a function with the given parameters.
@@ -169,9 +170,9 @@ async def execute_function(
         f"app_name={function.app.name}, user_id={user_id}, "
         f"linked_account_id={linked_account.id}, is_updated={security_credentials_response.is_updated}, "
     )
-    db_session.commit()
+    db_session.flush()
 
-    function_executor = get_executor(function.protocol, linked_account)
+    function_executor = get_executor(function.protocol, linked_account, run_id=run_id)
     logger.info(
         f"Instantiated function executor, function_executor={type(function_executor)}, "
         f"function={function_name}"
@@ -191,7 +192,7 @@ async def execute_function(
         last_used_at,
         linked_account,
     )
-    db_session.commit()
+    db_session.flush()
 
     if not execution_result.success:
         logger.error(

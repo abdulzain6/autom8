@@ -1,5 +1,6 @@
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 
 from aci.common.db import crud
 from aci.common.logging_setup import get_logger
@@ -8,6 +9,7 @@ from aci.common.schemas.automation_runs import (
     AutomationRunListParams,
 )
 from aci.server import dependencies as deps
+from aci.server.file_management import FileManager
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -74,20 +76,82 @@ def get_a_specific_run(
     return run
 
 
-@router.delete(
-    "/{run_id}", status_code=status.HTTP_204_NO_CONTENT
-)
+@router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Automation Runs"])
 def delete_a_run(
     run_id: str,
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
 ):
     """
-    Delete a specific automation run.
+    Delete a specific automation run and its associated artifact files from storage.
     """
-    # First, ensure the run exists and the user has permission to delete it.
-    get_run_and_verify_ownership(run_id=run_id, context=context)
+    # 1. Verify ownership and get the run with its artifacts pre-loaded
+    run = get_run_and_verify_ownership(run_id=run_id, context=context)
 
-    # Now, call the dedicated CRUD function to perform the deletion.
+    # 2. Delete the associated files from storage before deleting the DB records
+    if run.artifacts:
+        file_manager = FileManager(context.db_session)
+        logger.info(f"Deleting {len(run.artifacts)} artifact files for run {run_id}.")
+        for artifact in run.artifacts:
+            try:
+                # Assuming a method in FileManager to delete the file from storage
+                file_manager.delete_file(artifact.filer_path)
+            except Exception as e:
+                # Log the error but don't stop the overall deletion process
+                logger.error(
+                    f"Failed to delete artifact file {artifact.filer_path} "
+                    f"from storage for run {run_id}: {e}"
+                )
+
+    # 3. Delete the run from the database.
+    # NOTE: This assumes the relationship from AutomationRun to Artifact does NOT
+    # use cascade="all, delete-orphan", otherwise the artifact records would be
+    # deleted before we could get their paths. If artifacts are owned exclusively
+    # by one run, this relationship should be adjusted and this logic revisited.
     crud.automation_runs.delete_run(db=context.db_session, run_id=run_id)
 
     return None
+
+
+@router.get(
+    "/runs/{run_id}/artifacts/{artifact_id}/download",
+    response_description="The requested artifact file.",
+)
+def download_an_artifact_from_a_run(
+    run_id: str,
+    artifact_id: str,
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+):
+    """
+    Downloads a specific artifact file associated with a specific automation run.
+    """
+    # 1. Verify the user owns the run
+    run = get_run_and_verify_ownership(run_id=run_id, context=context)
+
+    # 2. Verify the artifact belongs to this specific run to prevent unauthorized access
+    artifact = next((art for art in run.artifacts if art.id == artifact_id), None)
+    if not artifact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Artifact with ID {artifact_id} not found in run {run_id}.",
+        )
+
+    # 3. Use the FileManager to stream the file
+    try:
+        file_manager = FileManager(context.db_session)
+        content_generator, mime_type = file_manager.read_artifact(artifact_id)
+
+        # 4. Set headers to prompt a download with the original filename
+        headers = {"Content-Disposition": f'attachment; filename="{artifact.filename}"'}
+
+        return StreamingResponse(
+            content=content_generator, media_type=mime_type, headers=headers
+        )
+    except ValueError as e:
+        # This catches if the file is not found or expired in the FileManager
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to download artifact {artifact_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not process file download.",
+        )

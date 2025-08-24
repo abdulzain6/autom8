@@ -91,11 +91,12 @@ class Amazon(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: NoAuthScheme,
         security_credentials: NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
         """
         Initializes the Amazon connector.
         """
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.base_url = "https://www.amazon.com"
         self.client = CycleTlsServerClient(server_url=CYCLE_TLS_SERVER_URL, proxy=HTTP_PROXY)
         self.affiliate_tag = None

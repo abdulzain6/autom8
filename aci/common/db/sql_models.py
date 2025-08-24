@@ -90,8 +90,6 @@ class Function(Base):
         String, primary_key=True, default_factory=lambda: str(uuid4()), init=False
     )
     app_id: Mapped[str] = mapped_column(String, ForeignKey("apps.id"), nullable=False)
-    # Note: the function name is unique across the platform and should have app information, e.g., "GITHUB_CLONE_REPO"
-    # ideally this should just be <app name>_<function name> (uppercase)
     name: Mapped[str] = mapped_column(
         String(MAX_STRING_LENGTH), nullable=False, unique=True
     )
@@ -102,15 +100,13 @@ class Function(Base):
     protocol_data: Mapped[dict] = mapped_column(
         MutableDict.as_mutable(JSONB), nullable=False
     )
-    # empty dict for function that takes no args
+
     parameters: Mapped[dict] = mapped_column(
         MutableDict.as_mutable(JSONB), nullable=False
     )
-    # TODO: should response schema be generic (data + execution success of not + optional error) or specific to the function
     response: Mapped[dict] = mapped_column(
         MutableDict.as_mutable(JSONB), nullable=False
     )
-    # TODO: should we provide EMBEDDING_DIMENSION here? which makes it less flexible if we want to change the embedding dimention in the future
     embedding: Mapped[list[float]] = mapped_column(
         Vector(EMBEDDING_DIMENSION), nullable=False
     )
@@ -435,12 +431,7 @@ class Artifact(Base):
     )
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
     user: Mapped[SupabaseUser] = relationship("SupabaseUser", lazy="select", init=False)
-
-    automation_runs: Mapped[List["AutomationRun"]] = relationship(
-        "AutomationRun",
-        secondary="automation_run_artifacts",
-        back_populates="artifacts",
-    )
+    run_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("automation_runs.id"))
 
 
 class Automation(Base):
@@ -509,6 +500,14 @@ class AutomationRun(Base):
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
     )
+    artifacts: Mapped[List["Artifact"]] = relationship(
+        "Artifact",
+        # This tells SQLAlchemy to delete all child artifacts when this run is deleted.
+        cascade="all, delete-orphan",
+        # This back-populates the run attribute on the Artifact model if you add it.
+        # back_populates="run", 
+        init=False,
+    )
 
 
 class AutomationLinkedAccount(Base):
@@ -529,17 +528,6 @@ class AutomationLinkedAccount(Base):
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
     )
-
-
-# ---------- Link Table ----------
-automation_run_artifacts = Table(
-    "automation_run_artifacts",
-    Base.metadata,
-    Column(
-        "automation_run_id", String, ForeignKey("automation_runs.id"), primary_key=True
-    ),
-    Column("artifact_id", String, ForeignKey("artifacts.id"), primary_key=True),
-)
 
 
 class AutomationTemplate(Base):

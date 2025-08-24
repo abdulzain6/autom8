@@ -84,11 +84,24 @@ class AutomationCreate(BaseModel):
         if self.is_recurring and not self.cron_schedule:
             raise ValueError("cron_schedule is required for recurring automations")
         if not self.is_recurring and self.cron_schedule:
-            raise ValueError(
-                "cron_schedule should only be provided for recurring automations"
-            )
-        if self.cron_schedule and not croniter.is_valid(self.cron_schedule):
-            raise ValueError(f"'{self.cron_schedule}' is not a valid cron schedule")
+            raise ValueError("cron_schedule should only be provided for recurring automations")
+        
+        if self.cron_schedule:
+            if not croniter.is_valid(self.cron_schedule):
+                raise ValueError(f"'{self.cron_schedule}' is not a valid cron schedule")
+
+            # Validate the minimum interval ---
+            # Calculate the time difference between two consecutive scheduled runs
+            # to ensure it's at least 30 minutes.
+            cron = croniter(self.cron_schedule)
+            next_run = cron.get_next(datetime)
+            next_next_run = cron.get_next(datetime)
+            
+            # 1800 seconds = 30 minutes
+            if (next_next_run - next_run).total_seconds() < 1800:
+                raise ValueError("Recurring automations cannot be scheduled more frequently than every 30 minutes.")
+            # ------------------------------------------
+
         return self
 
 
@@ -148,3 +161,9 @@ class AutomationListParams(BaseModel):
     status: Optional[RunStatus] = Field(default=None)
     limit: int = Field(default=100, ge=1, le=1000)
     offset: int = Field(default=0, ge=0)
+
+
+class AutomationRunResponse(BaseModel):
+    """Response schema for triggering an automation run."""
+    message: str
+    run_id: str

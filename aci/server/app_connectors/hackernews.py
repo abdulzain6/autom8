@@ -20,11 +20,12 @@ class Hackernews(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: NoAuthScheme,
         security_credentials: NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
         """
         Initializes the HackerNewsConnector.
         """
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.api_base_url = "https://hacker-news.firebaseio.com/v0"
         logger.info("HackerNews connector initialized (direct API mode).")
 

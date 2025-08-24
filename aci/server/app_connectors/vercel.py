@@ -16,8 +16,9 @@ class Vercel(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: APIKeyScheme,
         security_credentials: APIKeySchemeCredentials,
+        run_id: str | None = None,
     ):
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.api_key = security_credentials.secret_key
 
     def _before_execute(self) -> None:

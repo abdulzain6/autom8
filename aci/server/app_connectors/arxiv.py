@@ -22,11 +22,12 @@ class Arxiv(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: NoAuthScheme,
         security_credentials: NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
         """
         Initializes the ArxivConnector.
         """
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.client = arxiv.Client(page_size=20, delay_seconds=3, num_retries=3)
         logger.info("ArxivConnector initialized.")
 

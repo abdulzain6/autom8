@@ -42,7 +42,6 @@ def create_run(db: Session, automation_id: str) -> AutomationRun:
     """
     Creates a new run for an automation and updates the automation's last_run status.
     """
-    # Ensure the parent automation exists before creating a run for it
     automation = automations.get_automation(db, automation_id)
     if not automation:
         raise ValueError(f"Automation {automation_id} not found")
@@ -56,7 +55,6 @@ def create_run(db: Session, automation_id: str) -> AutomationRun:
     )
     db.add(run)
 
-    # Update the parent automation's status
     automation.last_run_status = RunStatus.in_progress
     automation.last_run_at = start_time
 
@@ -70,43 +68,50 @@ def finalize_run(
     db: Session,
     run_id: str,
     status: RunStatus,
+    message: str,
     logs: Optional[dict] = None,
     artifact_ids: Optional[List[str]] = None,
 ) -> AutomationRun:
     """
-    Finalizes a run with a status, logs, and a final list of artifacts.
-    This will replace any existing artifacts on the run.
+    Finalizes a run with a status, message, logs, and a list of new artifacts to append.
     """
     run = get_run(db, run_id)
     if not run:
         raise ValueError(f"Run {run_id} not found")
 
     # If artifact IDs are provided, validate and associate them.
-    if artifact_ids is not None:
-        artifacts_stmt = select(Artifact).where(Artifact.id.in_(artifact_ids))
-        artifacts = list(db.execute(artifacts_stmt).scalars().all())
+    if artifact_ids:
+        existing_artifact_ids = {artifact.id for artifact in run.artifacts}
+        new_artifact_ids = [
+            aid for aid in artifact_ids if aid not in existing_artifact_ids
+        ]
+        # ---------------------------------------------------------
 
-        found_ids = {artifact.id for artifact in artifacts}
-        missing_ids = set(artifact_ids) - found_ids
-        if missing_ids:
-            raise ValueError(f"Artifacts not found: {list(missing_ids)}")
+        if new_artifact_ids:
+            artifacts_stmt = select(Artifact).where(Artifact.id.in_(new_artifact_ids))
+            new_artifacts = list(db.execute(artifacts_stmt).scalars().all())
 
-        for artifact in artifacts:
-            if artifact.user_id != run.automation.user_id:
-                raise ValueError(
-                    f"Artifact {artifact.id} does not belong to the automation owner"
-                )
+            found_ids = {artifact.id for artifact in new_artifacts}
+            missing_ids = set(new_artifact_ids) - found_ids
+            if missing_ids:
+                raise ValueError(f"Artifacts not found: {list(missing_ids)}")
 
-        # This replaces the entire collection of artifacts for the run.
-        run.artifacts = artifacts
+            for artifact in new_artifacts:
+                if artifact.user_id != run.automation.user_id:
+                    raise ValueError(
+                        f"Artifact {artifact.id} does not belong to the automation owner"
+                    )
+            
+            # Append the new, validated artifacts to the existing collection.
+            run.artifacts.extend(new_artifacts)
 
     finish_time = datetime.now(timezone.utc)
     run.status = status
+    run.message = message # <-- Set the final message
     run.finished_at = finish_time
     if logs is not None:
         run.logs = logs
 
-    # The run.automation relationship is back-populated by SQLAlchemy
     if run.automation:
         run.automation.last_run_status = status
         run.automation.last_run_at = finish_time
@@ -128,11 +133,9 @@ def add_artifact_to_run(db: Session, run_id: str, artifact_id: str) -> None:
     if not artifact:
         raise ValueError(f"Artifact {artifact_id} not found")
 
-    # Ensure the artifact and the run belong to the same user
     if artifact.user_id != run.automation.user_id:
         raise ValueError("Artifact does not belong to the automation owner")
 
-    # Avoid adding duplicates, which would cause a database error
     if artifact not in run.artifacts:
         run.artifacts.append(artifact)
         db.commit()

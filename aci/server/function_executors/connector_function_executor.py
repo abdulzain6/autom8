@@ -1,7 +1,7 @@
 import importlib
 from typing import Generic
 
-from aci.common.db.sql_models import Function
+from aci.common.db.sql_models import Function, LinkedAccount
 from aci.common.exceptions import NoImplementationFound
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.function import FunctionExecutionResult
@@ -33,6 +33,10 @@ class ConnectorFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TSchem
     Function executor for local connector-based Apps/Functions.
     """
 
+    def __init__(self, linked_account: LinkedAccount, run_id: str | None = None):
+        self.linked_account = linked_account    
+        self.run_id = run_id
+
     def _execute(
         self,
         function: Function,
@@ -55,7 +59,7 @@ class ConnectorFunctionExecutor(FunctionExecutor[TScheme, TCred], Generic[TSchem
         # TODO: caching? singleton per app per enduser account? executing in a thread pool?
         # another tricky thing is the access token expiration if using long-live cached objects
         app_connector_instance = app_connector_class(
-            self.linked_account, security_scheme, security_credentials
+            self.linked_account, security_scheme, security_credentials, run_id=self.run_id
         )
         return app_connector_instance.execute(method_name, function_input)
 

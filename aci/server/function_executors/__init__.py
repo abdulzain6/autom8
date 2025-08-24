@@ -18,7 +18,7 @@ from aci.server.function_executors.rest_oauth2_function_executor import (
 logger = get_logger(__name__)
 
 
-def get_executor(protocol: Protocol, linked_account: LinkedAccount) -> FunctionExecutor:
+def get_executor(protocol: Protocol, linked_account: LinkedAccount, run_id: str | None = None) -> FunctionExecutor:
     match protocol, linked_account.security_scheme:
         case Protocol.REST, SecurityScheme.API_KEY:
             return RestAPIKeyFunctionExecutor(linked_account)
@@ -27,7 +27,7 @@ def get_executor(protocol: Protocol, linked_account: LinkedAccount) -> FunctionE
         case Protocol.REST, SecurityScheme.NO_AUTH:
             return RestNoAuthFunctionExecutor(linked_account)
         case Protocol.CONNECTOR, _:
-            return ConnectorFunctionExecutor(linked_account)
+            return ConnectorFunctionExecutor(linked_account, run_id=run_id)
         case _:
             raise ValueError("Unsupported protocol or security scheme")
 

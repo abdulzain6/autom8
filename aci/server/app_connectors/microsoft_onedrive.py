@@ -23,8 +23,9 @@ class MicrosoftOnedrive(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: OAuth2Scheme,
         security_credentials: OAuth2SchemeCredentials,
+        run_id: str | None = None,
     ):
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.access_token = security_credentials.access_token
         self.base_url = "https://graph.microsoft.com/v1.0"
 

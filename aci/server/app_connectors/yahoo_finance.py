@@ -4,8 +4,6 @@ from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredent
 from aci.server.app_connectors.base import AppConnectorBase
 import yfinance as yf
 from typing import List, Dict, Any
-from datetime import datetime
-
 from aci.common.logging_setup import get_logger
 
 
@@ -23,12 +21,13 @@ class YahooFinance(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: NoAuthScheme,
         security_credentials: NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
         """
         Initializes the YahooFinance connector.
         Note: Authentication details are not required for yfinance.
         """
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         logger.info("YahooFinance connector initialized.")
 
     def _before_execute(self) -> None:

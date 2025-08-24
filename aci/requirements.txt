@@ -218,3 +218,5 @@ html2text==2025.4.15
 pytrends==4.9.2
 langgraph==0.6.6
 croniter==6.0.0
+huey==2.5.3
+langchain_openai

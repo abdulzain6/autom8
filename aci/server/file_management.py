@@ -1,23 +1,19 @@
-import re
 import uuid
-import io
 import magic
 import requests
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import BinaryIO, Generator, Tuple
 from sqlalchemy.orm import Session
-
-# ACI framework imports
-from aci.common.db.sql_models import Artifact, UserProfile # Import UserProfile
-from aci.common import utils
-from aci.server import config
+from aci.common.db.sql_models import Artifact, UserProfile
 from aci.server.config import SEAWEEDFS_URL
 
 logger = logging.getLogger(__name__)
 
+
 class FileManager:
     """Manages both temporary and permanent file storage with SeaweedFS."""
+
     def __init__(self, db: Session):
         self.db = db
         self.filer_url = SEAWEEDFS_URL.rstrip("/")
@@ -38,7 +34,9 @@ class FileManager:
             initial_bytes = file_object.read(2048)
             file_object.seek(0)
             detected_mime_type = magic.from_buffer(initial_bytes, mime=True)
-            if allowed_mime_prefix and not detected_mime_type.startswith(allowed_mime_prefix):
+            if allowed_mime_prefix and not detected_mime_type.startswith(
+                allowed_mime_prefix
+            ):
                 raise ValueError(
                     f"Invalid file type. Expected '{allowed_mime_prefix}*', "
                     f"but got '{detected_mime_type}'."
@@ -65,20 +63,22 @@ class FileManager:
             file_object=file_object,
             filename=filename,
             subfolder="avatars",
-            allowed_mime_prefix="image/"
+            allowed_mime_prefix="image/",
         )
 
         # 2. Upsert the avatar URL in the profiles table
-        user_profile = self.db.query(UserProfile).filter(UserProfile.id == user_id).first()
+        user_profile = (
+            self.db.query(UserProfile).filter(UserProfile.id == user_id).first()
+        )
         if not user_profile:
             logger.info(f"No profile found for user {user_id}. Creating a new one.")
             user_profile = UserProfile(id=user_id, name=None, avatar_url=None)
             self.db.add(user_profile)
-        
+
         user_profile.avatar_url = avatar_filer_path
         self.db.commit()
         logger.info(f"Updated avatar for user {user_id} to path: {avatar_filer_path}")
-        
+
         return avatar_filer_path
 
     def read_avatar(self, user_id: str) -> Tuple[Generator[bytes, None, None], str]:
@@ -91,7 +91,9 @@ class FileManager:
         Returns:
             A tuple containing a generator for the file's bytes and the MIME type.
         """
-        user_profile = self.db.query(UserProfile).filter(UserProfile.id == user_id).first()
+        user_profile = (
+            self.db.query(UserProfile).filter(UserProfile.id == user_id).first()
+        )
 
         if not user_profile or not user_profile.avatar_url:
             raise ValueError(f"Avatar not found for user with ID {user_id}.")
@@ -102,7 +104,9 @@ class FileManager:
             # Perform a HEAD request first to get content type without downloading the body
             head_response = self.session.head(file_url)
             head_response.raise_for_status()
-            mime_type = head_response.headers.get('Content-Type', 'application/octet-stream')
+            mime_type = head_response.headers.get(
+                "Content-Type", "application/octet-stream"
+            )
         except requests.RequestException as e:
             logger.error(f"ERROR: Failed to get headers for avatar {file_url}: {e}")
             raise ValueError(f"Avatar file could not be accessed at {file_url}.")
@@ -120,6 +124,7 @@ class FileManager:
     def upload_artifact(
         self,
         user_id: str,
+        run_id: str | None,
         file_object: BinaryIO,
         filename: str,
         content_type: str,
@@ -140,7 +145,9 @@ class FileManager:
             upload_data = response.json()
         except requests.RequestException as e:
             error_details = e.response.text if e.response else str(e)
-            raise RuntimeError(f"Could not upload file to SeaweedFS Filer: {error_details}")
+            raise RuntimeError(
+                f"Could not upload file to SeaweedFS Filer: {error_details}"
+            )
 
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
         temp_file = Artifact(
@@ -150,6 +157,7 @@ class FileManager:
             mime_type=final_content_type,
             size_bytes=upload_data["size"],
             expires_at=expires_at,
+            run_id=run_id,
         )
         self.db.add(temp_file)
         self.db.commit()
@@ -162,12 +170,15 @@ class FileManager:
         file_record = (
             self.db.query(Artifact)
             .filter(Artifact.id == file_id)
-            .filter((Artifact.expires_at == None) | (Artifact.expires_at > current_time))
+            .filter(
+                (Artifact.expires_at == None) | (Artifact.expires_at > current_time)
+            )
             .first()
         )
         if file_record is None:
             raise ValueError(f"File with ID {file_id} not found or has expired.")
         file_url = f"{self.filer_url}{file_record.filer_path}"
+
         def stream_generator():
             try:
                 with self.session.get(file_url, stream=True) as r:
@@ -175,6 +186,7 @@ class FileManager:
                     yield from r.iter_content(chunk_size=65536)
             except requests.RequestException as e:
                 logger.error(f"ERROR: Failed to stream file from {file_url}: {e}")
+
         return stream_generator(), str(file_record.mime_type)
 
     def cleanup_expired_artifacts(self) -> Tuple[int, int]:
@@ -185,7 +197,9 @@ class FileManager:
         try:
             current_time = datetime.now(timezone.utc)
             expired_files = (
-                self.db.query(Artifact).filter(Artifact.expires_at <= current_time).all()
+                self.db.query(Artifact)
+                .filter(Artifact.expires_at <= current_time)
+                .all()
             )
             if not expired_files:
                 return 0, 0
@@ -209,3 +223,22 @@ class FileManager:
             self.db.rollback()
             raise
         return deleted_count, failed_count
+
+    def delete_file(self, filer_path: str):
+        """
+        Deletes a file from SeaweedFS storage.
+        """
+        if not filer_path.startswith("/"):
+            raise ValueError("filer_path must be an absolute path starting with '/'")
+
+        file_delete_url = f"{self.filer_url}{filer_path}"
+        try:
+            response = self.session.delete(file_delete_url)
+            # Treat 404 (Not Found) as a success, as the file is already gone.
+            if response.status_code not in [202, 204, 404]:
+                response.raise_for_status()
+            logger.info(f"Successfully deleted file at path: {filer_path}")
+        except requests.RequestException as e:
+            # Log the error but re-raise to let the caller handle it.
+            logger.error(f"Failed to delete file from Filer at {file_delete_url}: {e}")
+            raise RuntimeError(f"Could not delete file from storage: {e}")

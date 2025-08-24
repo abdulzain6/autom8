@@ -31,10 +31,12 @@ class AppConnectorBase(ABC):
         security_credentials: OAuth2SchemeCredentials
         | APIKeySchemeCredentials
         | NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
         self.linked_account = linked_account
         self.security_scheme = security_scheme
         self.security_credentials = security_credentials
+        self.run_id = run_id
 
     @abstractmethod
     def _before_execute(self) -> None:

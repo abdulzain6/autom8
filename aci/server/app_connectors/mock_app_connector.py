@@ -20,8 +20,9 @@ class MockAppConnector(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: OAuth2Scheme | NoAuthScheme,
         security_credentials: OAuth2SchemeCredentials | NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         if isinstance(self.security_scheme, NoAuthScheme):
             pass
         else:

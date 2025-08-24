@@ -6,10 +6,12 @@ from aci.common.schemas.automations import (
     AutomationCreate,
     AutomationFromTemplateCreate,
     AutomationPublic,
+    AutomationRunResponse,
     AutomationUpdate,
     AutomationListParams,
 )
 from aci.server import dependencies as deps
+from aci.server.tasks.tasks import execute_automation
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -160,6 +162,41 @@ def create_automation_from_a_template(
         )
         return new_automation
     except ValueError as e:
-        # Catches all validation errors from the CRUD layer (template not found,
-        # variable mismatch, missing linked accounts, etc.)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post(
+    "/{automation_id}/run",
+    response_model=AutomationRunResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def run_an_automation(
+    automation_id: str,
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+):
+    """
+    Manually triggers a run for a specific automation.
+    """
+    automation = crud.automations.get_automation(
+        db=context.db_session, automation_id=automation_id
+    )
+    if not automation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Automation not found."
+        )
+    if automation.user_id != context.user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to run this automation.",
+        )
+    
+    # Create the run record first to get a run_id and "lock" the automation
+    automation_run = crud.automation_runs.create_run(context.db_session, automation_id)
+    
+    # Enqueue the task with the specific run_id
+    execute_automation(automation_run.id)
+    
+    return {
+        "message": "Automation run has been successfully queued.",
+        "run_id": automation_run.id,
+    }

@@ -25,9 +25,10 @@ class CodeExecutor(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: NoAuthScheme,
         security_credentials: NoAuthSchemeCredentials,
+        run_id: str | None = None,
     ):
         """Initializes the connector, setting up API and Redis clients."""
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.user_id = linked_account.user_id
         self.base_url = config.CODE_EXECUTOR_URL.rstrip("/")
         self.redis_client = redis.Redis.from_url(config.REDIS_URL)
@@ -196,7 +197,8 @@ class CodeExecutor(AppConnectorBase):
                         filename=filename,
                         content_type=content_type,
                         ttl_seconds=24 * 3600,
-                        user_id=self.user_id
+                        user_id=self.user_id,
+                        run_id=self.run_id
                     )
                     new_artifact_ids.append(new_artifact_id)
                 return {"new_artifact_ids": new_artifact_ids}

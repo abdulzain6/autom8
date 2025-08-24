@@ -34,10 +34,20 @@ services:
       start_period: 30s
       timeout: 10s
     networks:
-      - executor_network
       - storage_network
       - services_network
       - web_proxy
+
+  huey_worker:
+    build:
+      context: ./aci
+      dockerfile: Dockerfile
+    restart: always
+    command: huey_consumer.py aci.server.tasks.tasks.huey -w 20 -k thread
+    networks:
+      - executor_network
+      - storage_network
+      - services_network
 
   # --- 3. LiveKit Server ---
   livekit:

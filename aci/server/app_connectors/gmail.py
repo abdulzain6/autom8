@@ -27,8 +27,9 @@ class Gmail(AppConnectorBase):
         linked_account: LinkedAccount,
         security_scheme: OAuth2Scheme,
         security_credentials: OAuth2SchemeCredentials,
+        run_id: str | None = None,
     ):
-        super().__init__(linked_account, security_scheme, security_credentials)
+        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.credentials = Credentials(  # type: ignore
             token=security_credentials.access_token,
             refresh_token=security_credentials.refresh_token,
