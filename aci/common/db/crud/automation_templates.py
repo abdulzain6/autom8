@@ -59,17 +59,13 @@ def list_templates(
 
     if category:
         stmt = stmt.where(AutomationTemplate.tags.contains([category]))
-    
-    # --- ADD THIS FOR FULL-TEXT SEARCH ---
+
     if search_query:
-        # Use to_tsquery to search against the pre-computed search_vector column.
-        # The `websearch` flag allows for a more flexible, Google-like search syntax.
         stmt = stmt.where(
-            AutomationTemplate.search_vector.match(
-                func.websearch_to_tsquery('english', search_query)
+            AutomationTemplate.search_vector.op("@@")(
+                func.websearch_to_tsquery("english", search_query)
             )
         )
-    # ------------------------------------
 
     stmt = stmt.order_by(AutomationTemplate.name).offset(offset).limit(limit)
     return list(db.execute(stmt).scalars().all())
