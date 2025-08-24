@@ -45,14 +45,31 @@ def get_template(db: Session, template_id: str) -> Optional[AutomationTemplate]:
 
 
 def list_templates(
-    db: Session, limit: int, offset: int, category: Optional[str] = None
+    db: Session,
+    limit: int,
+    offset: int,
+    category: Optional[str] = None,
+    search_query: Optional[str] = None,
 ) -> List[AutomationTemplate]:
-    """Lists all automation templates with pagination and optional category filtering."""
+    """
+    Lists all automation templates with pagination, optional category filtering,
+    and full-text search.
+    """
     stmt = select(AutomationTemplate)
+
     if category:
-        # FIX: Use the .contains() operator for a simpler and type-safe way to check
-        # if a value exists in a PostgreSQL ARRAY column. We wrap the category in a list.
         stmt = stmt.where(AutomationTemplate.tags.contains([category]))
+    
+    # --- ADD THIS FOR FULL-TEXT SEARCH ---
+    if search_query:
+        # Use to_tsquery to search against the pre-computed search_vector column.
+        # The `websearch` flag allows for a more flexible, Google-like search syntax.
+        stmt = stmt.where(
+            AutomationTemplate.search_vector.match(
+                func.websearch_to_tsquery('english', search_query)
+            )
+        )
+    # ------------------------------------
 
     stmt = stmt.order_by(AutomationTemplate.name).offset(offset).limit(limit)
     return list(db.execute(stmt).scalars().all())

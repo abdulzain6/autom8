@@ -57,3 +57,4 @@ class AutomationTemplateListParams(BaseModel):
     category: Optional[str] = Field(None, description="Filter templates by a specific category/tag.")
     limit: int = Field(default=100, ge=1, le=1000)
     offset: int = Field(default=0, ge=0)
+    search_query: Optional[str] = Field(None, description="A search query for full-text search across template names, descriptions, and tags.")

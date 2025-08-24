@@ -176,18 +176,6 @@ def delete_automation(db: Session, automation_id: str) -> None:
         db.commit()
 
 
-def get_automation_artifacts(db: Session, automation_id: str) -> List[Artifact]:
-    """Gets all unique artifacts associated with any run of an automation."""
-    stmt = (
-        select(Artifact)
-        .join(Artifact.automation_runs)
-        .join(AutomationRun.automation)
-        .where(Automation.id == automation_id)
-        .distinct()
-    )
-    return list(db.execute(stmt).scalars().all())
-
-
 def create_automation_from_template(
     db: Session, user_id: str, template_data: AutomationFromTemplateCreate
 ) -> Automation:

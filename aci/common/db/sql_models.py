@@ -14,6 +14,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     String,
     Table,
     Text,
@@ -23,7 +24,7 @@ from sqlalchemy import (
 from sqlalchemy import Enum as SqlEnum
 
 # Note: need to use postgresqlr ARRAY in order to use overlap operator
-from sqlalchemy.dialects.postgresql import ARRAY, BYTEA, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, BYTEA, JSONB, TSVECTOR
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -545,6 +546,13 @@ class AutomationTemplate(Base):
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default_factory=lambda: str(uuid.uuid4())
     )
+    search_vector: Mapped[TSVECTOR] = mapped_column(
+        TSVECTOR,
+        nullable=True,
+        init=False,
+        # This tells SQLAlchemy to expect the database to generate this value.
+        server_default=None, 
+    )
     variable_names: Mapped[List[str]] = mapped_column(
         ARRAY(String),
         nullable=False,
@@ -561,6 +569,14 @@ class AutomationTemplate(Base):
         secondary=automation_template_apps,
         lazy="selectin",  # Use 'selectin' for efficient loading of related apps
         init=False,
+    )
+
+    __table_args__ = (
+        Index(
+            'ix_automation_templates_search_vector',
+            'search_vector',
+            postgresql_using='gin'
+        ),
     )
 
 

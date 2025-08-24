@@ -43,6 +43,7 @@ def list_all_templates(
         limit=params.limit,
         offset=params.offset,
         category=params.category,
+        search_query=params.search_query,
     )
     return templates
 
