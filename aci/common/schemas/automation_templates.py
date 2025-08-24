@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Optional, List
+from typing import Dict, Optional, List
 from pydantic import BaseModel, ConfigDict, Field
+
+from aci.common.enums import SecurityScheme
 
 # --- Nested Schema for App Representation ---
 
@@ -12,6 +14,7 @@ class AppForTemplatePublic(BaseModel):
     logo: Optional[str] = None
     is_linked: bool = Field(False, description="Indicates if the current user has linked this app.")
     model_config = ConfigDict(from_attributes=True)
+    security_scheme: Dict[SecurityScheme, dict]
 
 
 # --- Main Schemas for Automation Templates ---
