@@ -77,7 +77,7 @@ def list_all_templates(
                     display_name=app.display_name,
                     logo=app.logo,
                     is_linked=is_linked,
-                    security_scheme=app.security_schemes,
+                    security_scheme=list(app.security_schemes.keys()),
                 )
             )
             template_app_ids.add(app.id)
@@ -136,6 +136,7 @@ def get_template_by_id(
             display_name=app.display_name,
             logo=app.logo,
             is_linked=app.id in linked_app_ids,
+            security_scheme=list(app.security_schemes.keys()),
         )
         for app in template.required_apps
     ]

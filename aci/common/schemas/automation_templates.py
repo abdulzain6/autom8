@@ -14,7 +14,7 @@ class AppForTemplatePublic(BaseModel):
     logo: Optional[str] = None
     is_linked: bool = Field(False, description="Indicates if the current user has linked this app.")
     model_config = ConfigDict(from_attributes=True)
-    security_scheme: Dict[SecurityScheme, dict]
+    security_scheme: list[SecurityScheme]
 
 
 # --- Main Schemas for Automation Templates ---
