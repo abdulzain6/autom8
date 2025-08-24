@@ -1,9 +1,10 @@
-from typing import Annotated, List
+from typing import Annotated, List, Set
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from aci.common.db import crud
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.automation_templates import (
+    AppForTemplatePublic,
     AutomationTemplatePublic,
     AutomationTemplateListParams,
 )
@@ -36,8 +37,10 @@ def list_all_templates(
     params: Annotated[AutomationTemplateListParams, Depends()],
 ):
     """
-    Retrieve a list of all available automation templates, with optional category filtering.
+    Retrieve a list of all available automation templates, with user-specific
+    information on which required apps are linked.
     """
+    # 1. Fetch the base templates
     templates = crud.automation_templates.list_templates(
         db=context.db_session,
         limit=params.limit,
@@ -45,7 +48,57 @@ def list_all_templates(
         category=params.category,
         search_query=params.search_query,
     )
-    return templates
+
+    # 2. Gather all unique required app IDs from the templates
+    all_required_app_ids: Set[str] = {
+        app.id for template in templates for app in template.required_apps
+    }
+
+    # 3. Fetch all of the user's linked accounts for those apps in a single query
+    user_linked_accounts = crud.linked_accounts.get_linked_accounts_for_apps(
+        db=context.db_session,
+        user_id=context.user.id,
+        app_ids=list(all_required_app_ids),
+    )
+    linked_app_ids: Set[str] = {la.app_id for la in user_linked_accounts}
+
+    # 4. Build the final response DTOs
+    response: List[AutomationTemplatePublic] = []
+    for template in templates:
+        required_apps_with_status = []
+        template_app_ids = set()
+
+        for app in template.required_apps:
+            is_linked = app.id in linked_app_ids
+            required_apps_with_status.append(
+                AppForTemplatePublic(
+                    id=app.id,
+                    name=app.name,
+                    display_name=app.display_name,
+                    logo=app.logo,
+                    is_linked=is_linked,
+                )
+            )
+            template_app_ids.add(app.id)
+
+        # Determine if all apps for this specific template are linked
+        all_linked = template_app_ids.issubset(linked_app_ids)
+
+        response.append(
+            AutomationTemplatePublic(
+                id=template.id,
+                name=template.name,
+                description=template.description,
+                tags=template.tags,
+                goal=template.goal,
+                is_deep=template.is_deep,
+                variable_names=template.variable_names,
+                required_apps=required_apps_with_status,
+                all_apps_linked=all_linked,
+            )
+        )
+
+    return response
 
 
 @router.get(
@@ -57,7 +110,8 @@ def get_template_by_id(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
 ):
     """
-    Retrieve a specific automation template by its ID.
+    Retrieve a specific automation template by its ID, with user-specific
+    information on which required apps are linked.
     """
     template = crud.automation_templates.get_template(
         db=context.db_session, template_id=template_id
@@ -66,4 +120,35 @@ def get_template_by_id(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Template not found."
         )
-    return template
+
+    required_app_ids = [app.id for app in template.required_apps]
+
+    user_linked_accounts = crud.linked_accounts.get_linked_accounts_for_apps(
+        db=context.db_session, user_id=context.user.id, app_ids=required_app_ids
+    )
+    linked_app_ids: Set[str] = {la.app_id for la in user_linked_accounts}
+
+    required_apps_with_status = [
+        AppForTemplatePublic(
+            id=app.id,
+            name=app.name,
+            display_name=app.display_name,
+            logo=app.logo,
+            is_linked=app.id in linked_app_ids,
+        )
+        for app in template.required_apps
+    ]
+
+    all_linked = set(required_app_ids).issubset(linked_app_ids)
+
+    return AutomationTemplatePublic(
+        id=template.id,
+        name=template.name,
+        description=template.description,
+        tags=template.tags,
+        goal=template.goal,
+        is_deep=template.is_deep,
+        variable_names=template.variable_names,
+        required_apps=required_apps_with_status,
+        all_apps_linked=all_linked,
+    )

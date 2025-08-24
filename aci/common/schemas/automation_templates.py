@@ -10,7 +10,7 @@ class AppForTemplatePublic(BaseModel):
     name: str
     display_name: str
     logo: Optional[str] = None
-
+    is_linked: bool = Field(False, description="Indicates if the current user has linked this app.")
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -26,7 +26,7 @@ class AutomationTemplatePublic(BaseModel):
     is_deep: bool
     variable_names: List[str]
     required_apps: List[AppForTemplatePublic] = []
-
+    all_apps_linked: bool = Field(False, description="Indicates if the user has linked all apps required by this template.")
     model_config = ConfigDict(from_attributes=True)
 
 

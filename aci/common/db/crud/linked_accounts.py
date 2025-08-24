@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
@@ -227,3 +227,26 @@ def get_linked_account_for_app_and_user(
         LinkedAccount.app_id == app_id, LinkedAccount.user_id == user_id
     )
     return db.execute(stmt).scalar_one_or_none()
+
+
+def get_linked_accounts_for_apps(
+    db: Session, *, user_id: str, app_ids: List[str]
+) -> List[LinkedAccount]:
+    """
+    Efficiently retrieves all of a user's linked accounts for a given list of app IDs.
+
+    Args:
+        db: The SQLAlchemy database session.
+        user_id: The ID of the user.
+        app_ids: A list of app IDs to check for linked accounts.
+
+    Returns:
+        A list of the user's LinkedAccount objects for the specified apps.
+    """
+    if not app_ids:
+        return []
+
+    stmt = select(LinkedAccount).where(
+        LinkedAccount.user_id == user_id, LinkedAccount.app_id.in_(app_ids)
+    )
+    return list(db.execute(stmt).scalars().all())
