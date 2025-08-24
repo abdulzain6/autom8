@@ -58,7 +58,7 @@ def create_run(db: Session, automation_id: str) -> AutomationRun:
     automation.last_run_status = RunStatus.in_progress
     automation.last_run_at = start_time
 
-    db.commit()
+    db.flush()
     db.refresh(run)
     db.refresh(automation)
     return run
@@ -116,29 +116,11 @@ def finalize_run(
         run.automation.last_run_status = status
         run.automation.last_run_at = finish_time
 
-    db.commit()
+    db.flush()
     db.refresh(run)
     if run.automation:
         db.refresh(run.automation)
     return run
-
-
-def add_artifact_to_run(db: Session, run_id: str, artifact_id: str) -> None:
-    """Associates an existing artifact with an automation run."""
-    run = get_run(db, run_id)
-    if not run:
-        raise ValueError(f"Run {run_id} not found")
-
-    artifact = db.get(Artifact, artifact_id)
-    if not artifact:
-        raise ValueError(f"Artifact {artifact_id} not found")
-
-    if artifact.user_id != run.automation.user_id:
-        raise ValueError("Artifact does not belong to the automation owner")
-
-    if artifact not in run.artifacts:
-        run.artifacts.append(artifact)
-        db.commit()
 
 
 def delete_run(db: Session, run_id: str) -> None:

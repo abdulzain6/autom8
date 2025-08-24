@@ -193,6 +193,8 @@ def run_an_automation(
     # Create the run record first to get a run_id and "lock" the automation
     automation_run = crud.automation_runs.create_run(context.db_session, automation_id)
     
+    context.db_session.commit()
+    
     # Enqueue the task with the specific run_id
     execute_automation(automation_run.id)
     
