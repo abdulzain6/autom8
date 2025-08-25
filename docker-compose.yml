@@ -3,7 +3,6 @@ version: "3.8"
 services:
   # --- 1. Edge Router / Reverse Proxy (Caddy) ---
   caddy:
-    # ... (no changes needed)
     build:
       context: ./caddy
       dockerfile: Dockerfile
@@ -73,6 +72,18 @@ services:
       - web_proxy
 
   # --- 5. Internal Services ---
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 15s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - services_network
+
   code-executor:
     build:
       context: ./code_executor

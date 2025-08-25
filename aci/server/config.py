@@ -79,3 +79,5 @@ HTTP_PROXY = os.getenv("SERVER_HTTP_PROXY")
 # LLM
 DEEPINFRA_API_KEY = check_and_get_env_variable("SERVER_DEEPINFRA_API_KEY")
 DEEPINFRA_BASE_URL = check_and_get_env_variable("SERVER_DEEPINFRA_BASE_URL")
+
+GOTENBERG_URL = check_and_get_env_variable("SERVER_GOTENBERG_URL")

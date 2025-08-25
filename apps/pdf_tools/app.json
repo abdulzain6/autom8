@@ -1,0 +1,20 @@
+{
+  "name": "PDF_TOOLS",
+  "display_name": "PDF Tools",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/main/app_logos/pdf-tools.png",
+  "provider": "Autom8 Connectors",
+  "version": "1.0.0",
+  "description": "A powerful suite of tools for creating, manipulating, and extracting data from PDF files. Convert web pages, office documents, and markdown to PDF, or merge, split, and edit PDF metadata.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Productivity",
+    "Documents",
+    "Utilities",
+    "Data Conversion"
+  ],
+  "visibility": "public",
+  "active": true
+}

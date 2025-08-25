@@ -1,0 +1,360 @@
+[
+    {
+        "name": "PDF_TOOLS__URL_TO_PDF",
+        "description": "Converts a public webpage from a URL into a PDF document.",
+        "tags": [
+            "pdf",
+            "convert",
+            "url",
+            "webpage",
+            "html"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "The full URL of the public webpage to convert into a PDF."
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "The desired filename for the resulting PDF artifact (e.g., 'report.pdf')."
+                }
+            },
+            "required": [
+                "url",
+                "output_filename"
+            ],
+            "visible": [
+                "url",
+                "output_filename"
+            ],
+            "additionalProperties": true
+        }
+    },
+    {
+        "name": "PDF_TOOLS__HTML_TO_PDF",
+        "description": "Converts a string of HTML code into a PDF document.",
+        "tags": [
+            "pdf",
+            "convert",
+            "html",
+            "code",
+            "document"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "html_content": {
+                    "type": "string",
+                    "description": "The raw HTML content to be rendered into a PDF."
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "The desired filename for the resulting PDF artifact (e.g., 'document.pdf')."
+                }
+            },
+            "required": [
+                "html_content",
+                "output_filename"
+            ],
+            "visible": [
+                "html_content",
+                "output_filename"
+            ],
+            "additionalProperties": true
+        }
+    },
+    {
+        "name": "PDF_TOOLS__MARKDOWN_TO_PDF",
+        "description": "Converts a string of Markdown text into a formatted PDF document.",
+        "tags": [
+            "pdf",
+            "convert",
+            "markdown",
+            "md",
+            "text",
+            "document"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "markdown_content": {
+                    "type": "string",
+                    "description": "The raw Markdown text to be converted into a PDF."
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "The desired filename for the resulting PDF artifact (e.g., 'notes.pdf')."
+                }
+            },
+            "required": [
+                "markdown_content",
+                "output_filename"
+            ],
+            "visible": [
+                "markdown_content",
+                "output_filename"
+            ],
+            "additionalProperties": true
+        }
+    },
+    {
+        "name": "PDF_TOOLS__OFFICE_TO_PDF",
+        "description": "Converts a single Office document (e.g., DOCX, XLSX, PPTX) into a PDF.",
+        "tags": [
+            "pdf",
+            "convert",
+            "office",
+            "word",
+            "excel",
+            "powerpoint",
+            "docx",
+            "xlsx"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "artifact_id": {
+                    "type": "string",
+                    "description": "The artifact ID of the Office document to convert."
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "The desired filename for the resulting PDF artifact."
+                }
+            },
+            "required": [
+                "artifact_id",
+                "output_filename"
+            ],
+            "visible": [
+                "artifact_id",
+                "output_filename"
+            ],
+            "additionalProperties": true
+        }
+    },
+    {
+        "name": "PDF_TOOLS__MERGE_PDFS",
+        "description": "Merges two or more PDF documents into a single PDF file.",
+        "tags": [
+            "pdf",
+            "merge",
+            "combine",
+            "join",
+            "document"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "artifact_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "A list of artifact IDs for the PDF files to merge, in the desired order."
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "The desired filename for the final merged PDF artifact."
+                }
+            },
+            "required": [
+                "artifact_ids",
+                "output_filename"
+            ],
+            "visible": [
+                "artifact_ids",
+                "output_filename"
+            ],
+            "additionalProperties": true
+        }
+    },
+    {
+        "name": "PDF_TOOLS__SPLIT_PDF",
+        "description": "Splits a PDF document based on page ranges or intervals.",
+        "tags": [
+            "pdf",
+            "split",
+            "extract",
+            "pages",
+            "document"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "artifact_id": {
+                    "type": "string",
+                    "description": "The artifact ID of the PDF document to split."
+                },
+                "split_mode": {
+                    "type": "string",
+                    "description": "The split mode, either 'pages' (for specific page numbers) or 'intervals' (to split into equal parts)."
+                },
+                "split_span": {
+                    "type": "string",
+                    "description": "The page ranges (e.g., '1-3,5') or the interval size (e.g., '1' for single pages) to extract."
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "The desired base filename for the output. The result may be a PDF or a ZIP archive."
+                }
+            },
+            "required": [
+                "artifact_id",
+                "split_mode",
+                "split_span",
+                "output_filename"
+            ],
+            "visible": [
+                "artifact_id",
+                "split_mode",
+                "split_span",
+                "output_filename"
+            ],
+            "additionalProperties": true
+        }
+    },
+    {
+        "name": "PDF_TOOLS__FLATTEN_PDF",
+        "description": "Flattens a PDF to convert annotations, forms, and layers into static content.",
+        "tags": [
+            "pdf",
+            "flatten",
+            "form",
+            "annotation",
+            "document"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "artifact_id": {
+                    "type": "string",
+                    "description": "The artifact ID of the PDF document to flatten."
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "The desired filename for the flattened PDF artifact."
+                }
+            },
+            "required": [
+                "artifact_id",
+                "output_filename"
+            ],
+            "visible": [
+                "artifact_id",
+                "output_filename"
+            ],
+            "additionalProperties": true
+        }
+    },
+    {
+        "name": "PDF_TOOLS__READ_PDF_METADATA",
+        "description": "Reads and returns metadata (e.g., author, title, creation date) from a PDF file.",
+        "tags": [
+            "pdf",
+            "metadata",
+            "read",
+            "info",
+            "properties",
+            "extract"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "artifact_id": {
+                    "type": "string",
+                    "description": "The artifact ID of the PDF file to read metadata from."
+                }
+            },
+            "required": [
+                "artifact_id"
+            ],
+            "visible": [
+                "artifact_id"
+            ],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "PDF_TOOLS__WRITE_PDF_METADATA",
+        "description": "Writes or overwrites metadata fields in a PDF file and creates a new version.",
+        "tags": [
+            "pdf",
+            "metadata",
+            "write",
+            "edit",
+            "properties",
+            "update"
+        ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "artifact_id": {
+                    "type": "string",
+                    "description": "The artifact ID of the PDF to modify."
+                },
+                "metadata": {
+                    "type": "object",
+                    "description": "A JSON object of metadata to write. Common keys include 'Author', 'Title', 'Subject', 'Keywords'.",
+                    "properties": {},
+                    "required": [],
+                    "visible": [],
+                    "additionalProperties": true
+                },
+                "output_filename": {
+                    "type": "string",
+                    "description": "The desired filename for the new PDF with updated metadata."
+                }
+            },
+            "required": [
+                "artifact_id",
+                "metadata",
+                "output_filename"
+            ],
+            "visible": [
+                "artifact_id",
+                "metadata",
+                "output_filename"
+            ],
+            "additionalProperties": true
+        }
+    }
+]
