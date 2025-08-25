@@ -15,6 +15,8 @@ class AppForTemplatePublic(BaseModel):
     is_linked: bool = Field(False, description="Indicates if the current user has linked this app.")
     model_config = ConfigDict(from_attributes=True)
     security_scheme: list[SecurityScheme]
+    linked_account_id: str | None
+    instructions: str | None = None
 
 
 # --- Main Schemas for Automation Templates ---

@@ -2,6 +2,7 @@ from typing import Annotated, List, Set
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from aci.common.db import crud
+from aci.common.enums import SecurityScheme
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.automation_templates import (
     AppForTemplatePublic,
@@ -78,6 +79,13 @@ def list_all_templates(
                     logo=app.logo,
                     is_linked=is_linked,
                     security_scheme=list(app.security_schemes.keys()),
+                    instructions=app.security_schemes.get(
+                        SecurityScheme.API_KEY, {}
+                    ).get("instructions", None),
+                    linked_account_id=next(
+                        (la.id for la in user_linked_accounts if la.app_id == app.id),
+                        None,
+                    ),
                 )
             )
             template_app_ids.add(app.id)
@@ -137,6 +145,12 @@ def get_template_by_id(
             logo=app.logo,
             is_linked=app.id in linked_app_ids,
             security_scheme=list(app.security_schemes.keys()),
+            instructions=app.security_schemes.get(SecurityScheme.API_KEY, {}).get(
+                "instructions", None
+            ),
+            linked_account_id=next(
+                (la.id for la in user_linked_accounts if la.app_id == app.id), None
+            ),
         )
         for app in template.required_apps
     ]
