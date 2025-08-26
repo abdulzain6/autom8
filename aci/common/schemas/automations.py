@@ -26,6 +26,7 @@ class AutomationPublic(BaseModel):
     description: Optional[str]
     user_id: str
     goal: str
+    active: bool
     last_run_at: Optional[datetime]
     is_recurring: bool
     cron_schedule: Optional[str] = None
