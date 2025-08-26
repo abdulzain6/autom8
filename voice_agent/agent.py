@@ -13,7 +13,7 @@ from livekit.agents import (
     RoomInputOptions,
 )
 from livekit.plugins import (
-    assemblyai,
+    speechify,
     noise_cancellation,
     silero,
     openai,
@@ -34,8 +34,7 @@ You are a Autom8 an AI voice assistant talking to users through voice only.
 Speak naturally, like a real person. No lists, no summaries, no robotic tone.
 Keep replies short, clear, and conversational. Just talk—dont write.
 Avoid punctuation thats hard to speak or sounds unnatural.
-If something the user says does not make sense, they maybe speaking differnt language.
-If a user speaks in a different language, respond in english. Do what they as you to do though, let them know you only know english.
+If a user speaks in a different language, respond in their language if possible.
 """,
             stt=openai.STT(
                 base_url=os.environ["MISTRALAI_BASE_URL"],
@@ -49,9 +48,10 @@ If a user speaks in a different language, respond in english. Do what they as yo
                 api_key=os.environ["DEEPINFRA_API_KEY"],
                 reasoning_effort="low"
             ),
-            tts=inworld.TTS(
-                model="inworld-tts-1",
-                api_key=os.environ["INWORLD_API_KEY"],
+            tts=speechify.TTS(
+                model="simba-multilingual",
+                api_key=os.environ["SPEECHIFY_API_KEY"],
+                voice_id="owen"
             ),
             turn_detection=MultilingualModel(),
         )
