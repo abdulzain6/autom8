@@ -1,4 +1,6 @@
 import os
+
+from pydantic import SecretStr
 from aci.common.utils import check_and_get_env_variable, construct_db_url
 import dotenv
 
@@ -81,3 +83,10 @@ DEEPINFRA_API_KEY = check_and_get_env_variable("SERVER_DEEPINFRA_API_KEY")
 DEEPINFRA_BASE_URL = check_and_get_env_variable("SERVER_DEEPINFRA_BASE_URL")
 
 GOTENBERG_URL = check_and_get_env_variable("SERVER_GOTENBERG_URL")
+
+# SMTP
+SMTP_SERVER = check_and_get_env_variable("SERVER_SMTP_SERVER")
+SMTP_PORT = int(check_and_get_env_variable("SERVER_SMTP_PORT"))
+SMTP_USERNAME = check_and_get_env_variable("SERVER_SMTP_USERNAME")  
+SMTP_PASSWORD = SecretStr(check_and_get_env_variable("SERVER_SMTP_PASSWORD"))
+FROM_EMAIL_AGENT = check_and_get_env_variable("SERVER_FROM_EMAIL_AGENT")

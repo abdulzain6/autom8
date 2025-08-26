@@ -1,0 +1,34 @@
+[
+  {
+    "name": "NOTIFYME__SEND_ME_EMAIL",
+    "description": "Sends an email to your own email address, with an optional list of file attachments.",
+    "tags": ["email", "notification", "alert", "reporting"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "subject": {
+          "type": "string",
+          "description": "The subject line for the email."
+        },
+        "body": {
+          "type": "string",
+          "description": "The main content/body of the email. Can be plain text or formatted markdown."
+        },
+        "artifact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An optional list of artifact IDs to include as file attachments. Total size cannot exceed 10MB."
+        }
+      },
+      "required": ["subject", "body"],
+      "visible": ["subject", "body", "artifact_ids"],
+      "additionalProperties": false
+    }
+  }
+]

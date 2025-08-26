@@ -1,0 +1,18 @@
+{
+  "name": "NOTIFYME",
+  "display_name": "Notify Me",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/notify-me.png",
+  "provider": "Internal",
+  "version": "1.0.0",
+  "description": "A utility for sending notifications directly to you. Use it to get alerts, reports, or the output of other automations, with optional file attachments. Supports multiple notification channels.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Productivity",
+    "Utilities"
+  ],
+  "visibility": "public",
+  "active": true
+}
