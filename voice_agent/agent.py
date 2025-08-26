@@ -51,7 +51,7 @@ If a user speaks in a different language, respond in their language if possible.
             tts=speechify.TTS(
                 model="simba-multilingual",
                 api_key=os.environ["SPEECHIFY_API_KEY"],
-                voice_id="owen"
+                voice_id="arun",
             ),
             turn_detection=MultilingualModel(),
         )
