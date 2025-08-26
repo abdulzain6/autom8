@@ -37,12 +37,11 @@ Avoid punctuation thats hard to speak or sounds unnatural.
 If something the user says does not make sense, they maybe speaking differnt language.
 If a user speaks in a different language, respond in english. Do what they as you to do though, let them know you only know english.
 """,
-            stt=assemblyai.STT(
-                api_key=os.environ["ASSEMBLYAI_API_KEY"],
-                format_turns=False,
-                max_turn_silence=1000,
-                min_end_of_turn_silence_when_confident=100,
-                end_of_turn_confidence_threshold=0.6
+            stt=openai.STT(
+                base_url=os.environ["DEEPINFRA_BASE_URL"],
+                api_key=os.environ["DEEPINFRA_API_KEY"],
+                model="mistralai/Voxtral-Small-24B-2507",
+                prompt="You are a helpful assistant that transcribes voice to text. Transcribe the audio as accurately as possible. If you are unsure about a word, make your best guess. Do not include any additional commentary or notes in the transcription. For any emotions or non-verbal sounds, use brackets to indicate them, e.g., [laughter], [applause].",
             ),
             llm=openai.LLM(
                 model="Qwen/Qwen3-235B-A22B-Instruct-2507",
