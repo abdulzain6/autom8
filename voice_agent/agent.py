@@ -38,9 +38,9 @@ If something the user says does not make sense, they maybe speaking differnt lan
 If a user speaks in a different language, respond in english. Do what they as you to do though, let them know you only know english.
 """,
             stt=openai.STT(
-                base_url=os.environ["DEEPINFRA_BASE_URL"],
-                api_key=os.environ["DEEPINFRA_API_KEY"],
-                model="mistralai/Voxtral-Mini-3B-2507",
+                base_url=os.environ["MISTRALAI_BASE_URL"],
+                api_key=os.environ["MISTRALAI_API_KEY"],
+                model="voxtral-mini-2507",
                 prompt="You are a helpful assistant that transcribes voice to text. Transcribe the audio as accurately as possible. If you are unsure about a word, make your best guess. Do not include any additional commentary or notes in the transcription. For any emotions or non-verbal sounds, use brackets to indicate them, e.g., [laughter], [applause].",
             ),
             llm=openai.LLM(
