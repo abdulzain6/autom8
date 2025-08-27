@@ -41,13 +41,13 @@ If a user speaks in a different language, respond in their language if possible.
                 prompt="You are a helpful assistant that transcribes voice to text. Transcribe the audio as accurately as possible. If you are unsure about a word, make your best guess. Do not include any additional commentary or notes in the transcription. For any emotions or non-verbal sounds, use brackets to indicate them, e.g., [laughter], [applause].",
             ),
             llm=openai.LLM(
-                model="openai/gpt-oss-20b",
+                model="deepseek-ai/DeepSeek-V3.1",
                 base_url=os.environ["DEEPINFRA_BASE_URL"],
                 api_key=os.environ["DEEPINFRA_API_KEY"],
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
-                voice="sage"
+                voice="sage",
             ),
             turn_detection=MultilingualModel(),
         )
