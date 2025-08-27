@@ -44,7 +44,6 @@ If a user speaks in a different language, respond in their language if possible.
                 model="Qwen/Qwen3-235B-A22B-Instruct-2507",
                 base_url=os.environ["DEEPINFRA_BASE_URL"],
                 api_key=os.environ["DEEPINFRA_API_KEY"],
-                reasoning_effort="low"
             ),
             tts=speechify.TTS(
                 model="simba-multilingual",
