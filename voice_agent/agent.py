@@ -41,7 +41,7 @@ If a user speaks in a different language, respond in their language if possible.
                 prompt="You are a helpful assistant that transcribes voice to text. Transcribe the audio as accurately as possible. If you are unsure about a word, make your best guess. Do not include any additional commentary or notes in the transcription. For any emotions or non-verbal sounds, use brackets to indicate them, e.g., [laughter], [applause].",
             ),
             llm=openai.LLM(
-                model="Qwen/Qwen3-235B-A22B-Instruct-2507",
+                model="openai/gpt-oss-20b",
                 base_url=os.environ["DEEPINFRA_BASE_URL"],
                 api_key=os.environ["DEEPINFRA_API_KEY"],
             ),
