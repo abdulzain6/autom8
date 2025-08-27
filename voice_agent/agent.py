@@ -37,9 +37,7 @@ Avoid punctuation thats hard to speak or sounds unnatural.
 If a user speaks in a different language, respond in their language if possible.
 """,
             stt=openai.STT(
-                base_url=os.environ["MISTRALAI_BASE_URL"],
-                api_key=os.environ["MISTRALAI_API_KEY"],
-                model="voxtral-mini-2507",
+                model="gpt-4o-mini-transcribe",
                 prompt="You are a helpful assistant that transcribes voice to text. Transcribe the audio as accurately as possible. If you are unsure about a word, make your best guess. Do not include any additional commentary or notes in the transcription. For any emotions or non-verbal sounds, use brackets to indicate them, e.g., [laughter], [applause].",
             ),
             llm=openai.LLM(
