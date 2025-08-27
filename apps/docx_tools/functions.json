@@ -1,0 +1,31 @@
+[
+  {
+    "name": "DOCX_TOOLS__MARKDOWN_TO_DOCX",
+    "description": "Converts a string of Markdown text into a Microsoft Word (.docx) file and saves it as an artifact.",
+    "tags": ["docx", "markdown", "convert", "report", "document", "word"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "markdown_content": {
+          "type": "string",
+          "description": "The Markdown content to be converted into a document."
+        },
+        "output_filename": {
+          "type": "string",
+          "description": "The desired filename for the final .docx artifact (e.g., 'Weekly_Report.docx')."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title to be placed at the top of the Word document."
+        }
+      },
+      "required": ["markdown_content", "output_filename", "title"],
+      "visible": ["markdown_content", "output_filename", "title"],
+      "additionalProperties": false
+    }
+  }
+]

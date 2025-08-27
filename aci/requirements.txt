@@ -220,3 +220,8 @@ langgraph==0.6.6
 croniter==6.0.0
 huey==2.5.3
 langchain_openai
+python-whois 
+dnspython 
+geocoder
+markdown==3.8.2
+html2docx==1.6.0
