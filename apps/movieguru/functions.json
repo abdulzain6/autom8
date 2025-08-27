@@ -1,0 +1,95 @@
+[
+  {
+    "name": "MOVIE_GURU__SEARCH_MOVIE",
+    "description": "Searches for movies by title and returns a list of matching results with summary information.",
+    "tags": ["movie", "search", "find", "film"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the movie to search for (e.g., 'Inception')."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "The maximum number of search results to return. Defaults to 5."
+        }
+      },
+      "required": ["title"],
+      "visible": ["title", "limit"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "MOVIE_GURU__GET_MOVIE_DETAILS",
+    "description": "Retrieves detailed information about a specific movie, with optional info sets (e.g., plot, cast, technical).",
+    "tags": ["movie", "details", "info", "plot", "cast", "release date"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "movie_id": {
+          "type": "string",
+          "description": "The IMDb ID of the movie, which is the number part of the URL (e.g., '0133093' for The Matrix)."
+        },
+        "info_sets": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional list of IMDb info sets to fetch (e.g., ['main', 'plot', 'keywords']). Defaults to ['main']."
+        }
+      },
+      "required": ["movie_id"],
+      "visible": ["movie_id", "info_sets"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "MOVIE_GURU__GET_TOP_250_MOVIES",
+    "description": "Fetches a list of the highest-rated movies from the official IMDb Top 250 chart, with fallback to the Popular 100 if needed.",
+    "tags": ["movie", "top rated", "best", "popular", "classic"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "description": "The number of movies to return from the top of the list. Defaults to 10."
+        }
+      },
+      "required": [],
+      "visible": ["limit"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "MOVIE_GURU__GET_UPCOMING_MOVIES",
+    "description": "Fetches a list of upcoming movies (proxied via IMDb’s popular 100 list).",
+    "tags": ["movie", "upcoming", "soon", "popular"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "description": "The maximum number of upcoming movies to return. Defaults to 10."
+        }
+      },
+      "required": [],
+      "visible": ["limit"],
+      "additionalProperties": false
+    }
+  }
+]

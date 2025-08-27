@@ -1,0 +1,19 @@
+{
+  "name": "MOVIE_GURU",
+  "display_name": "Movie Guru",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/movie-guru.png",
+  "provider": "IMDb (via Cinemagoer)",
+  "version": "1.0.0",
+  "description": "Your expert guide for movie information. Search for any movie, get detailed information like plots and cast, discover top-rated classics, and see what's popular or coming soon.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Entertainment",
+    "Data",
+    "Search"
+  ],
+  "visibility": "public",
+  "active": true
+}
