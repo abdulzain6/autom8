@@ -17,7 +17,6 @@ from livekit.plugins import (
     noise_cancellation,
     silero,
     openai,
-    inworld
 )
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
