@@ -13,7 +13,6 @@ from livekit.agents import (
     RoomInputOptions,
 )
 from livekit.plugins import (
-    speechify,
     noise_cancellation,
     silero,
     openai,
@@ -36,7 +35,9 @@ Avoid punctuation thats hard to speak or sounds unnatural.
 If a user speaks in a different language, respond in their language if possible.
 """,
             stt=openai.STT(
-                model="gpt-4o-mini-transcribe",
+                base_url=os.environ["MISTRALAI_BASE_URL"],
+                api_key=os.environ["MISTRALAI_API_KEY"],
+                model="voxtral-mini-2507",
                 prompt="You are a helpful assistant that transcribes voice to text. Transcribe the audio as accurately as possible. If you are unsure about a word, make your best guess. Do not include any additional commentary or notes in the transcription. For any emotions or non-verbal sounds, use brackets to indicate them, e.g., [laughter], [applause].",
             ),
             llm=openai.LLM(
@@ -44,10 +45,9 @@ If a user speaks in a different language, respond in their language if possible.
                 base_url=os.environ["DEEPINFRA_BASE_URL"],
                 api_key=os.environ["DEEPINFRA_API_KEY"],
             ),
-            tts=speechify.TTS(
-                model="simba-multilingual",
-                api_key=os.environ["SPEECHIFY_API_KEY"],
-                voice_id="arun",
+            tts=openai.TTS(
+                model="gpt-4o-mini-tts",
+                voice="sage"
             ),
             turn_detection=MultilingualModel(),
         )
