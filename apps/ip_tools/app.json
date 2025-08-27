@@ -1,0 +1,19 @@
+{
+  "name": "IP_TOOLS",
+  "display_name": "IP Tools",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/ip-tools.png",
+  "provider": "Internal",
+  "version": "1.0.0",
+  "description": "A toolkit for network diagnostics and information gathering. Provides tools for looking up IP address details (geolocation, WHOIS) and performing various DNS record queries.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Utilities",
+    "Dev Tools",
+    "Network"
+  ],
+  "visibility": "public",
+  "active": true
+}

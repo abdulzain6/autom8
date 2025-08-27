@@ -1,0 +1,52 @@
+[
+  {
+    "name": "IP_TOOLS__GET_IP_INFO",
+    "description": "Retrieves geolocation and WHOIS ownership information for a given IP address.",
+    "tags": ["ip", "network", "whois", "geolocation", "lookup"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "ip_address": {
+          "type": "string",
+          "description": "The IPv4 or IPv6 address to look up (e.g., '8.8.8.8')."
+        }
+      },
+      "required": ["ip_address"],
+      "visible": ["ip_address"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "IP_TOOLS__DNS_LOOKUP",
+    "description": "Performs DNS lookups for a given domain and one or more record types (A, AAAA, MX, NS, TXT, CNAME).",
+    "tags": ["dns", "network", "domain", "lookup", "records"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "The domain name to query (e.g., 'google.com')."
+        },
+        "record_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["A", "AAAA", "MX", "NS", "TXT", "CNAME"]
+          },
+          "description": "A list of DNS record types to look up."
+        }
+      },
+      "required": ["domain", "record_types"],
+      "visible": ["domain", "record_types"],
+      "additionalProperties": false
+    }
+  }
+]
