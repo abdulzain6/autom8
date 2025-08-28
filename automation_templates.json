@@ -1,0 +1,87 @@
+{
+  "templates": [
+    {
+      "name": "Get Top News Headlines",
+      "description": "Fetches the current top 5 news headlines for a specific country and sends them to you in an email.",
+      "tags": [
+        "News"
+      ],
+      "goal": "Fetch the top 5 news headlines from Google News for the '{{ variables['Country'] }}' region. Then, format these headlines into a clean summary and send it to me in an email with the subject 'Your Daily News Briefing'.",
+      "variable_names": [
+        "Country"
+      ],
+      "required_app_names": [
+        "GOOGLE_NEWS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Comprehensive Stock Analysis Report",
+      "description": "Generates a detailed report for a stock, including fundamental data, historical performance, search trends, and the latest news.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "For the stock ticker '{{ variables['Stock Ticker'] }}', create a comprehensive research report. For fundamental analysis, retrieve the company's key info like its business summary and market cap. For technical analysis, fetch the historical stock data for the past year. For market trends, get the latest company news and the Google search interest over the last 3 months. Finally, synthesize all of this information into a well-structured report.",
+      "variable_names": [
+        "Stock Ticker"
+      ],
+      "required_app_names": [
+        "YAHOO_FINANCE",
+        "GOOGLE_TRENDS"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Create Weekly GitHub Report Issue",
+      "description": "Creates a new issue in a GitHub repository, ideal for weekly reports or reminders.",
+      "tags": [
+        "Dev Tools"
+      ],
+      "goal": "Create a new issue in the GitHub repository '{{ variables['GitHub Owner'] }}/{{ variables['GitHub Repository'] }}' with the title '{{ variables['Issue Title'] }}'. For the issue body, provide a summary of the repository's activity over the last 7 days.",
+      "variable_names": [
+        "GitHub Owner",
+        "GitHub Repository",
+        "Issue Title"
+      ],
+      "required_app_names": [
+        "GITHUB"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Domain DNS Report",
+      "description": "Performs a DNS lookup for a domain to get key records and emails you the results.",
+      "tags": [
+        "Utilities"
+      ],
+      "goal": "Perform a DNS lookup for the domain '{{ variables['Domain Name'] }}' to get its 'A', 'MX', and 'TXT' records. Format the results into a clear report and send it to me in an email with the subject 'DNS Report for {{ variables['Domain Name'] }}'.",
+      "variable_names": [
+        "Domain Name"
+      ],
+      "required_app_names": [
+        "IP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Wikipedia Article to DOCX",
+      "description": "Summarizes a Wikipedia article on any topic and saves the summary as a Microsoft Word document.",
+      "tags": [
+        "Research"
+      ],
+      "goal": "Get the summary of the Wikipedia article for the topic '{{ variables['Topic'] }}'. Then, take that summary content and convert it into a Microsoft Word document with the title '{{ variables['Document Title'] }}'. Save the final file as '{{ variables['Output Filename'] }}.docx'.",
+      "variable_names": [
+        "Topic",
+        "Document Title",
+        "Output Filename"
+      ],
+      "required_app_names": [
+        "WIKIPEDIA_API",
+        "DOCX_TOOLS"
+      ],
+      "is_deep": false
+    }
+  ]
+}

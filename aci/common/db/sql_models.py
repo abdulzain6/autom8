@@ -550,7 +550,6 @@ class AutomationTemplate(Base):
         TSVECTOR,
         nullable=True,
         init=False,
-        # This tells SQLAlchemy to expect the database to generate this value.
         server_default=None, 
     )
     variable_names: Mapped[List[str]] = mapped_column(

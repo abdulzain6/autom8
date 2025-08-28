@@ -1,8 +1,8 @@
-from typing import List, Optional, Tuple
-from sqlalchemy import and_, null, select, update
+from typing import List, Optional, Tuple, Dict
+from sqlalchemy import and_, null, select, update, func
 from sqlalchemy.orm import Session, selectinload
 
-from aci.common.db.sql_models import App, LinkedAccount, Function, AppConfiguration, DefaultAppCredential
+from aci.common.db.sql_models import App, LinkedAccount, Function, AppConfiguration, DefaultAppCredential, AutomationTemplate, automation_template_apps
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppUpsert
 
@@ -49,9 +49,10 @@ def get_app(db_session: Session, app_name: str, active_only: bool) -> App | None
 
 def get_app_with_user_context(
     db_session: Session, app_name: str, user_id: str, active_only: bool
-) -> Tuple[App, Optional[LinkedAccount]] | None:
+) -> Optional[Tuple[App, Optional[LinkedAccount], List[AutomationTemplate]]]:
     """
-    Efficiently retrieves a single App and the user's LinkedAccount for it in one query.
+    Efficiently retrieves a single App, the user's LinkedAccount for it,
+    and a list of related automation templates.
     """
     stmt = (
         select(App, LinkedAccount)
@@ -70,7 +71,61 @@ def get_app_with_user_context(
         stmt = stmt.filter(App.active)
     
     result = db_session.execute(stmt).first()
-    return result if result else None # type: ignore
+
+    if not result:
+        return None
+
+    app, linked_account = result
+
+    templates_stmt = (
+        select(AutomationTemplate)
+        .join(automation_template_apps)
+        .where(automation_template_apps.c.app_id == app.id)
+        .order_by(AutomationTemplate.name)
+        .limit(5)
+    )
+    related_templates = list(db_session.execute(templates_stmt).scalars().all())
+
+    return app, linked_account, related_templates
+
+
+def _fetch_and_map_related_templates(db: Session, apps: List[App]) -> Dict[str, List[AutomationTemplate]]:
+    """
+    Given a list of apps, efficiently fetches all related templates and maps them by app_id.
+    """
+    if not apps:
+        return {}
+    
+    app_ids = [app.id for app in apps]
+    
+    # Subquery to rank templates for each app and select the top 5
+    template_subquery = (
+        select(
+            automation_template_apps.c.app_id,
+            AutomationTemplate,
+            func.row_number().over(
+                partition_by=automation_template_apps.c.app_id,
+                order_by=AutomationTemplate.name,
+            ).label("rn")
+        )
+        .join(AutomationTemplate)
+        .where(automation_template_apps.c.app_id.in_(app_ids))
+        .subquery("ranked_templates")
+    )
+    
+    # Final query to get the top 5 templates
+    templates_stmt = select(
+        template_subquery.c.app_id,
+        AutomationTemplate
+    ).select_from(template_subquery).where(template_subquery.c.rn <= 5)
+    
+    results = db.execute(templates_stmt).all()
+    
+    templates_by_app_id: Dict[str, List[AutomationTemplate]] = {app_id: [] for app_id in app_ids}
+    for app_id, template in results:
+        templates_by_app_id[app_id].append(template)
+            
+    return templates_by_app_id
 
 
 def list_apps_with_user_context(
@@ -81,7 +136,11 @@ def list_apps_with_user_context(
     app_names: Optional[List[str]] = None,
     limit: int = 100,
     offset: int = 0,
-) -> List[Tuple[App, Optional[LinkedAccount]]]:
+    return_automation_templates: bool = False,
+) -> List[Tuple[App, Optional[LinkedAccount], List[AutomationTemplate]]]:
+    """
+    Efficiently retrieves a list of Apps, optionally including related templates.
+    """
     stmt = (
         select(App, LinkedAccount)
         .outerjoin(
@@ -98,12 +157,24 @@ def list_apps_with_user_context(
     if active_only:
         stmt = stmt.where(App.active == True)
     if configured_only:
-        stmt = stmt.where(App.configuration != None)
+        stmt = stmt.where(App.configuration.has())
     if app_names:
         stmt = stmt.where(App.name.in_(app_names))
     stmt = stmt.limit(limit).offset(offset)
-    results = db.execute(stmt).all()
-    return results # type: ignore
+    
+    app_results = db.execute(stmt).all()
+    
+    apps = [app for app, _ in app_results]
+    templates_map = {}
+    if return_automation_templates and apps:
+        templates_map = _fetch_and_map_related_templates(db, apps)
+        
+    final_results = [
+        (app, linked_account, templates_map.get(app.id, []))
+        for app, linked_account in app_results
+    ]
+        
+    return final_results
 
 
 def search_apps(
@@ -116,9 +187,10 @@ def search_apps(
     intent_embedding: list[float] | None,
     limit: int,
     offset: int,
-) -> list[tuple[App, Optional[LinkedAccount], float | None]]:
+    return_automation_templates: bool = False,
+) -> list[tuple[App, Optional[LinkedAccount], float | None, List[AutomationTemplate]]]:
     """
-    Efficiently searches for apps, joining with the user's linked account info.
+    Efficiently searches for apps, joining with user context and optionally including related templates.
     """
     statement = (
         select(App, LinkedAccount)
@@ -126,7 +198,11 @@ def search_apps(
             LinkedAccount,
             and_(App.id == LinkedAccount.app_id, LinkedAccount.user_id == user_id),
         )
-        .options(selectinload(App.functions)) # Eagerly load functions
+        .options(
+            selectinload(App.functions),
+            selectinload(App.configuration),
+            selectinload(App.default_credentials)
+        )
     )
 
     if active_only:
@@ -138,7 +214,6 @@ def search_apps(
     if categories is not None:
         statement = statement.filter(App.categories.overlap(categories))
 
-
     if intent_embedding is not None:
         similarity_score = App.embedding.cosine_distance(intent_embedding)
         statement = statement.add_columns(similarity_score.label("similarity_score"))
@@ -147,16 +222,22 @@ def search_apps(
         statement = statement.add_columns(null().label("similarity_score"))
         statement = statement.order_by(App.name)
 
-
     statement = statement.offset(offset).limit(limit)
-    logger.debug(f"Executing statement, statement={statement}")
-    results = db_session.execute(statement).all()
+    search_results = db_session.execute(statement).all()
     
-    # The result is a list of Row objects, which can be unpacked
-    return [(app, linked_account, score) for app, linked_account, score in results]
+    apps = [app for app, _, __ in search_results]
+    templates_map = {}
+    if return_automation_templates and apps:
+        templates_map = _fetch_and_map_related_templates(db_session, apps)
+
+    final_results = [
+        (app, linked_account, score, templates_map.get(app.id, []))
+        for app, linked_account, score in search_results
+    ]
+
+    return final_results
 
 
 def set_app_active_status(db_session: Session, app_name: str, active: bool) -> None:
     statement = update(App).filter_by(name=app_name).values(active=active)
     db_session.execute(statement)
-

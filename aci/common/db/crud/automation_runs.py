@@ -11,6 +11,10 @@ from aci.common.db.sql_models import (
     RunStatus,
 )
 from . import automations
+from logging import getLogger
+
+
+logger = getLogger(__name__)
 
 
 def get_run(db: Session, run_id: str) -> Optional[AutomationRun]:
@@ -51,7 +55,7 @@ def create_run(db: Session, automation_id: str) -> AutomationRun:
         automation_id=automation_id,
         started_at=start_time,
         status=RunStatus.in_progress,
-        message=""
+        message="",
     )
     db.add(run)
 
@@ -79,13 +83,11 @@ def finalize_run(
     if not run:
         raise ValueError(f"Run {run_id} not found")
 
-    # If artifact IDs are provided, validate and associate them.
     if artifact_ids:
         existing_artifact_ids = {artifact.id for artifact in run.artifacts}
         new_artifact_ids = [
             aid for aid in artifact_ids if aid not in existing_artifact_ids
         ]
-        # ---------------------------------------------------------
 
         if new_artifact_ids:
             artifacts_stmt = select(Artifact).where(Artifact.id.in_(new_artifact_ids))
@@ -93,21 +95,24 @@ def finalize_run(
 
             found_ids = {artifact.id for artifact in new_artifacts}
             missing_ids = set(new_artifact_ids) - found_ids
+
             if missing_ids:
-                raise ValueError(f"Artifacts not found: {list(missing_ids)}")
+                logger.warning(
+                    f"During finalization of run {run_id}, the following artifact IDs "
+                    f"were not found or have expired: {list(missing_ids)}"
+                )
 
             for artifact in new_artifacts:
                 if artifact.user_id != run.automation.user_id:
                     raise ValueError(
                         f"Artifact {artifact.id} does not belong to the automation owner"
                     )
-            
-            # Append the new, validated artifacts to the existing collection.
+
             run.artifacts.extend(new_artifacts)
 
     finish_time = datetime.now(timezone.utc)
     run.status = status
-    run.message = message # <-- Set the final message
+    run.message = message
     run.finished_at = finish_time
     if logs is not None:
         run.logs = logs

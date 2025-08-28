@@ -1,5 +1,7 @@
 import re
 from datetime import datetime
+from typing import List, Optional
+from fastapi.params import Query
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from aci.common.enums import SecurityScheme
@@ -14,6 +16,13 @@ from aci.common.schemas.security_scheme import (
     SecuritySchemesPublic,
 )
 
+
+class AutomationTemplateBasic(BaseModel):
+    """A slim representation of an AutomationTemplate for embedding in other responses."""
+    id: str
+    name: str
+    description: Optional[str] = None
+    tags: List[str] = []
 
 class DefaultAppCredentialCreate(BaseModel):
     """Schema for creating default app credentials."""
@@ -102,21 +111,13 @@ class AppsSearch(BaseModel):
         default=False,
         description="If true, include functions (name and description) of each app in the response.",
     )
-    categories: list[str] | None = Field(
-        default=None, description="List of categories for filtering."
+    return_automation_templates: bool = Field(
+        default=False, description="Whether to include related automation templates in the response."
     )
     limit: int = Field(
         default=100, ge=1, le=1000, description="Maximum number of Apps per response."
     )
     offset: int = Field(default=0, ge=0, description="Pagination offset.")
-
-    @field_validator("categories")
-    def validate_categories(cls, v: list[str] | None) -> list[str] | None:
-        if v is not None:
-            v = [category for category in v if category.strip()]
-            if not v:
-                return None
-        return v
 
     @field_validator("intent")
     def validate_intent(cls, v: str | None) -> str | None:
@@ -129,14 +130,16 @@ class AppsList(BaseModel):
     """
     Parameters for listing Apps.
     """
-
-    app_names: list[str] | None = Field(
-        default=None, description="List of app names to filter by."
-    )
     limit: int = Field(
         default=100, ge=1, le=1000, description="Maximum number of Apps per response."
     )
     offset: int = Field(default=0, ge=0, description="Pagination offset.")
+    return_functions: bool = Field(
+        default=False, description="Whether to include function details in the response."
+    )
+    return_automation_templates: bool = Field(
+        default=False, description="Whether to include related automation templates in the response."
+    )
 
 
 class AppBasic(BaseModel):
@@ -155,6 +158,7 @@ class AppBasic(BaseModel):
     linked_account_id: str | None
     security_schemes: list[SecurityScheme]
     instructions: str | None = None
+    related_automation_templates: List[AutomationTemplateBasic] = [] 
 
 
 class AppDetails(BaseModel):
@@ -180,3 +184,4 @@ class AppDetails(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     linked_account_id: str | None
     instructions: str | None = None
+    related_automation_templates: List[AutomationTemplateBasic] = []

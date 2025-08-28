@@ -22,11 +22,11 @@ logging.basicConfig(level=logging.INFO)
 
 
 class AutomationResult(BaseModel):
-    """Schema for the result of an automation run."""
+    """The required schema for the final output of the automation run."""
 
-    status: Literal["success", "failure"] = Field(..., description="The status of the automation execution.")
-    automation_output: str = Field(..., description="The final output or result of the automation. This will contain any final messages or data produced by the automation.")
-    artifact_ids: list[str] = Field(default_factory=list, description="List of artifact IDs produced during the automation execution. Only include IDs of artifacts that were created or modified. Only include if you're sure the artifact ids are correct and returned by the tools. The tools will explicitly return the artifact ids.")
+    status: Literal["success", "failure"] = Field(..., description="The final status of the automation execution.")
+    automation_output: str = Field(..., description="The final, synthesized output, report, or result of the automation. This should be a human-readable summary of everything that was done.")
+    artifact_ids: list[str] = Field(default_factory=list, description="A list of final artifact IDs to be returned to the user. ONLY include IDs that were explicitly returned by a tool in a previous step.")
 
 
 class AutomationExecutor:
@@ -50,18 +50,20 @@ class AutomationExecutor:
                 "1.  **Plan First**: Formulate a clear, step-by-step plan before executing any tools.\n"
                 "2.  **Tool Adherence**: You may ONLY use the tools provided in the tool list. Do not invent tools.\n"
                 "3.  **Artifact Chaining**: If a task requires multiple steps (e.g., create a file, then edit it), you MUST use the `artifact_id` from the first step as an input to the second.\n"
-                "4.  **Final Answer Formatting**: After all tool calls are complete and you have gathered all necessary information, you MUST format your final, synthesized answer using the `AutomationResult` schema. **Do NOT call `AutomationResult` as a tool.** It is your final response format."
+                "4.  **Crucial Rule on Artifacts**: You MUST NOT invent, guess, or hallucinate `artifact_id`s. An `artifact_id` can ONLY be used if it was explicitly present in the output of a previous tool call.\n"
+                "5.  **Final Answer Formatting**: After all tool calls are complete and you have gathered all necessary information, you MUST format your final, synthesized answer using the `AutomationResult` schema. Do NOT call `AutomationResult` as a tool."
             ),
             (
                 "### Exemplar\n"
                 '**User Goal**: "Generate a picture of a lion and resize it for a profile picture."\n\n'
                 "**Your Plan**:\n"
-                "1.  Use the `image_generation_tool` with the prompt \"a majestic lion\". This will return an `artifact_id`.\n"
-                "2.  Use the `image_resizing_tool`, providing the `artifact_id` from the previous step and specifying dimensions.\n"
-                "3.  The goal is now complete. I will format my final answer using the `AutomationResult` schema."
+                "1.  Use the `image_generation_tool` with the prompt \"a majestic lion\". This will return an artifact with ID 'artifact-123'.\n"
+                "2.  Use the `image_resizing_tool`, providing the `artifact_id` 'artifact-123' from the previous step. This will return a new artifact with ID 'artifact-456'.\n"
+                "3.  The goal is now complete. I will format my final answer using the `AutomationResult` schema, including the final artifact ID 'artifact-456'."
             ),
         ]
         self.system_prompt = "\n\n---\n\n".join(prompt_components)
+
 
     def get_functions(self) -> list[Function]:
         """Retrieve the list of functions associated with the automation."""
