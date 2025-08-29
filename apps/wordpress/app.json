@@ -1,0 +1,147 @@
+[
+    {
+        "name": "WORDPRESS__GET_POSTS",
+        "description": "Retrieves a list of posts for a specific WordPress.com site.",
+        "tags": ["wordpress", "posts", "blog", "list", "content"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sites/{site_id}/posts",
+            "server_url": "https://public-api.wordpress.com/rest/v1.1"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "URL path parameters",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The ID or domain of the WordPress site."
+                        }
+                    },
+                    "required": ["site_id"],
+                    "visible": ["site_id"]
+                },
+                "query": {
+                    "type": "object",
+                    "description": "URL query parameters",
+                    "properties": {
+                        "number": {
+                            "type": "integer",
+                            "description": "The number of posts to return. Defaults to 20.",
+                            "default": 20
+                        },
+                        "status": {
+                            "type": "string",
+                            "description": "The post status to filter by (e.g., 'publish', 'draft', 'pending'). Defaults to 'publish'.",
+                            "enum": ["publish", "draft", "pending", "private", "trash"]
+                        }
+                    },
+                    "required": [],
+                    "visible": ["number", "status"]
+                }
+            },
+            "required": ["path"],
+            "visible": ["path", "query"],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "WORDPRESS__CREATE_POST",
+        "description": "Creates a new post on a specific WordPress.com site.",
+        "tags": ["wordpress", "posts", "blog", "create", "publish"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/sites/{site_id}/posts/new",
+            "server_url": "https://public-api.wordpress.com/rest/v1.1"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "URL path parameters",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The ID or domain of the WordPress site."
+                        }
+                    },
+                    "required": ["site_id"],
+                    "visible": ["site_id"]
+                },
+                "body": {
+                    "type": "object",
+                    "description": "The content of the new post.",
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "description": "The title of the new post."
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "The HTML content of the new post."
+                        },
+                        "tags": {
+                            "type": "string",
+                            "description": "A comma-separated list of tags to add to the post."
+                        },
+                        "categories": {
+                            "type": "string",
+                            "description": "A comma-separated list of categories to add to the post."
+                        }
+                    },
+                    "required": ["title", "content"],
+                    "visible": ["title", "content", "tags", "categories"]
+                }
+            },
+            "required": ["path", "body"],
+            "visible": ["path", "body"],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "WORDPRESS__GET_POST",
+        "description": "Retrieves details for a single post from a WordPress.com site.",
+        "tags": ["wordpress", "posts", "blog", "details", "read"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sites/{site_id}/posts/{post_id}",
+            "server_url": "https://public-api.wordpress.com/rest/v1.1"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "URL path parameters",
+                    "properties": {
+                        "site_id": {
+                            "type": "string",
+                            "description": "The ID or domain of the WordPress site."
+                        },
+                        "post_id": {
+                            "type": "integer",
+                            "description": "The ID of the post to retrieve."
+                        }
+                    },
+                    "required": ["site_id", "post_id"],
+                    "visible": ["site_id", "post_id"]
+                }
+            },
+            "required": ["path"],
+            "visible": ["path"],
+            "additionalProperties": false
+        }
+    }
+]

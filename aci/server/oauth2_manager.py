@@ -120,14 +120,6 @@ class OAuth2Manager:
     ) -> dict[str, Any]:
         """
         Exchange authorization code for access token
-
-        Args:
-            redirect_uri: The redirect URI of the OAuth2 client
-            code: The authorization code returned from OAuth2 provider
-            code_verifier: The code verifier used to for the authorization url
-
-        Returns:
-            Token response dictionary
         """
         try:
             token = cast(
@@ -137,7 +129,8 @@ class OAuth2Manager:
                     redirect_uri=redirect_uri,
                     code=code,
                     code_verifier=code_verifier,
-                    scope=self.scope,
+                    client_id=self.client_id,
+                    client_secret=self.client_secret,
                 ),
             )
             return token
