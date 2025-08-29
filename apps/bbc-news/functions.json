@@ -1,0 +1,75 @@
+[
+  {
+    "name": "BBC_NEWS__GET_TOP_HEADLINES",
+    "description": "Fetches the top headline articles from the BBC News homepage for a specific international edition.",
+    "tags": ["news", "headlines", "top stories", "bbc"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "description": "The maximum number of headlines to return. Defaults to 10."
+        },
+        "edition": {
+          "type": "string",
+          "enum": ["int", "uk", "us"],
+          "description": "The regional edition for the top stories ('int' for international, 'uk', or 'us'). Defaults to 'int'."
+        }
+      },
+      "required": [],
+      "visible": ["limit", "edition"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "BBC_NEWS__GET_ARTICLES_BY_CATEGORY",
+    "description": "Fetches the latest articles from a specific BBC News category.",
+    "tags": ["news", "category", "articles", "bbc"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["world", "uk", "business", "technology", "science", "entertainment"],
+          "description": "The news category to fetch articles from (e.g., 'technology')."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "The maximum number of articles to return. Defaults to 10."
+        }
+      },
+      "required": ["category"],
+      "visible": ["category", "limit"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "BBC_NEWS__GET_ARTICLE_CONTENT",
+    "description": "Fetches and reads the full text content of a single BBC News article from its URL.",
+    "tags": ["news", "article", "read", "content", "bbc"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The full URL of the BBC News article to read."
+        }
+      },
+      "required": ["url"],
+      "visible": ["url"],
+      "additionalProperties": false
+    }
+  }
+]

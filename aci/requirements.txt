@@ -225,3 +225,4 @@ dnspython
 geocoder
 markdown==3.8.2
 html2docx==1.6.0
+bbc-feeds==2.1

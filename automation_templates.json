@@ -33,23 +33,6 @@
       "is_deep": false
     },
     {
-      "name": "Create Weekly GitHub Report Issue",
-      "description": "Creates a new issue in a GitHub repository, ideal for weekly reports or reminders.",
-      "tags": [
-        "Dev Tools"
-      ],
-      "goal": "Create a new issue in the GitHub repository '{{ variables['GitHub Owner'] }}/{{ variables['GitHub Repository'] }}' with the title '{{ variables['Issue Title'] }}'. For the issue body, provide a summary of the repository's activity over the last 7 days.",
-      "variable_names": [
-        "GitHub Owner",
-        "GitHub Repository",
-        "Issue Title"
-      ],
-      "required_app_names": [
-        "GITHUB"
-      ],
-      "is_deep": false
-    },
-    {
       "name": "Domain DNS Report",
       "description": "Performs a DNS lookup for a domain to get key records and emails you the results.",
       "tags": [
@@ -71,11 +54,9 @@
       "tags": [
         "Research"
       ],
-      "goal": "Get the summary of the Wikipedia article for the topic '{{ variables['Topic'] }}'. Then, take that summary content and convert it into a Microsoft Word document with the title '{{ variables['Document Title'] }}'. Save the final file as '{{ variables['Output Filename'] }}.docx'.",
+      "goal": "Get the summary of the Wikipedia article for the topic '{{ variables['Topic'] }}'. Then, take that summary content and convert it into a Microsoft Word document. The title of the document should be the topic itself. The output filename should also be based on the topic (e.g., 'Topic_Summary.docx'). Save the final file.",
       "variable_names": [
-        "Topic",
-        "Document Title",
-        "Output Filename"
+        "Topic"
       ],
       "required_app_names": [
         "WIKIPEDIA_API",

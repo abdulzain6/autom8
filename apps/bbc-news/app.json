@@ -1,0 +1,19 @@
+{
+  "name": "BBC_NEWS",
+  "display_name": "BBC News",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/bbc-news.png",
+  "provider": "BBC (via bbc-feeds)",
+  "version": "2.1",
+  "description": "A reliable connector for fetching news articles from official BBC News RSS feeds. Allows for retrieving top headlines and browsing articles by category.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "News",
+    "Data",
+    "Information"
+  ],
+  "visibility": "public",
+  "active": true
+}
