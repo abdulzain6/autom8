@@ -1,5 +1,25 @@
 [
     {
+        "name": "WORDPRESS__GET_SITES",
+        "description": "Retrieves a list of WordPress.com sites that the authenticated user is a member of.",
+        "tags": ["wordpress", "sites", "blog", "list", "user"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/me/sites",
+            "server_url": "https://public-api.wordpress.com/rest/v1.1"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "visible": [],
+            "additionalProperties": false
+        }
+    },
+    {
         "name": "WORDPRESS__GET_POSTS",
         "description": "Retrieves a list of posts for a specific WordPress.com site.",
         "tags": ["wordpress", "posts", "blog", "list", "content"],
@@ -146,6 +166,39 @@
             },
             "required": ["path"],
             "visible": ["path"],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "WORDPRESS__UPLOAD_MEDIA",
+        "description": "Uploads a media file (like an image) to a WordPress.com site.",
+        "tags": ["wordpress", "media", "upload", "image", "file"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "connector",
+        "protocol_data": {},
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "site_id": {
+                    "type": "string",
+                    "description": "The ID or domain of the WordPress site to upload the media to."
+                },
+                "artifact_id": {
+                    "type": "string",
+                    "description": "The ID of the artifact (file) to upload."
+                },
+                "title": {
+                    "type": "string",
+                    "description": "The title for the media file."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "A description or caption for the media file."
+                }
+            },
+            "required": ["site_id", "artifact_id", "title"],
+            "visible": ["site_id", "artifact_id", "title", "description"],
             "additionalProperties": false
         }
     }
