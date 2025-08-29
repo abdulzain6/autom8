@@ -168,6 +168,9 @@ class App(Base):
         MutableDict.as_mutable(EncryptedSecurityScheme),
         nullable=False,
     )
+    configuration_schema: Mapped[Optional[Dict]] = mapped_column(
+        JSONB, nullable=True, comment="JSON Schema for user-configurable settings."
+    )
     embedding: Mapped[List[float]] = mapped_column(
         Vector(EMBEDDING_DIMENSION), nullable=False
     )
@@ -348,6 +351,9 @@ class LinkedAccount(Base):
         nullable=False,
     )
 
+    configuration: Mapped[Optional[Dict]] = mapped_column(
+        JSONB, nullable=True, comment="User-specific configuration for this linked account."
+    )
     disabled_functions: Mapped[List[str]] = mapped_column(
         ARRAY(String(MAX_STRING_LENGTH)), nullable=False, default_factory=list
     )
@@ -363,7 +369,6 @@ class LinkedAccount(Base):
         nullable=False,
         init=False,
     )
-
     last_used_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), nullable=True, init=False
     )

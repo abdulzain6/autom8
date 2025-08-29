@@ -102,7 +102,7 @@ def link_account_with_no_auth(
             body.app_name,
             SecurityScheme.NO_AUTH,
             NoAuthSchemeCredentials(),
-            enabled=True,
+            configuration=body.configuration,
         )
 
     context.db_session.commit()
@@ -200,7 +200,7 @@ def link_account_with_api_key(
         app_name=body.app_name,
         security_scheme=SecurityScheme.API_KEY,
         security_credentials=security_credentials,
-        enabled=True,
+        configuration=body.configuration,
     )
 
     context.db_session.commit()
@@ -209,46 +209,43 @@ def link_account_with_api_key(
     return new_linked_account
 
 
-@router.get("/oauth2")
+@router.post("/oauth2", response_model=dict)
 async def link_oauth2_account(
     request: Request,
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
-    query_params: Annotated[LinkedAccountOAuth2Create, Query()],
+    body: LinkedAccountOAuth2Create,
 ) -> dict:
     """
     Start an OAuth2 account linking process.
     It will return a redirect url (as a string, instead of RedirectResponse) to the OAuth2 provider's authorization endpoint.
     """
     app_configuration = crud.app_configurations.get_app_configuration(
-        context.db_session, query_params.app_name
+        context.db_session, body.app_name
     )
     if not app_configuration:
         logger.error(
             f"Failed to link OAuth2 account, app configuration not found, "
-            f"app_name={query_params.app_name}"
+            f"app_name={body.app_name}"
         )
         raise AppConfigurationNotFound(
-            f"configuration for app={query_params.app_name} not found."
+            f"configuration for app={body.app_name} not found."
         )
-    # TODO: for now we require the security_schema used for accounts under an App must be the same as the security_schema configured in the app
-    # configuration. But in the future, we might lift this restriction and allow any security_schema as long the App supports it.
     if app_configuration.security_scheme != SecurityScheme.OAUTH2:
         logger.error(
             f"Failed to link OAuth2 account, app configuration security scheme is not OAuth2, "
-            f"app_name={query_params.app_name} security_scheme={app_configuration.security_scheme}"
+            f"app_name={body.app_name} security_scheme={app_configuration.security_scheme}"
         )
         raise NoImplementationFound(
-            f"The security_scheme configured in app={query_params.app_name} is "
+            f"The security_scheme configured in app={body.app_name} is "
             f"{app_configuration.security_scheme}, not OAuth2"
         )
 
-    # Enforce linked accounts quota before creating new account
     oauth2_scheme = scm.get_app_configuration_oauth2_scheme(
         app_configuration.app, app_configuration
     )
 
     oauth2_manager = OAuth2Manager(
-        app_name=query_params.app_name,
+        app_name=body.app_name,
         client_id=oauth2_scheme.client_id,
         client_secret=oauth2_scheme.client_secret,
         scope=oauth2_scheme.scope,
@@ -261,29 +258,29 @@ async def link_oauth2_account(
     path = request.url_for(LINKED_ACCOUNTS_OAUTH2_CALLBACK_ROUTE_NAME).path
     redirect_uri = oauth2_scheme.redirect_url or f"{config.REDIRECT_URI_BASE}{path}"
 
-
     oauth2_state = LinkedAccountOAuth2CreateState(
-        app_name=query_params.app_name,
+        app_name=body.app_name,
         user_id=context.user.id,
         client_id=oauth2_scheme.client_id,
         redirect_uri=redirect_uri,
         code_verifier=OAuth2Manager.generate_code_verifier(),
-        after_oauth2_link_redirect_url=query_params.after_oauth2_link_redirect_url,
+        after_oauth2_link_redirect_url=body.after_oauth2_link_redirect_url,
+        configuration=body.configuration,
     )
     oauth2_state_jwt = jwt.encode(
         {"alg": config.JWT_ALGORITHM},
         oauth2_state.model_dump(mode="json", exclude_none=True),
         config.SIGNING_KEY,
-    ).decode() 
+    ).decode()
 
     authorization_url = await oauth2_manager.create_authorization_url(
         redirect_uri=redirect_uri,
         state=oauth2_state_jwt,
         code_verifier=oauth2_state.code_verifier,
     )
-    
+
     authorization_url = OAuth2Manager.rewrite_oauth2_authorization_url(
-        query_params.app_name, authorization_url
+        body.app_name, authorization_url
     )
 
     logger.info(f"Linking oauth2 account with authorization_url={authorization_url}")
@@ -429,7 +426,7 @@ async def linked_accounts_oauth2_callback(
             app_name=state.app_name,
             security_scheme=SecurityScheme.OAUTH2,
             security_credentials=security_credentials,
-            enabled=True,
+            configuration=state.configuration,
         )
     db_session.commit()
 

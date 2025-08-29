@@ -75,7 +75,8 @@ def list_apps(
             ),
             related_automation_templates=[
                 AutomationTemplateBasic.model_validate(t, from_attributes=True) for t in templates
-            ]
+            ],
+            configuration_schema=app.configuration_schema,
         )
         response.append(app_details)
 
@@ -134,7 +135,8 @@ def search_apps(
             ),
             "related_automation_templates": [
                 AutomationTemplateBasic.model_validate(t, from_attributes=True) for t in templates
-            ]
+            ],
+            "configuration_schema": app.configuration_schema,
         }
         if query_params.include_functions:
             app_data["functions"] = [
@@ -216,5 +218,6 @@ def get_app_details(
             AutomationTemplateBasic.model_validate(template, from_attributes=True)
             for template in related_templates
         ],
+        configuration_schema=app.configuration_schema,
     )
     return app_details

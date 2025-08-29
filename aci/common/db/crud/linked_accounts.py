@@ -1,5 +1,6 @@
+import jsonschema
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
@@ -100,19 +101,34 @@ def create_linked_account(
         | NoAuthSchemeCredentials
         | None
     ) = None,
-    enabled: bool = True,
+    configuration: Optional[Dict[str, Any]] = None,
 ) -> LinkedAccount:
     """
-    Create a linked account for a user with a specific app.
+    Create a linked account for a user with a specific app, validating any
+    provided configuration against the app's schema.
     """
-    app_id = db_session.execute(select(App.id).filter_by(name=app_name)).scalar_one()
+    app = db_session.execute(select(App).filter_by(name=app_name)).scalar_one_or_none()
+    if not app:
+        raise ValueError(f"App with name '{app_name}' not found.")
+
+    if app.configuration_schema:
+        if configuration is None:
+            raise ValueError("This app requires a configuration, but none was provided.")
+        try:
+            jsonschema.validate(instance=configuration, schema=app.configuration_schema)
+        except jsonschema.ValidationError as e:
+            raise ValueError(f"Configuration is invalid: {e.message}")
+    elif configuration is not None:
+        raise ValueError("This app does not support user configurations.")
+
     linked_account = LinkedAccount(
         user_id=user_id,
-        app_id=app_id,
+        app_id=app.id,
         security_scheme=security_scheme,
         security_credentials=(
             security_credentials.model_dump(mode="json") if security_credentials else {}
         ),
+        configuration=configuration,
         disabled_functions=[],
     )
     db_session.add(linked_account)
@@ -130,9 +146,7 @@ def update_linked_account_credentials(
 ) -> LinkedAccount:
     """
     Update the security credentials of a linked account.
-    Removing the security credentials (setting it to empty dict) is not handled here.
     """
-    # TODO: paranoid validation, should be removed if later the validation is done on the schema level
     validators.security_scheme.validate_scheme_and_credentials_type_match(
         linked_account.security_scheme, security_credentials
     )
@@ -187,23 +201,12 @@ def linked_account_exists_for_app_and_user(
 ) -> bool:
     """
     Efficiently checks if a LinkedAccount exists for a specific app and user.
-
-    This performs a lightweight EXISTS query that is much faster than
-    fetching the full object.
-
-    Args:
-        db: The SQLAlchemy database session.
-        app_id: The ID of the app.
-        user_id: The ID of the user.
-
-    Returns:
-        True if a LinkedAccount exists, otherwise False.
     """
     stmt = select(
         exists().where(LinkedAccount.app_id == app_id, LinkedAccount.user_id == user_id)
     )
     result = db.execute(stmt).scalar()
-    return result is True  # Ensure we return a clean boolean
+    return result is True
 
 
 def get_linked_account_for_app_and_user(
@@ -211,17 +214,6 @@ def get_linked_account_for_app_and_user(
 ) -> Optional[LinkedAccount]:
     """
     Efficiently retrieves a single LinkedAccount for a specific app and user.
-
-    This performs a targeted query and avoids loading all linked accounts
-    for an app into memory.
-
-    Args:
-        db: The SQLAlchemy database session.
-        app_id: The ID of the app.
-        user_id: The ID of the user.
-
-    Returns:
-        The LinkedAccount object if found, otherwise None.
     """
     stmt = select(LinkedAccount).where(
         LinkedAccount.app_id == app_id, LinkedAccount.user_id == user_id
@@ -234,14 +226,6 @@ def get_linked_accounts_for_apps(
 ) -> List[LinkedAccount]:
     """
     Efficiently retrieves all of a user's linked accounts for a given list of app IDs.
-
-    Args:
-        db: The SQLAlchemy database session.
-        user_id: The ID of the user.
-        app_ids: A list of app IDs to check for linked accounts.
-
-    Returns:
-        A list of the user's LinkedAccount objects for the specified apps.
     """
     if not app_ids:
         return []

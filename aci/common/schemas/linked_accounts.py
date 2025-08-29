@@ -1,8 +1,9 @@
 from datetime import datetime
+from typing import Optional, Dict, Any
 
 from pydantic import BaseModel, ConfigDict
 
-from aci.common.db.sql_models import  SecurityScheme
+from aci.common.db.sql_models import SecurityScheme
 from aci.common.schemas.security_scheme import (
     APIKeySchemeCredentialsLimited,
     NoAuthSchemeCredentialsLimited,
@@ -12,6 +13,7 @@ from aci.common.schemas.security_scheme import (
 
 class LinkedAccountCreateBase(BaseModel):
     app_name: str
+    configuration: Optional[Dict[str, Any]] = None 
 
 class LinkedAccountOAuth2Create(LinkedAccountCreateBase):
     after_oauth2_link_redirect_url: str | None = None
@@ -40,6 +42,7 @@ class LinkedAccountOAuth2CreateState(BaseModel):
     redirect_uri: str
     code_verifier: str
     after_oauth2_link_redirect_url: str | None = None
+    configuration: Optional[Dict[str, Any]] = None
 
 
 class LinkedAccountPublic(BaseModel):
@@ -51,6 +54,7 @@ class LinkedAccountPublic(BaseModel):
     updated_at: datetime
     last_used_at: datetime | None = None
     disabled_functions: list[str]
+    configuration: Optional[Dict[str, Any]] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -64,3 +68,8 @@ class LinkedAccountWithCredentials(LinkedAccountPublic):
 
 class LinkedAccountsList(BaseModel):
     app_name: str | None = None
+
+
+class LinkedAccountConfigUpdate(BaseModel):
+    """Schema for updating the configuration of a linked account."""
+    configuration: Dict[str, Any]

@@ -1,12 +1,26 @@
 from typing import List, Optional, Tuple, Dict
+import jsonschema
 from sqlalchemy import and_, null, select, update, func
 from sqlalchemy.orm import Session, selectinload
 
-from aci.common.db.sql_models import App, LinkedAccount, Function, AppConfiguration, DefaultAppCredential, AutomationTemplate, automation_template_apps
+from aci.common.db.sql_models import (
+    App,
+    LinkedAccount,
+    AutomationTemplate,
+    automation_template_apps,
+)
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppUpsert
 
 logger = get_logger(__name__)
+
+
+def _validate_json_schema(schema: dict):
+    """Helper function to validate a JSON schema."""
+    try:
+        jsonschema.Draft7Validator.check_schema(schema)
+    except jsonschema.SchemaError as e:
+        raise ValueError(f"Invalid configuration_schema provided: {e.message}")
 
 
 def create_app(
@@ -16,6 +30,10 @@ def create_app(
 ) -> App:
     logger.debug(f"Creating app: {app_upsert}")
     app_data = app_upsert.model_dump(mode="json", exclude_none=True)
+
+    if app_data.get("configuration_schema"):
+        _validate_json_schema(app_data["configuration_schema"])
+
     app = App(**app_data, embedding=app_embedding)
     db_session.add(app)
     db_session.flush()
@@ -30,6 +48,10 @@ def update_app(
     app_embedding: list[float] | None = None,
 ) -> App:
     new_app_data = app_upsert.model_dump(mode="json", exclude_unset=True)
+
+    if new_app_data.get("configuration_schema"):
+        _validate_json_schema(new_app_data["configuration_schema"])
+
     for field, value in new_app_data.items():
         setattr(app, field, value)
     if app_embedding is not None:
@@ -69,7 +91,7 @@ def get_app_with_user_context(
     )
     if active_only:
         stmt = stmt.filter(App.active)
-    
+
     result = db_session.execute(stmt).first()
 
     if not result:
@@ -89,42 +111,47 @@ def get_app_with_user_context(
     return app, linked_account, related_templates
 
 
-def _fetch_and_map_related_templates(db: Session, apps: List[App]) -> Dict[str, List[AutomationTemplate]]:
+def _fetch_and_map_related_templates(
+    db: Session, apps: List[App]
+) -> Dict[str, List[AutomationTemplate]]:
     """
     Given a list of apps, efficiently fetches all related templates and maps them by app_id.
     """
     if not apps:
         return {}
-    
+
     app_ids = [app.id for app in apps]
-    
-    # Subquery to rank templates for each app and select the top 5
+
     template_subquery = (
         select(
             automation_template_apps.c.app_id,
             AutomationTemplate,
-            func.row_number().over(
+            func.row_number()
+            .over(
                 partition_by=automation_template_apps.c.app_id,
                 order_by=AutomationTemplate.name,
-            ).label("rn")
+            )
+            .label("rn"),
         )
         .join(AutomationTemplate)
         .where(automation_template_apps.c.app_id.in_(app_ids))
         .subquery("ranked_templates")
     )
-    
-    # Final query to get the top 5 templates
-    templates_stmt = select(
-        template_subquery.c.app_id,
-        AutomationTemplate
-    ).select_from(template_subquery).where(template_subquery.c.rn <= 5)
-    
+
+    templates_stmt = (
+        select(template_subquery.c.app_id, AutomationTemplate)
+        .select_from(template_subquery)
+        .where(template_subquery.c.rn <= 5)
+    )
+
     results = db.execute(templates_stmt).all()
-    
-    templates_by_app_id: Dict[str, List[AutomationTemplate]] = {app_id: [] for app_id in app_ids}
+
+    templates_by_app_id: Dict[str, List[AutomationTemplate]] = {
+        app_id: [] for app_id in app_ids
+    }
     for app_id, template in results:
         templates_by_app_id[app_id].append(template)
-            
+
     return templates_by_app_id
 
 
@@ -161,19 +188,19 @@ def list_apps_with_user_context(
     if app_names:
         stmt = stmt.where(App.name.in_(app_names))
     stmt = stmt.limit(limit).offset(offset)
-    
+
     app_results = db.execute(stmt).all()
-    
+
     apps = [app for app, _ in app_results]
     templates_map = {}
     if return_automation_templates and apps:
         templates_map = _fetch_and_map_related_templates(db, apps)
-        
+
     final_results = [
         (app, linked_account, templates_map.get(app.id, []))
         for app, linked_account in app_results
     ]
-        
+
     return final_results
 
 
@@ -201,7 +228,7 @@ def search_apps(
         .options(
             selectinload(App.functions),
             selectinload(App.configuration),
-            selectinload(App.default_credentials)
+            selectinload(App.default_credentials),
         )
     )
 
@@ -224,7 +251,7 @@ def search_apps(
 
     statement = statement.offset(offset).limit(limit)
     search_results = db_session.execute(statement).all()
-    
+
     apps = [app for app, _, __ in search_results]
     templates_map = {}
     if return_automation_templates and apps:

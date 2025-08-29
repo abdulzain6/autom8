@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
-from typing import List, Optional
-from fastapi.params import Query
+from typing import Dict, List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from aci.common.enums import SecurityScheme
@@ -16,37 +16,24 @@ from aci.common.schemas.security_scheme import (
     SecuritySchemesPublic,
 )
 
-
-class AutomationTemplateBasic(BaseModel):
-    """A slim representation of an AutomationTemplate for embedding in other responses."""
-    id: str
-    name: str
-    description: Optional[str] = None
-    tags: List[str] = []
-
-class DefaultAppCredentialCreate(BaseModel):
-    """Schema for creating default app credentials."""
-
-    security_scheme: SecurityScheme
-    credentials: (
-        APIKeySchemeCredentials | OAuth2SchemeCredentials | NoAuthSchemeCredentials
-    )
-
+# ==============================================================================
+# Input Schemas (for creating/updating data)
+# ==============================================================================
 
 class AppUpsert(BaseModel, extra="ignore"):
     """
-    Schema for creating or updating an App.
+    Schema for creating or updating an App from a file or API call.
     """
-
     name: str
     display_name: str
     provider: str
     version: str
     description: str
-    logo: str | None  # Changed to optional to be more flexible
-    categories: list[str]
+    logo: Optional[str] = None
+    categories: List[str]
     active: bool
-    security_schemes: dict[SecurityScheme, APIKeyScheme | OAuth2Scheme | NoAuthScheme]
+    security_schemes: Dict[SecurityScheme, APIKeyScheme | OAuth2Scheme | NoAuthScheme]
+    configuration_schema: Optional[Dict] = Field(None, description="JSON Schema for user-configurable settings.")
 
     @field_validator("name")
     def validate_name(cls, v: str) -> str:
@@ -81,6 +68,92 @@ class AppUpsert(BaseModel, extra="ignore"):
                 )
         return v
 
+class DefaultAppCredentialCreate(BaseModel):
+    """Schema for creating default app credentials."""
+    security_scheme: SecurityScheme
+    credentials: (
+        APIKeySchemeCredentials | OAuth2SchemeCredentials | NoAuthSchemeCredentials
+    )
+
+# ==============================================================================
+# Query Parameter Schemas (for GET requests)
+# ==============================================================================
+
+class AppsSearch(BaseModel):
+    """Parameters for searching applications."""
+    intent: Optional[str] = Field(default=None)
+    include_functions: bool = Field(default=False)
+    return_automation_templates: bool = Field(default=False)
+    categories: Optional[List[str]] = Field(default=None)
+    limit: int = Field(default=100, ge=1, le=1000)
+    offset: int = Field(default=0, ge=0)
+
+    @field_validator("categories")
+    def validate_categories(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is not None:
+            v = [category for category in v if category.strip()]
+            if not v: return None
+        return v
+
+    @field_validator("intent")
+    def validate_intent(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v.strip() == "": return None
+        return v
+
+# ==============================================================================
+# Output Schemas (for API responses)
+# ==============================================================================
+
+class AutomationTemplateBasic(BaseModel):
+    """A slim representation of an AutomationTemplate for embedding in other responses."""
+    id: str
+    name: str
+    description: Optional[str] = None
+    tags: List[str] = []
+    model_config = ConfigDict(from_attributes=True)
+
+class AppBasic(BaseModel):
+    """Basic app information, often used in lists or search results."""
+    name: str
+    display_name: str
+    description: str
+    logo: Optional[str] = None
+    categories: List[str]
+    active: bool
+    is_linked: bool
+    has_default_credentials: bool
+    linked_account_id: Optional[str] = None
+    security_schemes: List[SecurityScheme]
+    instructions: Optional[str] = None
+    functions: Optional[List[BasicFunctionDefinition]] = None
+    related_automation_templates: List[AutomationTemplateBasic] = []
+    model_config = ConfigDict(from_attributes=True)
+
+class AppDetails(BaseModel):
+    """Detailed information about an app, including user-specific context."""
+    id: str
+    name: str
+    display_name: str
+    provider: str
+    version: str
+    description: str
+    logo: Optional[str] = None
+    categories: List[str]
+    active: bool
+    security_schemes: List[SecurityScheme]
+    supported_security_schemes: SecuritySchemesPublic
+    has_default_credentials: bool
+    is_configured: bool
+    is_linked: bool
+    linked_account_id: Optional[str] = None
+    functions: Optional[List[FunctionDetails]] = None
+    created_at: datetime
+    updated_at: datetime
+    instructions: Optional[str] = None
+    related_automation_templates: List[AutomationTemplateBasic] = []
+    configuration_schema: Optional[Dict] = None
+    model_config = ConfigDict(from_attributes=True)
+
 
 class AppEmbeddingFields(BaseModel):
     """
@@ -92,38 +165,6 @@ class AppEmbeddingFields(BaseModel):
     provider: str
     description: str
     categories: list[str]
-
-
-class AppsSearch(BaseModel):
-    """
-    Parameters for searching applications.
-    """
-
-    intent: str | None = Field(
-        default=None,
-        description="Natural language intent for vector similarity sorting. Results will be sorted by relevance to the intent.",
-    )
-    allowed_apps_only: bool = Field(
-        default=False,
-        description="If true, only return apps that are allowed by the agent/accessor, identified by the api key.",
-    )
-    include_functions: bool = Field(
-        default=False,
-        description="If true, include functions (name and description) of each app in the response.",
-    )
-    return_automation_templates: bool = Field(
-        default=False, description="Whether to include related automation templates in the response."
-    )
-    limit: int = Field(
-        default=100, ge=1, le=1000, description="Maximum number of Apps per response."
-    )
-    offset: int = Field(default=0, ge=0, description="Pagination offset.")
-
-    @field_validator("intent")
-    def validate_intent(cls, v: str | None) -> str | None:
-        if v is not None and v.strip() == "":
-            return None
-        return v
 
 
 class AppsList(BaseModel):
@@ -140,48 +181,3 @@ class AppsList(BaseModel):
     return_automation_templates: bool = Field(
         default=False, description="Whether to include related automation templates in the response."
     )
-
-
-class AppBasic(BaseModel):
-    """A minimal representation of an App."""
-
-    name: str
-    description: str
-    functions: list[BasicFunctionDefinition] | None = None
-    model_config = ConfigDict(from_attributes=True)
-    logo: str | None
-    is_linked: bool | None = None
-    categories: list[str]
-    active: bool
-    display_name: str
-    has_default_credentials: bool
-    linked_account_id: str | None
-    security_schemes: list[SecurityScheme]
-    instructions: str | None = None
-    related_automation_templates: List[AutomationTemplateBasic] = [] 
-
-
-class AppDetails(BaseModel):
-    """A detailed public representation of an App."""
-
-    id: str
-    name: str
-    display_name: str
-    provider: str
-    version: str
-    description: str
-    logo: str | None
-    categories: list[str]
-    active: bool
-    security_schemes: list[SecurityScheme]
-    supported_security_schemes: SecuritySchemesPublic
-    has_default_credentials: bool
-    is_configured: bool
-    is_linked: bool | None = None
-    functions: list[FunctionDetails] | None = None
-    created_at: datetime
-    updated_at: datetime
-    model_config = ConfigDict(from_attributes=True)
-    linked_account_id: str | None
-    instructions: str | None = None
-    related_automation_templates: List[AutomationTemplateBasic] = []
