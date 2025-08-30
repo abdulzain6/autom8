@@ -146,7 +146,7 @@ class OAuth2Manager:
 
         if "access_token" not in data:
             logger.error(f"Missing access_token in OAuth response, app={self.app_name}")
-            logger.debug(f"OAuth response data: {data}")
+            logger.info(f"OAuth response data: {data}")
             raise OAuth2Error("Missing access_token in OAuth response")
 
         expires_at: int | None = None
