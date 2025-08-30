@@ -10,12 +10,10 @@ from livekit.agents import (
     WorkerOptions,
     cli,
     metrics,
-    RoomInputOptions,
 )
 from livekit.plugins import (
-    noise_cancellation,
+    google,
     silero,
-    openai,
 )
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
@@ -34,21 +32,6 @@ Keep replies short, clear, and conversational. Just talk—dont write.
 Avoid punctuation thats hard to speak or sounds unnatural.
 If a user speaks in a different language, respond in their language if possible.
 """,
-            stt=openai.STT(
-                base_url=os.environ["MISTRALAI_BASE_URL"],
-                api_key=os.environ["MISTRALAI_API_KEY"],
-                model="voxtral-mini-2507",
-                prompt="You are a helpful assistant that transcribes voice to text. Transcribe the audio as accurately as possible. If you are unsure about a word, make your best guess. Do not include any additional commentary or notes in the transcription. For any emotions or non-verbal sounds, use brackets to indicate them, e.g., [laughter], [applause].",
-            ),
-            llm=openai.LLM(
-                model="deepseek-ai/DeepSeek-V3.1",
-                base_url=os.environ["DEEPINFRA_BASE_URL"],
-                api_key=os.environ["DEEPINFRA_API_KEY"],
-            ),
-            tts=openai.TTS(
-                model="gpt-4o-mini-tts",
-                voice="sage",
-            ),
             turn_detection=MultilingualModel(),
         )
 
@@ -68,7 +51,7 @@ async def entrypoint(ctx: JobContext):
 
     # Wait for the first participant to connect
     participant = await ctx.wait_for_participant()
-    ctx.room.metadata
+    logger.info(f"participant metadata: {ctx.room.metadata}")
     logger.info(f"starting voice assistant for participant {participant.identity}")
 
     usage_collector = metrics.UsageCollector()
@@ -79,19 +62,19 @@ async def entrypoint(ctx: JobContext):
         usage_collector.collect(agent_metrics)
 
     session = AgentSession(
-        vad=ctx.proc.userdata["vad"],
-        min_endpointing_delay=0.5,
-        max_endpointing_delay=5.0,
+        llm=google.beta.realtime.RealtimeModel(
+            model="gemini-2.5-flash-preview-native-audio-dialog",
+            voice="Puck",
+            temperature=0.8,
+            api_key=os.environ["GOOGLE_API_KEY"],
+        ),
     )
 
     session.on("metrics_collected", on_metrics_collected)
 
     await session.start(
         room=ctx.room,
-        agent=Assistant(),
-        room_input_options=RoomInputOptions(
-           noise_cancellation=noise_cancellation.BVC(),
-        ),
+        agent=Assistant()
     )
 
 
