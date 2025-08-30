@@ -19,7 +19,6 @@ from sqlalchemy import (
     Table,
     Text,
     UniqueConstraint,
-    func,
 )
 from sqlalchemy import Enum as SqlEnum
 
@@ -39,6 +38,7 @@ from aci.common.db.custom_sql_types import (
     EncryptedSecurityScheme,
 )
 from aci.common.enums import (
+    DeviceType,
     Protocol,
     RunStatus,
     SecurityScheme,
@@ -62,6 +62,11 @@ class SupabaseUser(Base):
     email = Column(String)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+    fcm_tokens: Mapped[List["FCMToken"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        init=False,
+    )
 
 
 class UserProfile(Base):
@@ -576,6 +581,52 @@ class AutomationTemplate(Base):
             'search_vector',
             postgresql_using='gin'
         ),
+    )
+
+
+class FCMToken(Base):
+    """
+    Stores FCM device tokens for users.
+    A user can have one token per device type.
+    """
+
+    __tablename__ = "fcm_tokens"
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
+    )
+    
+    # A user can have multiple tokens, so user_id is not unique on its own.
+    user_id: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id"), nullable=False
+    )
+
+    # The FCM token itself is globally unique to a device instance.
+    token: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    
+    device_type: Mapped[DeviceType] = mapped_column(
+        SqlEnum(DeviceType), nullable=False, default=DeviceType.UNKNOWN
+    )
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
+    )
+
+    user: Mapped["SupabaseUser"] = relationship(back_populates="fcm_tokens", init=False)
+
+    __table_args__ = (
+        # Enforce that a user can only have one token for each device type.
+        UniqueConstraint("user_id", "device_type", name="uq_user_device_type"),
     )
 
 

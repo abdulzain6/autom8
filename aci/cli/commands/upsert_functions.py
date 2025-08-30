@@ -72,9 +72,9 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool) -> list[st
                 existing_functions.append(function_upsert)
 
         console.rule("Checking functions to create...")
-        functions_created = create_functions_helper(db_session, new_functions)
+        functions_created = create_functions_helper(db_session, new_functions, skip_dry_run)
         console.rule("Checking functions to update...")
-        functions_updated = update_functions_helper(db_session, existing_functions)
+        functions_updated = update_functions_helper(db_session, existing_functions, skip_dry_run)
         # for functions that are in existing_functions but not in functions_updated
         functions_unchanged = [
             func.name for func in existing_functions if func.name not in functions_updated
@@ -101,51 +101,78 @@ def upsert_functions_helper(functions_file: Path, skip_dry_run: bool) -> list[st
 
 
 def create_functions_helper(
-    db_session: Session, functions_upsert: list[FunctionUpsert]
+    db_session: Session, functions_upsert: list[FunctionUpsert], skip_dry_run: bool
 ) -> list[str]:
     """
     Batch creates functions in the database.
     Generates embeddings for each new function and calls the CRUD layer for creation.
     Returns a list of created function names.
     """
-    functions_embeddings = embeddings.generate_function_embeddings(
-        [FunctionEmbeddingFields.model_validate(func.model_dump()) for func in functions_upsert],
-        openai_client,
-        embedding_model=config.OPENAI_EMBEDDING_MODEL,
-        embedding_dimension=config.OPENAI_EMBEDDING_DIMENSION,
-    )
-    created_functions = crud.functions.create_functions(
-        db_session, functions_upsert, functions_embeddings
-    )
+    created_function_names = []
+    BATCH_SIZE = 1
+    
+    for i in range(0, len(functions_upsert), BATCH_SIZE):
+        batch_functions = functions_upsert[i:i + BATCH_SIZE]
+        
+        console.print(f"Processing batch {i//BATCH_SIZE + 1} with {len(batch_functions)} functions...")
 
-    return [func.name for func in created_functions]
+        functions_embeddings = embeddings.generate_function_embeddings(
+            [FunctionEmbeddingFields.model_validate(func.model_dump()) for func in batch_functions],
+            openai_client,
+            embedding_model=config.OPENAI_EMBEDDING_MODEL,
+            embedding_dimension=config.OPENAI_EMBEDDING_DIMENSION,
+        )
+        created_functions = crud.functions.create_functions(
+            db_session, batch_functions, functions_embeddings
+        )
+        created_function_names.extend([func.name for func in created_functions])
+
+        # Commit this specific batch if not a dry run
+        if skip_dry_run:
+            db_session.commit()
+            console.print(f"--> Committed batch {i//BATCH_SIZE + 1}")
+
+    return created_function_names
 
 
 def update_functions_helper(
-    db_session: Session, functions_upsert: list[FunctionUpsert]
+    db_session: Session, functions_upsert: list[FunctionUpsert], skip_dry_run: bool
 ) -> list[str]:
     """
     Batch updates functions in the database.
 
+    Processes functions in small batches to avoid statement timeouts.
     For each function to update, determines if the embedding needs to be regenerated.
     Regenerates embeddings in batch for those that require it and updates the functions accordingly.
     Returns a list of updated function names.
     """
-    functions_with_new_embeddings: list[FunctionUpsert] = []
-    functions_without_new_embeddings: list[FunctionUpsert] = []
+    updated_function_names = []
+    BATCH_SIZE = 1
 
-    for function_upsert in functions_upsert:
-        existing_function = crud.functions.get_function(
-            db_session, function_upsert.name, active_only=False
-        )
-        if existing_function is None:
-            raise click.ClickException(f"Function '{function_upsert.name}' not found.")
-        existing_function_upsert = FunctionUpsert.model_validate(
-            existing_function, from_attributes=True
-        )
-        if existing_function_upsert == function_upsert:
-            continue
-        else:
+    for i in range(0, len(functions_upsert), BATCH_SIZE):
+        batch_to_process = functions_upsert[i : i + BATCH_SIZE]
+        console.print(f"Processing update batch {i//BATCH_SIZE + 1} with {len(batch_to_process)} functions...")
+
+        functions_with_new_embeddings: list[FunctionUpsert] = []
+        functions_without_new_embeddings: list[FunctionUpsert] = []
+
+        for function_upsert in batch_to_process:
+            console.print(f"Checking function '{function_upsert.name}' for updates...")
+            existing_function = crud.functions.get_function(
+                db_session, function_upsert.name, active_only=False
+            )
+            if existing_function is None:
+                # This should ideally not happen if called from the main script
+                console.print(f"[bold red]Warning: Function '{function_upsert.name}' not found during update. Skipping.[/bold red]")
+                continue
+            
+            console.print(f"Found existing function '{existing_function.name}'. Comparing for changes...")
+            existing_function_upsert = FunctionUpsert.model_validate(
+                existing_function, from_attributes=True
+            )
+            if existing_function_upsert == function_upsert:
+                continue  # Function is unchanged
+
             diff = DeepDiff(
                 existing_function_upsert.model_dump(),
                 function_upsert.model_dump(),
@@ -156,30 +183,39 @@ def update_functions_helper(
             )
             console.print(diff.pretty())
 
-        if _need_function_embedding_regeneration(existing_function_upsert, function_upsert):
-            functions_with_new_embeddings.append(function_upsert)
-        else:
-            functions_without_new_embeddings.append(function_upsert)
+            if _need_function_embedding_regeneration(existing_function_upsert, function_upsert):
+                functions_with_new_embeddings.append(function_upsert)
+            else:
+                functions_without_new_embeddings.append(function_upsert)
 
-    # Generate new embeddings in batch for functions that require regeneration.
-    functions_embeddings = embeddings.generate_function_embeddings(
-        [
-            FunctionEmbeddingFields.model_validate(func.model_dump())
-            for func in functions_with_new_embeddings
-        ],
-        openai_client,
-        embedding_model=config.OPENAI_EMBEDDING_MODEL,
-        embedding_dimension=config.OPENAI_EMBEDDING_DIMENSION,
-    )
+        if not functions_with_new_embeddings and not functions_without_new_embeddings:
+            continue # No functions to update in this batch
 
-    # Note: the order matters here because the embeddings need to match the functions
-    functions_updated = crud.functions.update_functions(
-        db_session,
-        functions_with_new_embeddings + functions_without_new_embeddings,
-        functions_embeddings + [None] * len(functions_without_new_embeddings),
-    )
+        # Generate embeddings for the current batch
+        functions_embeddings = embeddings.generate_function_embeddings(
+            [
+                FunctionEmbeddingFields.model_validate(func.model_dump())
+                for func in functions_with_new_embeddings
+            ],
+            openai_client,
+            embedding_model=config.OPENAI_EMBEDDING_MODEL,
+            embedding_dimension=config.OPENAI_EMBEDDING_DIMENSION,
+        )
 
-    return [func.name for func in functions_updated]
+        # Update the functions for the current batch
+        functions_updated = crud.functions.update_functions(
+            db_session,
+            functions_with_new_embeddings + functions_without_new_embeddings,
+            functions_embeddings + [None] * len(functions_without_new_embeddings),
+        )
+        updated_function_names.extend([func.name for func in functions_updated])
+
+        # Commit this specific batch if not a dry run
+        if skip_dry_run:
+            db_session.commit()
+            console.print(f"--> Committed update batch {i//BATCH_SIZE + 1}")
+
+    return updated_function_names
 
 
 def _validate_app_exists(db_session: Session, app_name: str) -> None:

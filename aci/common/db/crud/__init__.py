@@ -8,7 +8,8 @@ from . import (
     default_credentials,
     automations,
     automation_runs, 
-    automation_templates
+    automation_templates,
+    fcm_tokens
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "default_credentials",
     "automations",
     "automation_runs",
+    "fcm_tokens",
 ]

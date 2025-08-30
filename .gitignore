@@ -168,3 +168,5 @@ cython_debug/
 
 # Temporary files in the current directory
 tmp/
+
+creds.json

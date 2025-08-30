@@ -1,0 +1,30 @@
+{
+  "name": "TYPEFORM",
+  "display_name": "Typeform",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/typeform.svg",
+  "provider": "Typeform",
+  "version": "1.0.0",
+  "description": "Create beautiful, conversational forms, surveys, and quizzes. This connector allows you to manage your forms, view responses, and integrate your data.",
+  "security_schemes": {
+    "oauth2": {
+      "location": "header",
+      "name": "Authorization",
+      "prefix": "Bearer",
+      "client_id": "{{ AIPOLABS_TYPEFORM_CLIENT_ID }}",
+      "client_secret": "{{ AIPOLABS_TYPEFORM_CLIENT_SECRET }}",
+      "scope": "accounts:read forms:read forms:write responses:read offline",
+      "authorize_url": "https://api.typeform.com/oauth/authorize",
+      "access_token_url": "https://api.typeform.com/oauth/token",
+      "refresh_token_url": "https://api.typeform.com/oauth/token"
+    }
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Productivity",
+    "Forms & Surveys",
+    "Data Collection"
+  ],
+  "visibility": "public",
+  "active": true
+}
+

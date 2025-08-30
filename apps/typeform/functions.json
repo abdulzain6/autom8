@@ -1,0 +1,279 @@
+[
+    {
+        "name": "TYPEFORM__GET_ME",
+        "description": "Retrieves the account details of the authenticated user.",
+        "tags": ["typeform", "user", "account", "profile"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/me",
+            "server_url": "https://api.typeform.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "visible": [],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "TYPEFORM__LIST_FORMS",
+        "description": "Retrieves a list of forms belonging to the authenticated user.",
+        "tags": ["typeform", "forms", "surveys", "list"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/forms",
+            "server_url": "https://api.typeform.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object",
+                    "description": "URL query parameters",
+                    "properties": {
+                        "page": {
+                            "type": "integer",
+                            "description": "The page of results to retrieve. Starts at 1.",
+                            "default": 1
+                        },
+                        "page_size": {
+                            "type": "integer",
+                            "description": "The number of results to retrieve per page. Max is 200.",
+                            "default": 50
+                        },
+                        "search": {
+                            "type": "string",
+                            "description": "Filter the results by form title."
+                        }
+                    },
+                    "required": [],
+                    "visible": ["page", "page_size", "search"],
+                    "additionalProperties": false
+                }
+            },
+            "required": [],
+            "visible": ["query"],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "TYPEFORM__CREATE_FORM",
+        "description": "Creates a new, empty form with a title. Use 'UPDATE_FORM_STRUCTURE' to add questions.",
+        "tags": ["typeform", "forms", "create", "new"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/forms",
+            "server_url": "https://api.typeform.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object",
+                    "description": "The details of the form to create.",
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "description": "The title for the new form."
+                        }
+                    },
+                    "required": ["title"],
+                    "visible": ["title"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["body"],
+            "visible": ["body"],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "TYPEFORM__UPDATE_FORM_STRUCTURE",
+        "description": "Updates the structure of an existing form, including adding or modifying its questions.",
+        "tags": ["typeform", "forms", "update", "questions", "structure"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "PUT",
+            "path": "/forms/{form_id}",
+            "server_url": "https://api.typeform.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "URL path parameters",
+                    "properties": {
+                        "form_id": {
+                            "type": "string",
+                            "description": "The unique ID of the form to update."
+                        }
+                    },
+                    "required": ["form_id"],
+                    "visible": ["form_id"],
+                    "additionalProperties": false
+                },
+                "body": {
+                    "type": "object",
+                    "description": "The JSON definition of the form's structure.",
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "description": "The title of the form."
+                        },
+                        "fields": {
+                            "type": "array",
+                            "description": "The list of questions (fields) for the form.",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "description": "The question text."
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "description": "The type of question.",
+                                        "enum": ["short_text", "long_text", "multiple_choice", "rating", "yes_no"]
+                                    },
+                                    "properties": {
+                                        "type": "object",
+                                        "description": "Question-specific properties.",
+                                        "properties": {
+                                            "choices": {
+                                                "type": "array",
+                                                "description": "A list of choices for multiple_choice questions.",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "label": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "required": ["title", "type"]
+                            }
+                        }
+                    },
+                    "required": ["title", "fields"],
+                    "visible": ["title", "fields"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["path", "body"],
+            "visible": ["path", "body"],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "TYPEFORM__DELETE_FORM",
+        "description": "Deletes a specific form from your account.",
+        "tags": ["typeform", "forms", "delete", "remove"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "DELETE",
+            "path": "/forms/{form_id}",
+            "server_url": "https://api.typeform.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "URL path parameters",
+                    "properties": {
+                        "form_id": {
+                            "type": "string",
+                            "description": "The unique ID of the form to delete."
+                        }
+                    },
+                    "required": ["form_id"],
+                    "visible": ["form_id"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["path"],
+            "visible": ["path"],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "TYPEFORM__GET_FORM_RESPONSES",
+        "description": "Retrieves the responses for a specific form.",
+        "tags": ["typeform", "forms", "responses", "data"],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/forms/{form_id}/responses",
+            "server_url": "https://api.typeform.com"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object",
+                    "description": "URL path parameters",
+                    "properties": {
+                        "form_id": {
+                            "type": "string",
+                            "description": "The unique ID for the form."
+                        }
+                    },
+                    "required": ["form_id"],
+                    "visible": ["form_id"],
+                    "additionalProperties": false
+                },
+                "query": {
+                    "type": "object",
+                    "description": "URL query parameters",
+                    "properties": {
+                        "page_size": {
+                            "type": "integer",
+                            "description": "The number of responses to retrieve. Max is 1000.",
+                            "default": 100
+                        },
+                        "since": {
+                            "type": "string",
+                            "description": "Limit responses to those submitted after this date/time (ISO 8601 format)."
+                        },
+                        "until": {
+                            "type": "string",
+                            "description": "Limit responses to those submitted before this date/time (ISO 8601 format)."
+                        },
+                        "query": {
+                            "type": "string",
+                            "description": "Search for specific text in the responses."
+                        }
+                    },
+                    "required": [],
+                    "visible": ["page_size", "since", "until", "query"],
+                    "additionalProperties": false
+                }
+            },
+            "required": ["path"],
+            "visible": ["path", "query"],
+            "additionalProperties": false
+        }
+    }
+]
+

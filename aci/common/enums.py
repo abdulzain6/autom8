@@ -68,3 +68,10 @@ class FunctionDefinitionFormat(StrEnum):
 class ClientIdentityProvider(StrEnum):
     GOOGLE = "google"
     # GITHUB = "github"
+
+
+class DeviceType(StrEnum):
+    IOS = "ios"
+    ANDROID = "android"
+    WEB = "web"
+    UNKNOWN = "unknown"

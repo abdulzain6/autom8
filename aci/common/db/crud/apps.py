@@ -2,9 +2,10 @@ from typing import List, Optional, Tuple, Dict
 from sqlalchemy import and_, null, select, update, func
 from sqlalchemy.orm import Session, selectinload
 
-from aci.common.db.sql_models import App, LinkedAccount, Function, AppConfiguration, DefaultAppCredential, AutomationTemplate, automation_template_apps
+from aci.common.db.sql_models import App, LinkedAccount, AppConfiguration, AutomationTemplate, automation_template_apps
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.app import AppUpsert
+import jsonschema
 
 logger = get_logger(__name__)
 
@@ -29,7 +30,15 @@ def update_app(
     app_upsert: AppUpsert,
     app_embedding: list[float] | None = None,
 ) -> App:
+    """Updates an app, validating its configuration schema if provided."""
     new_app_data = app_upsert.model_dump(mode="json", exclude_unset=True)
+    
+    if "configuration_schema" in new_app_data and new_app_data["configuration_schema"]:
+        try:
+            jsonschema.Draft7Validator.check_schema(new_app_data["configuration_schema"])
+        except jsonschema.SchemaError as e:
+            raise ValueError(f"Invalid JSON Schema for configuration_schema: {e}")
+
     for field, value in new_app_data.items():
         setattr(app, field, value)
     if app_embedding is not None:
@@ -77,9 +86,14 @@ def get_app_with_user_context(
 
     app, linked_account = result
 
+    # --- REFACTORED QUERY ---
+    # This is a more expressive and direct way to get templates that require this app.
     templates_stmt = (
         select(AutomationTemplate)
-        .join(automation_template_apps)
+        .join(
+            automation_template_apps,
+            automation_template_apps.c.template_id == AutomationTemplate.id
+        )
         .where(automation_template_apps.c.app_id == app.id)
         .order_by(AutomationTemplate.name)
         .limit(5)
@@ -92,38 +106,31 @@ def get_app_with_user_context(
 def _fetch_and_map_related_templates(db: Session, apps: List[App]) -> Dict[str, List[AutomationTemplate]]:
     """
     Given a list of apps, efficiently fetches all related templates and maps them by app_id.
+    This uses a single query and processes the results in Python to avoid N+1 queries.
     """
     if not apps:
         return {}
     
     app_ids = [app.id for app in apps]
     
-    # Subquery to rank templates for each app and select the top 5
-    template_subquery = (
-        select(
-            automation_template_apps.c.app_id,
-            AutomationTemplate,
-            func.row_number().over(
-                partition_by=automation_template_apps.c.app_id,
-                order_by=AutomationTemplate.name,
-            ).label("rn")
+    # Get all (template, app_id) pairs for the given list of apps
+    templates_stmt = (
+        select(AutomationTemplate, automation_template_apps.c.app_id)
+        .join(
+            automation_template_apps,
+            automation_template_apps.c.template_id == AutomationTemplate.id
         )
-        .join(AutomationTemplate)
         .where(automation_template_apps.c.app_id.in_(app_ids))
-        .subquery("ranked_templates")
+        .order_by(automation_template_apps.c.app_id, AutomationTemplate.name)
     )
     
-    # Final query to get the top 5 templates
-    templates_stmt = select(
-        template_subquery.c.app_id,
-        AutomationTemplate
-    ).select_from(template_subquery).where(template_subquery.c.rn <= 5)
+    all_pairs = db.execute(templates_stmt).all()
     
-    results = db.execute(templates_stmt).all()
-    
+    # Process in Python to group by app_id and get the top 5 for each
     templates_by_app_id: Dict[str, List[AutomationTemplate]] = {app_id: [] for app_id in app_ids}
-    for app_id, template in results:
-        templates_by_app_id[app_id].append(template)
+    for template, app_id in all_pairs:
+        if len(templates_by_app_id[app_id]) < 5:
+            templates_by_app_id[app_id].append(template)
             
     return templates_by_app_id
 
@@ -241,3 +248,4 @@ def search_apps(
 def set_app_active_status(db_session: Session, app_name: str, active: bool) -> None:
     statement = update(App).filter_by(name=app_name).values(active=active)
     db_session.execute(statement)
+
