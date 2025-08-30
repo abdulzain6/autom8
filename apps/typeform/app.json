@@ -1,7 +1,7 @@
 {
   "name": "TYPEFORM",
   "display_name": "Typeform",
-  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/typeform.svg",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/typeform.png",
   "provider": "Typeform",
   "version": "1.0.0",
   "description": "Create beautiful, conversational forms, surveys, and quizzes. This connector allows you to manage your forms, view responses, and integrate your data.",
