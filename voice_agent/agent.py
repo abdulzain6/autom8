@@ -6,16 +6,13 @@ from livekit.agents import (
     AgentSession,
     AutoSubscribe,
     JobContext,
-    JobProcess,
     WorkerOptions,
     cli,
     metrics,
 )
 from livekit.plugins import (
     google,
-    silero,
 )
-from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 
 logger = logging.getLogger("voice-agent")
@@ -32,17 +29,12 @@ Keep replies short, clear, and conversational. Just talk—dont write.
 Avoid punctuation thats hard to speak or sounds unnatural.
 If a user speaks in a different language, respond in their language if possible.
 """,
-            turn_detection=MultilingualModel(),
         )
 
     async def on_enter(self):
         self.session.generate_reply(
             instructions="Hey, how can I help you today?", allow_interruptions=True
         )
-
-
-def prewarm(proc: JobProcess):
-    proc.userdata["vad"] = silero.VAD.load()
 
 
 async def entrypoint(ctx: JobContext):
@@ -82,7 +74,6 @@ if __name__ == "__main__":
     cli.run_app(
         WorkerOptions(
             entrypoint_fnc=entrypoint,
-            prewarm_fnc=prewarm,
             agent_name="Autom8 AI",
         ),
     )
