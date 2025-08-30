@@ -12,7 +12,7 @@ from livekit.agents import (
     metrics,
     RoomInputOptions,
 )
-from livekit.plugins import noise_cancellation, silero, openai, mistralai, google
+from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 
@@ -37,11 +37,12 @@ If a user speaks in a different language, respond in their language if possible.
                 model="qwen-3-235b-a22b-instruct-2507",
                 api_key=os.environ["CEREBRAS_API_KEY"],
             ),
-            tts=google.beta.GeminiTTS(
-                model="gemini-2.5-flash-preview-tts",
-                voice_name="Zephyr",
+            tts=openai.TTS(
+                model="gpt-4o-mini-tts",
+                voice="sage",
                 instructions="Speak in a friendly and engaging tone.",
             ),
+            vad=silero.VAD.load(),
             turn_detection=MultilingualModel(),
         )
 
