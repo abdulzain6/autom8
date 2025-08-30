@@ -12,7 +12,7 @@
       "prefix": "Bearer",
       "client_id": "{{ AIPOLABS_TYPEFORM_CLIENT_ID }}",
       "client_secret": "{{ AIPOLABS_TYPEFORM_CLIENT_SECRET }}",
-      "scope": "accounts:read forms:read forms:write responses:read offline",
+      "scope": "accounts:read forms:read forms:write responses:read",
       "authorize_url": "https://api.typeform.com/oauth/authorize",
       "access_token_url": "https://api.typeform.com/oauth/token",
       "refresh_token_url": "https://api.typeform.com/oauth/token"
