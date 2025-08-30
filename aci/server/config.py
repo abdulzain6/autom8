@@ -90,10 +90,4 @@ SMTP_PORT = int(check_and_get_env_variable("SERVER_SMTP_PORT"))
 SMTP_USERNAME = check_and_get_env_variable("SERVER_SMTP_USERNAME")  
 SMTP_PASSWORD = SecretStr(check_and_get_env_variable("SERVER_SMTP_PASSWORD"))
 FROM_EMAIL_AGENT = check_and_get_env_variable("SERVER_FROM_EMAIL_AGENT")
-
 FIREBASE_SERVICE_ACCOUNT_KEY_PATH = check_and_get_env_variable("SERVER_FIREBASE_SERVICE_ACCOUNT_KEY_PATH")
-
-OAUTH_APPS_REQUIRE_CREDENTIALS_IN_BODY = [
-    "TYPEFORM",
-    "WORDPRESS"
-]

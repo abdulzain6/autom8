@@ -8,10 +8,15 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client
 from aci.common.exceptions import OAuth2Error
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import OAuth2SchemeCredentials
-from aci.server import config  # Import the central config
 
 UNICODE_ASCII_CHARACTER_SET = string.ascii_letters + string.digits
+OAUTH_APPS_REQUIRE_CREDENTIALS_IN_BODY = [
+    "TYPEFORM",
+    "WORDPRESS"
+]
+
 logger = get_logger(__name__)
+
 
 
 class OAuth2Manager:
@@ -88,7 +93,7 @@ class OAuth2Manager:
         """
         try:
             extra_params = {}
-            if self.app_name in config.OAUTH_APPS_REQUIRE_CREDENTIALS_IN_BODY:
+            if self.app_name in OAUTH_APPS_REQUIRE_CREDENTIALS_IN_BODY:
                 logger.info(f"Applying specific token request params for {self.app_name}")
                 extra_params = {
                     "client_id": self.client_id,
@@ -141,6 +146,7 @@ class OAuth2Manager:
 
         if "access_token" not in data:
             logger.error(f"Missing access_token in OAuth response, app={self.app_name}")
+            logger.debug(f"OAuth response data: {data}")
             raise OAuth2Error("Missing access_token in OAuth response")
 
         expires_at: int | None = None
