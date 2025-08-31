@@ -1,6 +1,8 @@
 import asyncio
+from datetime import datetime
 import json
 import logging
+from time import time
 from typing import Any, Dict, cast
 from livekit.agents import (
     Agent,
@@ -45,6 +47,8 @@ class Assistant(Agent):
         super().__init__(
             instructions=f"""
 You are Autom8, an expert AI voice assistant. Your goal is to help users by using tools to accomplish tasks.
+
+Today is {datetime.now().strftime("%Y-%m-%d")}.
 
 Your Behavior:
 - Speak naturally and conversationally. Keep replies short and clear.

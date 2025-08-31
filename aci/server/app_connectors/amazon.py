@@ -1,3 +1,4 @@
+import logging
 import re
 import html2text
 from typing import Any, List, Callable, Optional
@@ -121,7 +122,7 @@ class Amazon(AppConnectorBase):
         self,
         keyword: str,
         num_results: int = 20,
-        sort_by: SortOptions = SortOptions.FEATURED,
+        sort_by: SortOptions | str = SortOptions.FEATURED,
         find_deals: bool = False,
     ) -> List[Product]:
         """
@@ -136,6 +137,13 @@ class Amazon(AppConnectorBase):
         Returns:
             A list of Product objects, each representing a found item.
         """
+        if isinstance(sort_by, str):
+            try:
+                sort_by = SortOptions(sort_by)
+            except ValueError:
+                logging.warning(f"Invalid sort_by value '{sort_by}' received. Defaulting to FEATURED.")
+                sort_by = SortOptions.FEATURED
+
         all_products = []
         page_number = 1
         while len(all_products) < num_results:
