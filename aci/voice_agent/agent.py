@@ -27,6 +27,7 @@ from aci.voice_agent.config import *
 from livekit.agents import function_tool, Agent, RunContext
 from aci.common.db import crud
 from aci.common.utils import create_db_session
+from livekit.agents import llm
 
 
 logger = logging.getLogger("voice-agent")
@@ -42,7 +43,7 @@ class Assistant(Agent):
         self.tools_names: Dict[str, Any] = {}
 
         super().__init__(
-        instructions = f"""
+            instructions=f"""
 You are Autom8, an expert AI voice assistant. Your goal is to help users by using tools to accomplish tasks.
 
 Your Behavior:
@@ -77,10 +78,77 @@ Available Apps for this User:
             turn_detection=MultilingualModel(),
         )
 
-    async def on_enter(self):
-        self.session.generate_reply(
-            user_input="Hey!", allow_interruptions=True
+    async def on_user_turn_completed(
+        self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
+    ) -> None:
+        """
+        Called when the user has finished speaking. This implementation manually
+        truncates the chat history to stay under a character limit, preserving
+        the system message and the most recent exchanges.
+
+        This version is updated to accurately reflect the ChatContext class structure.
+        """
+        MAX_CONTEXT_CHARS = 10000
+
+        all_items = turn_ctx.items
+        if not all_items:
+            return
+
+        # 1. Preserve the system message (it's usually the first item)
+        system_message = None
+        conversation_items = all_items
+        # Check if the first item is a ChatMessage with the 'system' role
+        if (
+            all_items
+            and isinstance(all_items[0], llm.ChatMessage)
+            and all_items[0].role == "system"
+        ):
+            system_message = all_items[0]
+            conversation_items = all_items[1:]
+
+        system_msg_len = len(system_message.text_content or "") if system_message else 0
+
+        # 2. Iterate backwards from the newest item to build the new history
+        truncated_conversation = []
+        current_char_count = 0
+        for item in reversed(conversation_items):
+            item_len = 0
+            # Calculate character length based on the item's type
+            if isinstance(item, llm.ChatMessage):
+                # Use the convenient .text_content property
+                item_len = len(item.text_content or "")
+            elif isinstance(item, llm.FunctionCall):
+                # Approximate length by name + arguments
+                item_len = len(item.name) + len(item.arguments)
+            elif isinstance(item, llm.FunctionCallOutput):
+                # Approximate length by name + output content
+                item_len = len(item.name) + len(item.output)
+
+            # Check if adding this item would exceed our character budget
+            if current_char_count + item_len + system_msg_len > MAX_CONTEXT_CHARS:
+                break  # Stop adding older items
+
+            truncated_conversation.append(item)
+            current_char_count += item_len
+
+        # 3. Reconstruct the final item list in the correct (chronological) order
+        final_items = []
+        if system_message:
+            final_items.append(system_message)
+
+        # The list was built backwards, so we reverse it to restore order
+        final_items.extend(reversed(truncated_conversation))
+
+        # 4. Update the mutable context with the new, shorter item history
+        turn_ctx.items = final_items
+
+        logger.info(
+            f"Context truncated: {len(all_items)} items -> {len(final_items)} items "
+            f"({current_char_count + system_msg_len} chars)."
         )
+
+    async def on_enter(self):
+        self.session.generate_reply(user_input="Hey!", allow_interruptions=True)
 
     def _create_tool_callable(self, func_obj: Function):
         """
@@ -89,9 +157,10 @@ Available Apps for this User:
         """
 
         async def tool_callable(raw_arguments: dict[str, object]):
-            return await asyncio.to_thread(
+            result = await asyncio.to_thread(
                 self._execute_tool_logic, func_obj, **raw_arguments
             )
+            return f"{result[:10000]}... (truncated)" if len(result) > 10000 else result
 
         return tool_callable
 
@@ -99,6 +168,10 @@ Available Apps for this User:
     async def get_app_info(self, app_names: list[str]) -> str:
         """Fetch and return detailed information about specified apps and their functions."""
         logger.info(f"Agent requested info for apps: {app_names}")
+        if len(app_names) > 3:
+            return json.dumps(
+                {"error": "You can request info for up to 3 apps at a time."}
+            )
         try:
             # Use the new CRUD function to get apps with their functions pre-loaded
             apps = crud.apps.get_apps_with_functions_by_names(
@@ -225,7 +298,7 @@ async def entrypoint(ctx: JobContext):
         vad=ctx.proc.userdata["vad"],
         min_endpointing_delay=0.5,
         max_endpointing_delay=5.0,
-        max_tool_steps=7
+        max_tool_steps=4,
     )
 
     session.on("metrics_collected", on_metrics_collected)
