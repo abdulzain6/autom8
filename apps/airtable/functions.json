@@ -18,17 +18,25 @@
             "type": "object",
             "properties": {
                 "query": {
-                    "type": "object",
-                    "description": "Query parameters",
-                    "properties": {
-                        "offset": {
-                            "type": "string",
-                            "description": "Pagination offset. Use the offset returned in the previous response to fetch the next page of records."
-                        }
-                    },
-                    "required": [],
-                    "visible": ["offset"],
-                    "additionalProperties": false
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "description": "Query parameters",
+                            "properties": {
+                                "offset": {
+                                    "anyOf": [
+                                        { "type": "string" },
+                                        { "type": "null" }
+                                    ],
+                                    "description": "Pagination offset. Use the offset returned in the previous response to fetch the next page of records."
+                                }
+                            },
+                            "required": [],
+                            "visible": ["offset"],
+                            "additionalProperties": false
+                        },
+                        { "type": "null" }
+                    ]
                 }
             },
             "required": [],
@@ -70,21 +78,31 @@
                     "additionalProperties": false
                 },
                 "query": {
-                    "type": "object",
-                    "description": "Query parameters",
-                    "properties": {
-                        "include": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "enum": ["visibleFieldIds"]
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "description": "Query parameters",
+                            "properties": {
+                                "include": {
+                                    "anyOf": [
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": ["visibleFieldIds"]
+                                            }
+                                        },
+                                        { "type": "null" }
+                                    ],
+                                    "description": "If specified, additional fields to include in the views object response; currently, this list only allows a single literal value 'visibleFieldIds' (for views of type grid only)"
+                                }
                             },
-                            "description": "If specified, additional fields to include in the views object response; currently, this list only allows a single literal value 'visibleFieldIds' (for views of type grid only)"
-                        }
-                    },
-                    "required": [],
-                    "visible": ["include"],
-                    "additionalProperties": false
+                            "required": [],
+                            "visible": ["include"],
+                            "additionalProperties": false
+                        },
+                        { "type": "null" }
+                    ]
                 }
             },
             "required": ["path"],
@@ -134,7 +152,10 @@
                             "description": "Name of the new table"
                         },
                         "description": {
-                            "type": "string",
+                            "anyOf": [
+                                { "type": "string" },
+                                { "type": "null" }
+                            ],
                             "description": "Description of the new table"
                         },
                         "fields": {
@@ -149,7 +170,10 @@
                                         "description": "Name of the field"
                                     },
                                     "description": {
-                                        "type": "string",
+                                        "anyOf": [
+                                            { "type": "string" },
+                                            { "type": "null" }
+                                        ],
                                         "description": "Description of the field"
                                     },
                                     "type": {
@@ -167,10 +191,14 @@
                                     },
                                     "options": {
                                         "type": "object",
-                                        "description": "Additional options for the field based on its type"
+                                        "description": "Additional options for the field based on its type. Due to API limitations, this must be an empty object.",
+                                        "properties": {},
+                                        "additionalProperties": false
                                     }
                                 },
-                                "required": ["name", "type"]
+                                "required": ["name", "type"],
+                                "visible": ["name", "description", "type", "options"],
+                                "additionalProperties": false
                             }
                         }
                     },
@@ -263,11 +291,17 @@
                     "description": "Table update parameters",
                     "properties": {
                         "name": {
-                            "type": "string",
+                            "anyOf": [
+                                { "type": "string" },
+                                { "type": "null" }
+                            ],
                             "description": "New name for the table"
                         },
                         "description": {
-                            "type": "string",
+                            "anyOf": [
+                                { "type": "string" },
+                                { "type": "null" }
+                            ],
                             "description": "New description for the table"
                         }
                     },

@@ -22,7 +22,7 @@ def schedule_due_automations():
             due_automations = automations.get_due_recurring_automations(db_session)
             if not due_automations:
                 logger.info("Scheduler beat: No automations are due.")
-                return
+                return # No commit needed as no changes were made
 
             logger.info(
                 f"Scheduler beat: Found {len(due_automations)} due automation(s)."
@@ -34,8 +34,11 @@ def schedule_due_automations():
                 automation_run = automation_runs.create_run(db_session, automation.id)
                 execute_automation(automation_run.id)
 
+            db_session.commit()
+
         except Exception as e:
             logger.error(f"Scheduler beat: An error occurred: {e}", exc_info=True)
+            db_session.rollback()
 
 
 @huey.task()
