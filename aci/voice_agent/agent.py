@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from typing import Any, Dict, cast
+from typing import Any, Dict
 from livekit.agents import (
     Agent,
     AgentSession,
@@ -16,12 +16,9 @@ from livekit.agents import (
 from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from aci.common.db.sql_models import Function
-from aci.common.enums import FunctionDefinitionFormat
-from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     execute_function,
-    format_function_definition,
 )
 from aci.voice_agent.config import *
 from livekit.agents import function_tool, Agent, RunContext
