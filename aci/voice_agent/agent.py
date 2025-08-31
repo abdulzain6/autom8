@@ -149,6 +149,7 @@ Available Apps for this User:
                 "type": "function",
                 "name": function.name,
                 "description": function.description,
+                "strict": True,
                 "parameters": function.parameters,
             }
             tool_logic = self._create_tool_callable(function)
