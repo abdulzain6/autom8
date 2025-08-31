@@ -21,6 +21,7 @@ from aci.server.routes import (
     automation_runs,
     automation_templates,
     automations,
+    fcm_tokens
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
@@ -145,4 +146,9 @@ app.include_router(
     automation_runs.router,
     prefix=config.ROUTER_PREFIX_AUTOMATION_RUNS,
     tags=[config.ROUTER_PREFIX_AUTOMATION_RUNS.split("/")[-1]],
+)
+app.include_router(
+    fcm_tokens.router,
+    prefix=config.ROUTER_PREFIX_FCM,
+    tags=[config.ROUTER_PREFIX_FCM.split("/")[-1]],
 )
