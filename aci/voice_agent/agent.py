@@ -160,6 +160,7 @@ Available Apps for this User:
             result = await asyncio.to_thread(
                 self._execute_tool_logic, func_obj, **raw_arguments
             )
+            logger.info(f"Tool {func_obj.name} returned result: {result}")
             return f"{result[:10000]}... (truncated)" if len(result) > 10000 else result
 
         return tool_callable
