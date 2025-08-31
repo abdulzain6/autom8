@@ -247,7 +247,7 @@ Available Apps for this User:
         self.tools_names = {**core_tools, **new_tools}
         await self.update_tools(tools=list(self.tools_names.values()))
 
-        msg = f"Successfully loaded {len(new_tools)} tools for apps: {app_names}."
+        msg = f"Successfully loaded {len(new_tools)} tools for apps: {app_names}. Ask the user if they would like to proceed."
         logger.info(msg)
         return {"status": "success", "message": msg}
 
