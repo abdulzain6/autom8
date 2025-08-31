@@ -75,7 +75,7 @@ Available Apps for this User:
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
                 voice="sage",
-                instructions="Speak in a friendly and engaging tone. Ignore markdown formatting, treat it as plain text.",
+                instructions="Speak in a friendly and engaging tone. Ignore markdown formatting, treat it as plain text. Do not pronounce special characters like #, *, etc.",
                 api_key=OPENAI_API_KEY,
             ),
             vad=silero.VAD.load(),
@@ -251,7 +251,7 @@ Available Apps for this User:
         self.tools_names = {**core_tools, **new_tools}
         await self.update_tools(tools=list(self.tools_names.values()))
 
-        msg = f"Successfully loaded {len(new_tools)} tools for apps: {app_names}. Ask the user if they would like to proceed."
+        msg = f"Successfully loaded {len(new_tools)} tools for apps: {app_names}. Ask the user if they would like to proceed"
         logger.info(msg)
         return {"status": "success", "message": msg}
 
