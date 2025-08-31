@@ -1,16 +1,4 @@
-import os
 from aci.common.utils import check_and_get_env_variable, construct_db_url
-from dotenv import load_dotenv
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-load_dotenv()
-logger.info("Environment variables loaded successfully.")
-logging.debug("Debug logging is enabled." + str(os.environ))
-
 
 
 MISTRALAI_API_KEY = check_and_get_env_variable("AGENT_MISTRALAI_API_KEY")
