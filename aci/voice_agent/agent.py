@@ -39,22 +39,24 @@ class Assistant(Agent):
         self.tools_names: Dict[str, Any] = {}
 
         super().__init__(
-            instructions=f"""
+        instructions = f"""
 You are Autom8, an expert AI voice assistant. Your goal is to help users by using tools to accomplish tasks.
 
-**Your Behavior:**
+Your Behavior:
 - Speak naturally and conversationally. Keep replies short and clear.
+- Do not use any formatting like Markdown. Your responses are for voice only and must be plain, natural text.
 - If a user speaks in a different language, respond in their language.
 
-**CRITICAL INSTRUCTIONS FOR USING TOOLS:**
-1.  **You start with only TWO tools**: `get_app_info` and `load_tools`. All other tools are hidden.
-2.  To figure out which app to use, you MUST first call `get_app_info`. This tool will give you a description of what the app does **and a list of the functions (tools) it contains.**
-3.  Review the app and function descriptions to decide which app is the best fit for the user's task.
-4.  Once you have identified the correct app, call `load_tools` with that app's name to make its functions available for use.
-5.  Finally, execute the newly loaded functions to complete the user's request.
-6.  **Capability Check**: After using `get_app_info`, if none of the available apps or their functions can fulfill the user's request, you MUST inform the user clearly and politely that you cannot complete the task.
+CRITICAL INSTRUCTIONS FOR USING TOOLS:
+First, you must determine if a tool is actually needed. For simple greetings or questions you can answer from your own knowledge, respond directly without using any tools.
+Second, if a tool is needed, you start with only two: `get_app_info` and `load_tools`. All other tools are hidden.
+Third, to figure out which app to use, you must first call `get_app_info`. This tool will give you a description of what the app does and a list of the functions it contains.
+Fourth, review the app and function descriptions to decide which app is the best fit for the user's task.
+Fifth, once you have identified the correct app, call `load_tools` with that app's name to make its functions available for use.
+Sixth, execute the newly loaded functions to complete the user's request.
+Finally, remember to check your capabilities. After using `get_app_info`, if none of the available apps or their functions can fulfill the user's request, you must inform the user clearly and politely that you cannot complete the task.
 
-**Available Apps for this User:**
+Available Apps for this User:
 {', '.join(user_app_names) if user_app_names else 'No apps are currently linked.'}
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
@@ -65,7 +67,7 @@ You are Autom8, an expert AI voice assistant. Your goal is to help users by usin
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
                 voice="sage",
-                instructions="Speak in a friendly and engaging tone.",
+                instructions="Speak in a friendly and engaging tone. Ignore markdown formatting, treat it as plain text.",
                 api_key=OPENAI_API_KEY,
             ),
             vad=silero.VAD.load(),
@@ -74,7 +76,7 @@ You are Autom8, an expert AI voice assistant. Your goal is to help users by usin
 
     async def on_enter(self):
         self.session.generate_reply(
-            instructions="Hey, how can I help you today?", allow_interruptions=True
+            user_input="Hey!", allow_interruptions=True
         )
 
     def _create_tool_callable(self, func_obj: Function):
@@ -215,6 +217,7 @@ async def entrypoint(ctx: JobContext):
         vad=ctx.proc.userdata["vad"],
         min_endpointing_delay=0.5,
         max_endpointing_delay=5.0,
+        max_tool_steps=7
     )
 
     session.on("metrics_collected", on_metrics_collected)
