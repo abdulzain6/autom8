@@ -84,6 +84,12 @@ class Notifyme(AppConnectorBase):
                 file_record = (
                     self.db.query(Artifact).filter(Artifact.id == artifact_id).first()
                 )
+                if not file_record:
+                    continue
+                
+                logger.info(f"Processing artifact ID: {artifact_id}")
+                logger.debug(f"Retrieved file record: {file_record.filename if file_record else 'None'}")
+
                 if (
                     not file_record
                     or file_record.user_id != self.linked_account.user_id

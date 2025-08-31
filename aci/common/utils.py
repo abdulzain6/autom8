@@ -59,11 +59,10 @@ def get_db_engine(db_url: str) -> Engine:
     )
 
 
-# NOTE: cache this because only one sessionmaker is needed for all db sessions
 @cache
 def get_sessionmaker(db_url: str) -> sessionmaker:
     engine = get_db_engine(db_url)
-    return sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    return sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, future=True)
 
 
 def create_db_session(db_url: str) -> Session:

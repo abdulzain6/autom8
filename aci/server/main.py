@@ -54,7 +54,6 @@ scheduler = AsyncIOScheduler()
 logger = logging.getLogger(__name__)
 
 
-app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
