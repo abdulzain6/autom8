@@ -64,6 +64,10 @@ async def entrypoint(ctx: JobContext):
     participant = await ctx.wait_for_participant()
 
     logger.info(f"starting voice assistant for participant {participant.identity}")
+    logger.info(f"job metadata: {ctx.job.metadata}")
+    logger.info(f"room metadata: {ctx.room.metadata}")
+    logger.info(f"agent metadata: {ctx.agent.metadata}")
+    logger.info(f"participant metadata: {participant.metadata}")
 
     usage_collector = metrics.UsageCollector()
 
