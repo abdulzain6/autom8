@@ -1,4 +1,7 @@
+import asyncio
+import threading
 import time
+from typing import Any, Coroutine, Dict, Optional
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -29,13 +32,13 @@ class SecurityCredentialsResponse(BaseModel):
     is_updated: bool
 
 
-async def get_security_credentials(
+def get_security_credentials(
     app: App, app_configuration: AppConfiguration, linked_account: LinkedAccount
 ) -> SecurityCredentialsResponse:
     if linked_account.security_scheme == SecurityScheme.API_KEY:
         return _get_api_key_credentials(app, linked_account)
     elif linked_account.security_scheme == SecurityScheme.OAUTH2:
-        return await _get_oauth2_credentials(app, app_configuration, linked_account)
+        return _get_oauth2_credentials(app, app_configuration, linked_account)
     elif linked_account.security_scheme == SecurityScheme.NO_AUTH:
         return _get_no_auth_credentials(app, linked_account)
     else:
@@ -75,27 +78,49 @@ def update_security_credentials(
     db_session.refresh(linked_account)
 
 
-async def _get_oauth2_credentials(
+def _run_coro_sync(coro: Coroutine) -> Any:
+    """Run coroutine from sync code; if an event loop is already running, run in a new thread."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    result: Dict[str, Any] = {}
+    exc: Dict[str, Exception] = {}
+
+    def _target() -> None:
+        try:
+            result["val"] = asyncio.run(coro)
+        except Exception as e:
+            exc["err"] = e
+
+    t = threading.Thread(target=_target, daemon=True)
+    t.start()
+    t.join()
+    if "err" in exc:
+        raise exc["err"]
+    return result.get("val")
+
+
+def _get_oauth2_credentials(
     app: App, app_configuration: AppConfiguration, linked_account: LinkedAccount
-) -> SecurityCredentialsResponse:
-    """Get OAuth2 credentials from linked account or app's default credentials.
-    If the access token is expired, it will be refreshed.
-    """
-    is_updated = False
+) -> "SecurityCredentialsResponse":
+    """Sync version of original async function — refreshes access token when expired."""
+    is_updated: bool = False
     oauth2_scheme = get_app_configuration_oauth2_scheme(app_configuration.app, app_configuration)
     oauth2_scheme_credentials = OAuth2SchemeCredentials.model_validate(
         linked_account.security_credentials
     )
+
     if _access_token_is_expired(oauth2_scheme_credentials):
         logger.warning(
             f"Access token expired, trying to refresh linked_account_id={linked_account.id}, "
             f"security_scheme={linked_account.security_scheme}, app={app.name}"
         )
-        token_response = await _refresh_oauth2_access_token(
-            app.name, oauth2_scheme, oauth2_scheme_credentials
+        token_response: Dict[str, Any] = _run_coro_sync(
+            _refresh_oauth2_access_token(app.name, oauth2_scheme, oauth2_scheme_credentials)
         )
-        # TODO: refactor parsing to _refresh_oauth2_access_token
-        expires_at: int | None = None
+
+        expires_at: Optional[int] = None
         if "expires_at" in token_response:
             expires_at = int(token_response["expires_at"])
         elif "expires_in" in token_response:
@@ -109,17 +134,14 @@ async def _get_oauth2_credentials(
             )
             raise OAuth2Error("failed to refresh access token")
 
-        fields_to_update = {
+        fields_to_update: Dict[str, Any] = {
             "access_token": token_response["access_token"],
             "expires_at": expires_at,
         }
-        # NOTE: some app's refresh token can only be used once, so we need to update the refresh token (if returned)
         if token_response.get("refresh_token"):
             fields_to_update["refresh_token"] = token_response["refresh_token"]
 
-        oauth2_scheme_credentials = oauth2_scheme_credentials.model_copy(
-            update=fields_to_update,
-        )
+        oauth2_scheme_credentials = oauth2_scheme_credentials.model_copy(update=fields_to_update)
         is_updated = True
 
     return SecurityCredentialsResponse(

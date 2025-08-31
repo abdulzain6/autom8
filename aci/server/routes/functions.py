@@ -39,14 +39,14 @@ def list_functions(
     response_model=FunctionExecutionResult,
     response_model_exclude_none=True,
 )
-async def execute(
+def execute(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     function_name: str,
     body: FunctionExecute,
 ) -> FunctionExecutionResult:
     start_time = datetime.now(UTC)
 
-    result = await execute_function(
+    result = execute_function(
         db_session=context.db_session,
         user_id=context.user.id,
         function_name=function_name,

@@ -86,7 +86,7 @@ class AutomationExecutor:
 
         return functions
 
-    async def _execute_tool_logic(self, function: Function, **kwargs):
+    def _execute_tool_logic(self, function: Function, **kwargs):
         """
         A helper method containing the actual logic for executing a tool.
         It creates a new, isolated database session for each execution.
@@ -95,7 +95,7 @@ class AutomationExecutor:
         with get_db_session() as tool_db_session:
             try:
                 logger.info(f"Executing tool: {function.name} with args: {kwargs}")
-                return await execute_function(
+                return execute_function(
                     tool_db_session, function.name, self.automation.user_id, kwargs, run_id=self.run_id
                 )
             except Exception as e:
@@ -120,9 +120,7 @@ class AutomationExecutor:
                 description=function.description,
                 infer_schema=False,
                 args_schema=formatted_function.parameters,
-                func=lambda f=function, **kwargs: asyncio.run(
-                    self._execute_tool_logic(f, **kwargs)
-                ),
+                func=lambda f=function, **kwargs: self._execute_tool_logic(f, **kwargs)
             )
             tools.append(tool)
 

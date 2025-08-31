@@ -1,9 +1,10 @@
+from typing import List
 from sqlalchemy import select, update
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from aci.common import utils
 from aci.common.db import crud
-from aci.common.db.sql_models import App, Function
+from aci.common.db.sql_models import App, Function, LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.function import FunctionUpsert
 
@@ -26,8 +27,12 @@ def create_functions(
         app_name = utils.parse_app_name_from_function_name(function_upsert.name)
         app = crud.apps.get_app(db_session, app_name, False)
         if not app:
-            logger.error(f"App={app_name} does not exist for function={function_upsert.name}")
-            raise ValueError(f"App={app_name} does not exist for function={function_upsert.name}")
+            logger.error(
+                f"App={app_name} does not exist for function={function_upsert.name}"
+            )
+            raise ValueError(
+                f"App={app_name} does not exist for function={function_upsert.name}"
+            )
         function_data = function_upsert.model_dump(mode="json", exclude_none=True)
         function = Function(
             app_id=app.id,
@@ -147,6 +152,67 @@ def get_function(
     return db_session.execute(statement).scalar_one_or_none()
 
 
-def set_function_active_status(db_session: Session, function_name: str, active: bool) -> None:
+def set_function_active_status(
+    db_session: Session, function_name: str, active: bool
+) -> None:
     statement = update(Function).filter_by(name=function_name).values(active=active)
     db_session.execute(statement)
+
+
+def get_user_enabled_functions_for_apps(
+    db_session: Session,
+    user_id: str,
+    app_names: List[str],
+) -> List[Function]:
+    """
+    Retrieves all enabled functions for a user across a specified list of linked apps.
+
+    This function efficiently fetches the necessary linked accounts, eagerly loads
+    the required relationships (apps and their functions), and then filters the
+    functions based on both the app's status and the user's specific settings
+    (i.e., disabled_functions).
+
+    Args:
+        db_session: The SQLAlchemy database session.
+        user_id: The ID of the user.
+        app_names: A list of up to 3 app names to get functions for.
+
+    Returns:
+        A list of Function objects that the user can access.
+
+    Raises:
+        ValueError: If more than 3 app names are provided, or if the user has not
+                    linked one or more of the requested apps.
+    """
+    if not 1 <= len(app_names) <= 3:
+        raise ValueError("You must provide between 1 and 3 app names.")
+
+    # Eagerly load the full relationship path to avoid N+1 queries.
+    stmt = (
+        select(LinkedAccount)
+        .join(App)
+        .options(selectinload(LinkedAccount.app).selectinload(App.functions))
+        .where(LinkedAccount.user_id == user_id, App.name.in_(app_names))
+    )
+
+    linked_accounts = list(db_session.execute(stmt).scalars().unique().all())
+
+    # Validate that the user has linked all requested apps.
+    found_app_names = {account.app.name for account in linked_accounts}
+    missing_apps = set(app_names) - found_app_names
+    if missing_apps:
+        raise ValueError(
+            f"User has not linked the following required apps: {list(missing_apps)}"
+        )
+
+    # Filter and collect all enabled functions.
+    enabled_functions = []
+    for account in linked_accounts:
+        if not account.app.active:
+            continue
+
+        for func in account.app.functions:
+            if func.active and func.id not in account.disabled_functions:
+                enabled_functions.append(func)
+
+    return enabled_functions

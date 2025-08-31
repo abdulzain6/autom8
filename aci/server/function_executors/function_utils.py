@@ -76,7 +76,7 @@ def format_function_definition(
             raise InvalidFunctionDefinitionFormat(f"Invalid format: {format}")
 
 
-async def execute_function(
+def execute_function(
     db_session: Session,
     function_name: str,
     user_id: str,
@@ -156,7 +156,7 @@ async def execute_function(
         )
 
     security_credentials_response: SecurityCredentialsResponse = (
-        await scm.get_security_credentials(
+        scm.get_security_credentials(
             app_configuration.app, app_configuration, linked_account
         )
     )

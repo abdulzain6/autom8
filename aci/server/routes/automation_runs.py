@@ -76,7 +76,7 @@ def get_a_specific_run(
     return run
 
 
-@router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Automation Runs"])
+@router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_a_run(
     run_id: str,
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
@@ -84,31 +84,20 @@ def delete_a_run(
     """
     Delete a specific automation run and its associated artifact files from storage.
     """
-    # 1. Verify ownership and get the run with its artifacts pre-loaded
     run = get_run_and_verify_ownership(run_id=run_id, context=context)
-
-    # 2. Delete the associated files from storage before deleting the DB records
     if run.artifacts:
         file_manager = FileManager(context.db_session)
         logger.info(f"Deleting {len(run.artifacts)} artifact files for run {run_id}.")
         for artifact in run.artifacts:
             try:
-                # Assuming a method in FileManager to delete the file from storage
                 file_manager.delete_file(artifact.filer_path)
             except Exception as e:
-                # Log the error but don't stop the overall deletion process
                 logger.error(
                     f"Failed to delete artifact file {artifact.filer_path} "
                     f"from storage for run {run_id}: {e}"
                 )
 
-    # 3. Delete the run from the database.
-    # NOTE: This assumes the relationship from AutomationRun to Artifact does NOT
-    # use cascade="all, delete-orphan", otherwise the artifact records would be
-    # deleted before we could get their paths. If artifacts are owned exclusively
-    # by one run, this relationship should be adjusted and this logic revisited.
     crud.automation_runs.delete_run(db=context.db_session, run_id=run_id)
-
     return None
 
 

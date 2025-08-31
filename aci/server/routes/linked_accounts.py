@@ -467,7 +467,7 @@ def list_linked_accounts(
     response_model=LinkedAccountWithCredentials,
     response_model_exclude_none=True,
 )
-async def get_linked_account(
+def get_linked_account(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     linked_account_id: str,
 ) -> LinkedAccount:
@@ -496,7 +496,7 @@ async def get_linked_account(
             f"app configuration for app={linked_account.app.name} not found"
         )
 
-    security_credentials_response = await scm.get_security_credentials(
+    security_credentials_response = scm.get_security_credentials(
         linked_account.app, app_configuration, linked_account
     )
     scm.update_security_credentials(
