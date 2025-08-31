@@ -6,16 +6,20 @@ from aci.common.logging_setup import get_logger
 logger = get_logger(__name__)
 
 
-# TODO: test processor
 def filter_visible_properties(parameters_schema: dict) -> dict:
     """
     Filter the schema to include only visible properties and remove the 'visible' field itself.
-    Ideally, visible and required should be defined for type "object", but we don't make that assumption here.
+    This version is updated to handle schemas with 'anyOf' for nullable objects.
     """
 
-    # create a separate function to avoid deep copying the schema at each recursive call
     def filter(schema: dict) -> dict:
-        # if the schema is not an object return the schema as is
+        if "anyOf" in schema and isinstance(schema["anyOf"], list):
+            # Recursively filter each sub-schema within the 'anyOf' list.
+            # This allows the filter to find the object schema alongside the null type.
+            schema["anyOf"] = [filter(sub_schema) for sub_schema in schema["anyOf"]]
+            return schema
+
+        # If the schema is not an object, return it as is.
         if schema.get("type") != "object":
             return schema
 
@@ -23,14 +27,14 @@ def filter_visible_properties(parameters_schema: dict) -> dict:
         properties: dict | None = schema.get("properties")
         required: list[str] | None = schema.get("required")
 
-        # only continue if properties are defined
+        # Only continue if properties are defined
         if properties is not None:
             # Filter properties to include only visible properties
             filtered_properties = {
                 key: value for key, value in properties.items() if key in visible
             }
 
-            # if required is defined, update the required list to include only visible properties
+            # If required is defined, update the list to include only visible properties
             if required is not None:
                 schema["required"] = [key for key in required if key in visible]
 
@@ -43,10 +47,9 @@ def filter_visible_properties(parameters_schema: dict) -> dict:
 
         return schema
 
-    # Create a deep copy of the schema once
+    # Create a deep copy of the schema to avoid modifying the original
     filtered_parameters_schema = copy.deepcopy(parameters_schema)
     return filter(filtered_parameters_schema)
-
 
 def inject_required_but_invisible_defaults(parameters_schema: dict, input_data: dict) -> dict:
     """

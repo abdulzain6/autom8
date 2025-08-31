@@ -15,21 +15,34 @@
       "type": "object",
       "properties": {
         "query": {
-          "type": "object",
           "description": "Optional query parameters to filter the joke.",
-          "properties": {
-            "blacklistFlags": {
-              "type": "string",
-              "description": "A comma-separated list of flags to blacklist (e.g., 'nsfw,religious,political')."
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "blacklistFlags": {
+                  "description": "A comma-separated list of flags to blacklist (e.g., 'nsfw,religious,political').",
+                  "anyOf": [
+                    { "type": "string" },
+                    { "type": "null" }
+                  ]
+                },
+                "type": {
+                  "description": "The type of joke to get: 'single' or 'twopart'.",
+                  "anyOf": [
+                    { "type": "string" },
+                    { "type": "null" }
+                  ]
+                }
+              },
+              "required": [],
+              "visible": ["blacklistFlags", "type"],
+              "additionalProperties": false
             },
-            "type": {
-              "type": "string",
-              "description": "The type of joke to get: 'single' or 'twopart'."
+            {
+              "type": "null"
             }
-          },
-          "required": [],
-          "visible": ["blacklistFlags", "type"],
-          "additionalProperties": false
+          ]
         }
       },
       "required": [],
@@ -66,21 +79,34 @@
           "additionalProperties": false
         },
         "query": {
-          "type": "object",
           "description": "Optional query parameters to filter the joke.",
-          "properties": {
-            "blacklistFlags": {
-              "type": "string",
-              "description": "A comma-separated list of flags to blacklist (e.g., 'nsfw,religious,political')."
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "blacklistFlags": {
+                  "description": "A comma-separated list of flags to blacklist (e.g., 'nsfw,religious,political').",
+                  "anyOf": [
+                    { "type": "string" },
+                    { "type": "null" }
+                  ]
+                },
+                "type": {
+                  "description": "The type of joke to get: 'single' or 'twopart'.",
+                  "anyOf": [
+                    { "type": "string" },
+                    { "type": "null" }
+                  ]
+                }
+              },
+              "required": [],
+              "visible": ["blacklistFlags", "type"],
+              "additionalProperties": false
             },
-            "type": {
-              "type": "string",
-              "description": "The type of joke to get: 'single' or 'twopart'."
+            {
+              "type": "null"
             }
-          },
-          "required": [],
-          "visible": ["blacklistFlags", "type"],
-          "additionalProperties": false
+          ]
         }
       },
       "required": ["path"],

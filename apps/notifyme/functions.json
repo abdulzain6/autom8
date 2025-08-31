@@ -19,11 +19,18 @@
           "description": "The main content/body of the email. Can be plain text or formatted markdown."
         },
         "artifact_ids": {
-          "type": ["array", "null"],
-          "items": {
-            "type": "string"
-          },
-          "description": "An optional list of artifact IDs..."
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An optional list of artifact IDs to include as file attachments. Total size cannot exceed 10MB."
         }
       },
       "required": ["subject", "body"],
