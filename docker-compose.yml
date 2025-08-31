@@ -73,7 +73,7 @@ services:
       - services_network
       - web_proxy
 
-    command: python -m aci.voice_agent.agent start
+    command: python -m aci.voice_agent.agent download-files && python -m aci.voice_agent.agent start
 
 
   # --- 5. Internal Services ---
