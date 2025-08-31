@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, cast
 from livekit.agents import (
     Agent,
     AgentSession,
@@ -16,9 +16,12 @@ from livekit.agents import (
 from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from aci.common.db.sql_models import Function
+from aci.common.enums import FunctionDefinitionFormat
+from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     execute_function,
+    format_function_definition,
 )
 from aci.voice_agent.config import *
 from livekit.agents import function_tool, Agent, RunContext
@@ -145,12 +148,16 @@ Available Apps for this User:
 
         new_tools: Dict[str, Any] = {}
         for function in functions:
+            formatted_function: OpenAIFunction = cast(
+                OpenAIFunctionDefinition,
+                format_function_definition(function, FunctionDefinitionFormat.OPENAI),
+            ).function
             raw_schema = {
                 "type": "function",
                 "name": function.name,
                 "description": function.description,
                 "strict": True,
-                "parameters": function.parameters,
+                "parameters": formatted_function.parameters,
             }
             tool_logic = self._create_tool_callable(function)
             livekit_tool = function_tool(raw_schema=raw_schema)(tool_logic)
