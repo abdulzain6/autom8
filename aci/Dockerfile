@@ -5,6 +5,7 @@ WORKDIR /app
 # Only copy requirements first so Docker can cache pip install step
 COPY requirements.txt ./
 
+
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install pygooglenews --no-deps
@@ -17,5 +18,7 @@ COPY . ./aci/
 COPY alembic.ini .
 COPY .env .
 COPY start.sh .
+
+RUN python -m aci.voice_agent.agent download-files
 
 CMD ["uvicorn", "aci.server.main:app", "--proxy-headers", "--forwarded-allow-ips=*", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]

@@ -65,11 +65,16 @@ services:
   # --- 4. Voice Agent ---
   voice_agent:
     build:
-      context: ./voice_agent
+      context: ./aci
       dockerfile: Dockerfile
     restart: always
     networks:
+      - storage_network
+      - services_network
       - web_proxy
+
+    command: python -m aci.voice_agent.agent start
+
 
   # --- 5. Internal Services ---
   gotenberg:

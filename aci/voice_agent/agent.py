@@ -1,6 +1,4 @@
 import logging
-import os
-from dotenv import load_dotenv
 from livekit.agents import (
     Agent,
     AgentSession,
@@ -14,11 +12,9 @@ from livekit.agents import (
 )
 from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
-
+from aci.voice_agent.config import *
 
 logger = logging.getLogger("voice-agent")
-load_dotenv()
-
 
 class Assistant(Agent):
     def __init__(self) -> None:
@@ -31,16 +27,17 @@ Avoid punctuation thats hard to speak or sounds unnatural.
 If a user speaks in a different language, respond in their language if possible.
 """,
             stt=mistralai.STT(
-                model="voxtral-mini-latest", api_key=os.environ["MISTRALAI_API_KEY"]
+                model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY
             ),
             llm=openai.LLM.with_cerebras(
                 model="qwen-3-235b-a22b-instruct-2507",
-                api_key=os.environ["CEREBRAS_API_KEY"],
+                api_key=CEREBRAS_API_KEY,
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
                 voice="sage",
                 instructions="Speak in a friendly and engaging tone.",
+                api_key=OPENAI_API_KEY,
             ),
             vad=silero.VAD.load(),
             turn_detection=MultilingualModel(),
@@ -64,11 +61,9 @@ async def entrypoint(ctx: JobContext):
     participant = await ctx.wait_for_participant()
 
     logger.info(f"starting voice assistant for participant {participant.identity}")
-    logger.info(f"job metadata: {ctx.job.metadata}")
-    logger.info(f"room metadata: {ctx.room.metadata}")
-    logger.info(f"agent metadata: {ctx.agent.metadata}")
-    logger.info(f"participant metadata: {participant.metadata}")
 
+    user_id = participant.identity
+    
     usage_collector = metrics.UsageCollector()
 
     # Log metrics and collect usage data
@@ -99,5 +94,8 @@ if __name__ == "__main__":
             entrypoint_fnc=entrypoint,
             prewarm_fnc=prewarm,
             agent_name="Autom8 AI",
+            api_key=LIVEKIT_API_KEY,
+            api_secret=LIVEKIT_API_SECRET,
+            ws_url=LIVEKIT_URL,
         ),
     )
