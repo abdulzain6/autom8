@@ -189,27 +189,19 @@ Finally, if none of the available apps can fulfill the user's request, you must 
         "parameters": {
             "type": "object",
             "properties": {
-                "app_title": {
-                    "type": "string",
-                    "description": "A short, descriptive title for the application (e.g., 'BMI Calculator')."
-                },
                 "html_content": {
                     "type": "string",
                     "description": "The complete HTML string for the application, including all necessary CSS and JavaScript."
-                },
-                "timeout": {
-                    "type": "number",
-                    "description": "The time in seconds to wait for the frontend to acknowledge the request. Defaults to 10.0."
-                }
+                },  
             },
-            "required": ["app_title", "html_content"],
+            "required": ["html_content"],
         },
     })
     async def display_mini_app(
         self,
         context: RunContext,
-        app_title: str,
         html_content: str,
+        app_title: str = "Mini App",
         timeout: float = 10.0,
     ):
         """
