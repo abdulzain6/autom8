@@ -30,13 +30,14 @@ from livekit.agents import function_tool, Agent, RunContext
 from aci.common.db import crud
 from aci.common.utils import create_db_session
 from livekit.agents import llm
+from livekit.agents import get_job_context, ToolError
 
 
 logger = logging.getLogger("voice-agent")
 
 
 class Assistant(Agent):
-    _core_tool_names = {"load_tools"}
+    _core_tool_names = {"load_tools", "display_mini_app", "get_app_info"}
 
     def __init__(self, user_id: str) -> None:
         self.db_session = create_db_session(DB_FULL_URL)
@@ -46,9 +47,9 @@ class Assistant(Agent):
 
         super().__init__(
             instructions=f"""
-You are Autom8, a friendly and efficient AI voice assistant. Your goal is to help users by accomplishing tasks quickly and communicating clearly.
+You are Autom8, an expert AI voice assistant. Your goal is to help users by using tools to accomplish tasks.
 
-Today is {datetime.now().strftime('%Y-%m-%d')}.
+Today is {datetime.now().strftime('%Y-%-m-%d')}.
 
 ---
 ### Your Voice and Personality: CRITICAL RULES
@@ -57,10 +58,13 @@ Today is {datetime.now().strftime('%Y-%m-%d')}.
 - **Summarize, Don't Recite:** This is vital. When a tool returns data, NEVER read the raw data back. Summarize the single most important piece of information in a natural, spoken phrase.
     - BAD (Reciting): "The result of the weather tool is: Temperature 28 degrees Celsius, condition sunny, humidity 60 percent, wind speed 5 kilometers per hour."
     - GOOD (Summarizing): "It looks like it'll be sunny and around 28 degrees today."
-    - BAD (Reciting): "The tool returned a list of three products: Product A at $19.99, Product B at $25.00, and Product C at $15.50."
-    - GOOD (Summarizing): "Okay, I found a few options. The first one is Product A, which costs about $20."
 - **No Written Language:** Your responses are for voice ONLY. Do not use any formatting, lists, or sentence structures that sound like a written document.
 - **Global Friend:** If the user speaks a language other than English, reply in their language with the same friendly and brief style.
+---
+
+### Interaction Flow: How to Handle Conversations
+- **Ask Clarifying Questions:** If a user's request is vague or ambiguous, you MUST ask for more details before using any tools. Do not guess. For example, if the user says "send a message," you should ask, "Who should I send it to, and what should it say?"
+- **Confirm Before Acting:** Before you perform any action that creates or modifies data (like creating a post, sending an email, or deleting something), you MUST first summarize what you are about to do and ask for the user's permission to proceed. For example, say: "Okay, I'm ready to create a GitHub issue titled 'Fix the login bug.' Should I go ahead?" Only proceed after the user confirms.
 ---
 
 ### CRITICAL INSTRUCTIONS FOR USING TOOLS:
@@ -176,6 +180,54 @@ Finally, if none of the available apps can fulfill the user's request, you must 
             return f"{result[:10000]}... (truncated)" if len(result) > 10000 else result
 
         return tool_callable
+
+    @function_tool()
+    async def display_mini_app(
+        self,
+        context: RunContext,
+        app_title: str,
+        html_content: str,
+        timeout: float = 10.0,
+    ):
+        """
+        Renders a self-contained mini-application (HTML, CSS, JS) on the user's frontend.
+
+        This tool is used to display interactive widgets, calculators, or other small applications
+        for the user to interact with. The application's logic must be fully contained
+        within the provided HTML string.
+
+        Args:
+            app_title: A short, descriptive title for the application (e.g., "BMI Calculator").
+            html_content: The complete HTML string for the application. This must include
+                        all necessary CSS (e.g., in <style> tags) and JavaScript
+                        (e.g., in <script> tags).
+            timeout: The time in seconds to wait for the frontend to acknowledge the request.
+
+        Returns:
+            A confirmation message indicating that the app was sent successfully.
+        """
+        try:
+            room = get_job_context().room
+            # Find a participant to send the RPC to
+            participant_identity = next(iter(room.remote_participants))
+
+            # The frontend client must have a listener for the "displayMiniApp" method
+            await room.local_participant.perform_rpc(
+                destination_identity=participant_identity,
+                method="displayMiniApp",
+                payload=json.dumps({"title": app_title, "html": html_content}),
+                response_timeout=timeout,
+            )
+
+            # The frontend should send back a simple success message
+            return "App successfully sent to the user for display."
+        except StopIteration:
+            raise ToolError(
+                "No remote participants found in the room to display the app."
+            )
+        except Exception as e:
+            # This will catch RPC timeouts or other communication errors
+            raise ToolError(f"Failed to send the mini-app to the frontend: {e}")
 
     @function_tool()
     async def get_app_info(self, app_names: list[str]) -> str:
