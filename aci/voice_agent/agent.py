@@ -181,7 +181,30 @@ Finally, if none of the available apps can fulfill the user's request, you must 
 
         return tool_callable
 
-    @function_tool()
+    @function_tool(raw_schema={
+        "type": "function",
+        "name": "display_mini_app",
+        "description": "Renders a self-contained mini-application (HTML, CSS, JS) on the user's frontend.",
+        "strict": True,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "app_title": {
+                    "type": "string",
+                    "description": "A short, descriptive title for the application (e.g., 'BMI Calculator')."
+                },
+                "html_content": {
+                    "type": "string",
+                    "description": "The complete HTML string for the application, including all necessary CSS and JavaScript."
+                },
+                "timeout": {
+                    "type": "number",
+                    "description": "The time in seconds to wait for the frontend to acknowledge the request. Defaults to 10.0."
+                }
+            },
+            "required": ["app_title", "html_content"],
+        },
+    })
     async def display_mini_app(
         self,
         context: RunContext,
@@ -208,7 +231,6 @@ Finally, if none of the available apps can fulfill the user's request, you must 
         """
         try:
             room = get_job_context().room
-            # Find a participant to send the RPC to
             participant_identity = next(iter(room.remote_participants))
 
             # The frontend client must have a listener for the "displayMiniApp" method
