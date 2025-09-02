@@ -168,3 +168,45 @@ class AutomationRunResponse(BaseModel):
     """Response schema for triggering an automation run."""
     message: str
     run_id: str
+
+
+class AutomationAgentCreate(BaseModel):
+    """Schema for the voice agent to create automations using app names instead of linked account IDs."""
+    
+    name: str = Field(..., max_length=255, description="A clear, descriptive name for the automation")
+    description: Optional[str] = Field(None, description="A brief description of what this automation does")
+    goal: str = Field(..., description="The specific goal or instruction for the automation - what exactly should it accomplish?")
+    app_names: List[str] = Field(..., description="List of app names required for this automation (e.g., ['gmail', 'google_calendar', 'notifyme'])")
+    is_deep: bool = Field(default=False, description="Set to true for complex automations that require multiple steps")
+    active: bool = Field(default=True, description="Whether the automation should be active immediately")
+    is_recurring: bool = Field(default=False, description="Whether this automation should run on a schedule")
+    cron_schedule: Optional[str] = Field(
+        None,
+        description="UTC cron schedule (e.g., '0 9 * * 1' for every Monday at 9 AM UTC). Required if is_recurring is true. Minimum interval is 30 minutes."
+    )
+
+    @model_validator(mode="after")
+    def validate_automation_requirements(self) -> "AutomationAgentCreate":
+        # Validate cron schedule requirements
+        if self.is_recurring and not self.cron_schedule:
+            raise ValueError("cron_schedule is required for recurring automations")
+        if not self.is_recurring and self.cron_schedule:
+            raise ValueError("cron_schedule should only be provided for recurring automations")
+        
+        if self.cron_schedule:
+            if not croniter.is_valid(self.cron_schedule):
+                raise ValueError(f"'{self.cron_schedule}' is not a valid cron schedule")
+
+            # Validate minimum 30-minute interval
+            cron = croniter(self.cron_schedule)
+            next_run = cron.get_next(datetime)
+            next_next_run = cron.get_next(datetime)
+            
+            if (next_next_run - next_run).total_seconds() < 1800:  # 1800 seconds = 30 minutes
+                raise ValueError("Recurring automations cannot be scheduled more frequently than every 30 minutes")
+
+        # Validate app names are provided
+        if not self.app_names:
+            raise ValueError("At least one app name must be provided")
+
+        return self

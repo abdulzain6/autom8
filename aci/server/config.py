@@ -53,6 +53,7 @@ ROUTER_PREFIX_PROFILE = "/v1/profile"
 ROUTER_PREFIX_AUTOMATIONS = "/v1/automations"
 ROUTER_PREFIX_AUTOMATION_TEMPLATES = "/v1/automation-templates"
 ROUTER_PREFIX_AUTOMATION_RUNS = "/v1/automation-runs"
+ROUTER_PREFIX_ACTIVITY = "/v1/activity"
 ROUTER_PREFIX_FCM = "/v1/fcm"
 
 # 8KB

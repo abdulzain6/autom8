@@ -166,17 +166,14 @@ class FileManager:
 
     def read_artifact(self, file_id: str) -> Tuple[Generator[bytes, None, None], str]:
         """Retrieves a temporary file's content as a memory-efficient stream generator."""
-        current_time = datetime.now(timezone.utc)
         file_record = (
             self.db.query(Artifact)
             .filter(Artifact.id == file_id)
-            .filter(
-                (Artifact.expires_at == None) | (Artifact.expires_at > current_time)
-            )
             .first()
         )
         if file_record is None:
             raise ValueError(f"File with ID {file_id} not found or has expired.")
+        
         file_url = f"{self.filer_url}{file_record.filer_path}"
 
         def stream_generator():
@@ -191,7 +188,6 @@ class FileManager:
 
     def cleanup_expired_artifacts(self) -> Tuple[int, int]:
         """Finds and deletes all expired files and their database records."""
-        # ... (implementation is unchanged)
         deleted_count = 0
         failed_count = 0
         try:
