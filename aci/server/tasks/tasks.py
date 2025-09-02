@@ -4,6 +4,7 @@ from .config import huey
 from logging import getLogger
 from aci.server.dependencies import get_db_session
 from aci.common.db.crud import automations, automation_runs
+from aci.common.db.crud.usage import increment_automation_runs
 from aci.server.agent.automation_executor import AutomationExecutor
 from aci.common.fcm import FCMManager
 
@@ -102,6 +103,13 @@ def execute_automation(run_id: str):
                 artifact_ids=automation_output.artifact_ids,
             )
             
+            # Track successful automation run in usage
+            try:
+                increment_automation_runs(db_session, automation.user_id, success=True)
+                logger.info(f"Tracked successful automation run for user {automation.user_id}")
+            except Exception as e:
+                logger.warning(f"Failed to track automation usage: {e}")
+            
             # Send success notification
             try:
                 fcm_manager.send_notification_to_user(
@@ -137,6 +145,15 @@ def execute_automation(run_id: str):
                 status=RunStatus.failure,
                 message=f"An unexpected error occurred: {e}",
             )
+            
+            # Track failed automation run in usage
+            try:
+                automation = automations.get_automation(db_session, automation_id)
+                if automation:
+                    increment_automation_runs(db_session, automation.user_id, success=False)
+                    logger.info(f"Tracked failed automation run for user {automation.user_id}")
+            except Exception as usage_error:
+                logger.warning(f"Failed to track automation usage: {usage_error}")
             
             # Send failure notification
             try:

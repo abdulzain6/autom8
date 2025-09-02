@@ -630,6 +630,79 @@ class FCMToken(Base):
     )
 
 
+class UserUsage(Base):
+    """
+    Tracks user usage statistics per month.
+    One record per user per month to monitor voice agent usage and automation runs.
+    """
+
+    __tablename__ = "user_usage"
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
+    )
+    
+    user_id: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id"), nullable=False
+    )
+    
+    # Year and month for the usage period (e.g., 2025, 9 for September 2025)
+    year: Mapped[int] = mapped_column(nullable=False)
+    month: Mapped[int] = mapped_column(nullable=False)
+    
+    # Voice agent usage in minutes (user-facing metric)
+    voice_agent_minutes: Mapped[float] = mapped_column(
+        nullable=False, default=0.0, server_default="0.0"
+    )
+    
+    # Number of automation runs in this month
+    automation_runs_count: Mapped[int] = mapped_column(
+        nullable=False, default=0, server_default="0"
+    )
+    
+    # Additional usage metrics
+    successful_automation_runs: Mapped[int] = mapped_column(
+        nullable=False, default=0, server_default="0"
+    )
+    failed_automation_runs: Mapped[int] = mapped_column(
+        nullable=False, default=0, server_default="0"
+    )
+    
+    # Internal cost tracking metrics (from LiveKit usage)
+    llm_tokens_used: Mapped[int] = mapped_column(
+        nullable=False, default=0, server_default="0"
+    )
+    stt_audio_minutes: Mapped[float] = mapped_column(
+        nullable=False, default=0.0, server_default="0.0"
+    )
+    tts_characters_used: Mapped[int] = mapped_column(
+        nullable=False, default=0, server_default="0"
+    )
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
+    )
+
+    user: Mapped["SupabaseUser"] = relationship("SupabaseUser", lazy="select", init=False)
+
+    __table_args__ = (
+        # Ensure one record per user per month
+        UniqueConstraint("user_id", "year", "month", name="uq_user_year_month"),
+        # Index for efficient querying
+        Index("ix_user_usage_user_year_month", "user_id", "year", "month"),
+    )
+
+
 __all__ = [
     "App",
     "AppConfiguration",
@@ -641,4 +714,5 @@ __all__ = [
     "Automation",
     "AutomationRun",
     "AutomationLinkedAccount",
+    "UserUsage",
 ]

@@ -10,7 +10,6 @@ from aci.server.file_management import FileManager
 from aci.common.logging_setup import setup_logging
 from aci.common.utils import create_db_session
 from aci.server.log_schema_filter import LogSchemaFilter
-from aci.server.middleware.ratelimit import RateLimitMiddleware
 from aci.server.routes import (
     apps,
     functions,
@@ -22,7 +21,8 @@ from aci.server.routes import (
     automation_templates,
     automations,
     fcm_tokens,
-    activity
+    activity,
+    usage
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
@@ -156,4 +156,9 @@ app.include_router(
     activity.router,
     prefix=config.ROUTER_PREFIX_ACTIVITY,
     tags=[config.ROUTER_PREFIX_ACTIVITY.split("/")[-1]],
+)
+app.include_router(
+    usage.router,
+    prefix=config.ROUTER_PREFIX_USAGE,
+    tags=[config.ROUTER_PREFIX_USAGE.split("/")[-1]],
 )
