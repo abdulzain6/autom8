@@ -960,11 +960,26 @@ async def entrypoint(ctx: JobContext):
         
         logger.info(f"User {user_id} disconnected. Session duration: {session_duration_minutes:.2f} minutes")
         
-        # Use real-time accumulated metrics instead of usage_collector summary
-        logger.info(f"Real-time session metrics for user {user_id}: "
+        # Use real-time accumulated metrics first, fall back to usage_collector if needed
+        usage_summary = usage_collector.get_summary()
+        
+        # If real-time tracking didn't capture anything but usage_collector did, use that as fallback
+        if session_metrics['llm_tokens'] == 0 and session_metrics['stt_duration'] == 0 and session_metrics['tts_characters'] == 0:
+            if usage_summary.llm_prompt_tokens > 0 or usage_summary.llm_completion_tokens > 0 or usage_summary.stt_audio_duration > 0 or usage_summary.tts_characters_count > 0:
+                logger.warning(f"Real-time metrics were zero but usage_collector has data - using fallback for user {user_id}")
+                session_metrics['llm_tokens'] = usage_summary.llm_prompt_tokens + usage_summary.llm_completion_tokens + usage_summary.llm_prompt_cached_tokens
+                session_metrics['stt_duration'] = usage_summary.stt_audio_duration
+                session_metrics['tts_characters'] = usage_summary.tts_characters_count
+        
+        logger.info(f"Final session metrics for user {user_id}: "
                    f"LLM tokens: {session_metrics['llm_tokens']}, "
                    f"STT duration: {session_metrics['stt_duration']:.2f}s, "
                    f"TTS characters: {session_metrics['tts_characters']}")
+        
+        logger.info(f"UsageCollector summary for comparison: "
+                   f"LLM tokens: {usage_summary.llm_prompt_tokens + usage_summary.llm_completion_tokens + usage_summary.llm_prompt_cached_tokens}, "
+                   f"STT duration: {usage_summary.stt_audio_duration:.2f}s, "
+                   f"TTS characters: {usage_summary.tts_characters_count}")
         
         # Save all usage metrics to database
         try:
@@ -986,7 +1001,7 @@ async def entrypoint(ctx: JobContext):
                         tts_characters=session_metrics['tts_characters']
                     )
                     
-                    logger.info(f"Recorded real-time metrics for user {user_id}: "
+                    logger.info(f"Recorded final metrics for user {user_id}: "
                                f"{session_metrics['llm_tokens']} LLM tokens, "
                                f"{stt_minutes:.2f} STT minutes, "
                                f"{session_metrics['tts_characters']} TTS characters")
@@ -1018,22 +1033,23 @@ async def entrypoint(ctx: JobContext):
 
     # Log metrics and collect usage data
     def on_metrics_collected(agent_metrics: metrics.AgentMetrics):
+        logger.info(f"Metrics collected callback triggered: {type(agent_metrics).__name__}")
         metrics.log_metrics(agent_metrics)
         usage_collector.collect(agent_metrics)
         
         # Accumulate metrics in real-time based on metric type
         if isinstance(agent_metrics, metrics.LLMMetrics):
             session_metrics['llm_tokens'] += agent_metrics.completion_tokens + agent_metrics.prompt_tokens + agent_metrics.prompt_cached_tokens
-            logger.debug(f"LLM metrics: +{agent_metrics.completion_tokens + agent_metrics.prompt_tokens + agent_metrics.prompt_cached_tokens} tokens (total: {session_metrics['llm_tokens']})")
+            logger.info(f"LLM metrics: +{agent_metrics.completion_tokens + agent_metrics.prompt_tokens + agent_metrics.prompt_cached_tokens} tokens (total: {session_metrics['llm_tokens']})")
         elif isinstance(agent_metrics, metrics.STTMetrics):
             session_metrics['stt_duration'] += agent_metrics.audio_duration
-            logger.debug(f"STT metrics: +{agent_metrics.audio_duration:.2f}s (total: {session_metrics['stt_duration']:.2f}s)")
+            logger.info(f"STT metrics: +{agent_metrics.audio_duration:.2f}s (total: {session_metrics['stt_duration']:.2f}s)")
         elif isinstance(agent_metrics, metrics.TTSMetrics):
             session_metrics['tts_characters'] += agent_metrics.characters_count
-            logger.debug(f"TTS metrics: +{agent_metrics.characters_count} characters (total: {session_metrics['tts_characters']})")
+            logger.info(f"TTS metrics: +{agent_metrics.characters_count} characters (total: {session_metrics['tts_characters']})")
         elif isinstance(agent_metrics, metrics.RealtimeModelMetrics):
             session_metrics['llm_tokens'] += agent_metrics.input_tokens + agent_metrics.output_tokens
-            logger.debug(f"Realtime model metrics: +{agent_metrics.input_tokens + agent_metrics.output_tokens} tokens (total: {session_metrics['llm_tokens']})")
+            logger.info(f"Realtime model metrics: +{agent_metrics.input_tokens + agent_metrics.output_tokens} tokens (total: {session_metrics['llm_tokens']})")
 
     session = AgentSession(
         vad=ctx.proc.userdata["vad"],
@@ -1042,6 +1058,7 @@ async def entrypoint(ctx: JobContext):
         max_tool_steps=4,
     )
 
+    logger.info(f"Registering metrics_collected callback for user {user_id}")
     session.on("metrics_collected", on_metrics_collected)
 
     try:
