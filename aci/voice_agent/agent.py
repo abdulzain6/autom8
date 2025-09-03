@@ -15,6 +15,7 @@ from livekit.agents import (
     metrics,
     RoomInputOptions,
 )
+from livekit.rtc import ConnectionState
 from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from aci.common.db.sql_models import Function
@@ -933,38 +934,23 @@ async def entrypoint(ctx: JobContext):
 
     usage_collector = metrics.UsageCollector()
 
-    # Log metrics and collect usage data
-    def on_metrics_collected(agent_metrics: metrics.AgentMetrics):
-        metrics.log_metrics(agent_metrics)
-        usage_collector.collect(agent_metrics)
-
-    session = AgentSession(
-        vad=ctx.proc.userdata["vad"],
-        min_endpointing_delay=0.5,
-        max_endpointing_delay=5.0,
-        max_tool_steps=4,
-    )
-
-    session.on("metrics_collected", on_metrics_collected)
-
     # Track session start time for voice minutes calculation
     session_start_time = time()
+    usage_recorded = False  # Prevent duplicate usage recording
     logger.info(f"Session started for user {user_id} at {session_start_time}")
 
-    try:
-        await session.start(
-            room=ctx.room,
-            agent=Assistant(user_id=user_id),
-            room_input_options=RoomInputOptions(
-                noise_cancellation=noise_cancellation.BVC(),
-            ),
-        )
-    finally:
-        # Calculate session duration and save usage metrics when session ends
+    # Function to save usage metrics when user disconnects
+    def save_usage_metrics():
+        nonlocal usage_recorded
+        if usage_recorded:
+            logger.info(f"Usage already recorded for user {user_id}, skipping")
+            return
+            
+        usage_recorded = True
         session_end_time = time()
         session_duration_minutes = (session_end_time - session_start_time) / 60
         
-        logger.info(f"Session ended for user {user_id}. Duration: {session_duration_minutes:.2f} minutes")
+        logger.info(f"User {user_id} disconnected. Session duration: {session_duration_minutes:.2f} minutes")
         
         # Get the collected usage data from LiveKit
         usage_summary = usage_collector.get_summary()
@@ -1006,6 +992,56 @@ async def entrypoint(ctx: JobContext):
                 
         except Exception as e:
             logger.error(f"Error saving usage metrics for user {user_id}: {str(e)}", exc_info=True)
+
+    # Listen for user disconnect events
+    def on_participant_disconnected(participant):
+        if participant.identity == user_id:
+            logger.info(f"User {user_id} disconnected from room, saving usage metrics")
+            save_usage_metrics()
+
+    # Listen for room disconnect events as fallback
+    def on_room_disconnected(reason):
+        logger.info(f"Room disconnected (reason: {reason}), saving usage metrics for user {user_id}")
+        save_usage_metrics()
+    
+    # Listen for connection state changes for additional robustness  
+    def on_connection_state_changed(state):
+        if state == ConnectionState.CONN_DISCONNECTED:
+            logger.info(f"Connection disconnected, saving usage metrics for user {user_id}")
+            save_usage_metrics()
+
+    # Register event listeners
+    ctx.room.on("participant_disconnected", on_participant_disconnected)
+    ctx.room.on("disconnected", on_room_disconnected)
+    ctx.room.on("connection_state_changed", on_connection_state_changed)
+
+    # Log metrics and collect usage data
+    def on_metrics_collected(agent_metrics: metrics.AgentMetrics):
+        metrics.log_metrics(agent_metrics)
+        usage_collector.collect(agent_metrics)
+
+    session = AgentSession(
+        vad=ctx.proc.userdata["vad"],
+        min_endpointing_delay=0.5,
+        max_endpointing_delay=5.0,
+        max_tool_steps=4,
+    )
+
+    session.on("metrics_collected", on_metrics_collected)
+
+    try:
+        await session.start(
+            room=ctx.room,
+            agent=Assistant(user_id=user_id),
+            room_input_options=RoomInputOptions(
+                noise_cancellation=noise_cancellation.BVC(),
+            ),
+        )
+    finally:
+        # Final fallback to ensure usage is recorded if events didn't fire
+        if not usage_recorded:
+            logger.info(f"Session ended without disconnect event, saving usage metrics for user {user_id}")
+            save_usage_metrics()
 
 
 if __name__ == "__main__":
