@@ -937,6 +937,14 @@ async def entrypoint(ctx: JobContext):
     # Track session start time for voice minutes calculation
     session_start_time = time()
     usage_recorded = False  # Prevent duplicate usage recording
+    
+    # Track metrics in real-time as they occur
+    session_metrics = {
+        'llm_tokens': 0,
+        'stt_duration': 0.0,
+        'tts_characters': 0
+    }
+    
     logger.info(f"Session started for user {user_id} at {session_start_time}")
 
     # Function to save usage metrics when user disconnects
@@ -952,13 +960,11 @@ async def entrypoint(ctx: JobContext):
         
         logger.info(f"User {user_id} disconnected. Session duration: {session_duration_minutes:.2f} minutes")
         
-        # Get the collected usage data from LiveKit
-        usage_summary = usage_collector.get_summary()
-        
-        logger.info(f"Usage summary for user {user_id}: "
-                   f"LLM tokens: {usage_summary.llm_prompt_tokens + usage_summary.llm_completion_tokens}, "
-                   f"STT duration: {usage_summary.stt_audio_duration:.2f}s, "
-                   f"TTS characters: {usage_summary.tts_characters_count}")
+        # Use real-time accumulated metrics instead of usage_collector summary
+        logger.info(f"Real-time session metrics for user {user_id}: "
+                   f"LLM tokens: {session_metrics['llm_tokens']}, "
+                   f"STT duration: {session_metrics['stt_duration']:.2f}s, "
+                   f"TTS characters: {session_metrics['tts_characters']}")
         
         # Save all usage metrics to database
         try:
@@ -968,27 +974,22 @@ async def entrypoint(ctx: JobContext):
                     usage_crud.increment_voice_minutes(db_session, user_id, session_duration_minutes)
                     logger.info(f"Recorded {session_duration_minutes:.2f} voice minutes for user {user_id}")
                 
-                # Calculate total LLM tokens (prompt + completion + cached)
-                total_llm_tokens = (usage_summary.llm_prompt_tokens + 
-                                  usage_summary.llm_completion_tokens + 
-                                  usage_summary.llm_prompt_cached_tokens)
-                
-                # Save LiveKit usage metrics using bulk increment for efficiency
-                if total_llm_tokens > 0 or usage_summary.stt_audio_duration > 0 or usage_summary.tts_characters_count > 0:
-                    stt_minutes = usage_summary.stt_audio_duration / 60  # Convert seconds to minutes
+                # Save real-time usage metrics using bulk increment for efficiency
+                if session_metrics['llm_tokens'] > 0 or session_metrics['stt_duration'] > 0 or session_metrics['tts_characters'] > 0:
+                    stt_minutes = session_metrics['stt_duration'] / 60  # Convert seconds to minutes
                     
                     usage_crud.increment_usage_from_livekit_metrics(
                         db_session, 
                         user_id,
-                        llm_tokens=total_llm_tokens,
+                        llm_tokens=session_metrics['llm_tokens'],
                         stt_minutes=stt_minutes,
-                        tts_characters=usage_summary.tts_characters_count
+                        tts_characters=session_metrics['tts_characters']
                     )
                     
-                    logger.info(f"Recorded LiveKit metrics for user {user_id}: "
-                               f"{total_llm_tokens} LLM tokens, "
+                    logger.info(f"Recorded real-time metrics for user {user_id}: "
+                               f"{session_metrics['llm_tokens']} LLM tokens, "
                                f"{stt_minutes:.2f} STT minutes, "
-                               f"{usage_summary.tts_characters_count} TTS characters")
+                               f"{session_metrics['tts_characters']} TTS characters")
                 
         except Exception as e:
             logger.error(f"Error saving usage metrics for user {user_id}: {str(e)}", exc_info=True)
@@ -1019,6 +1020,20 @@ async def entrypoint(ctx: JobContext):
     def on_metrics_collected(agent_metrics: metrics.AgentMetrics):
         metrics.log_metrics(agent_metrics)
         usage_collector.collect(agent_metrics)
+        
+        # Accumulate metrics in real-time based on metric type
+        if isinstance(agent_metrics, metrics.LLMMetrics):
+            session_metrics['llm_tokens'] += agent_metrics.completion_tokens + agent_metrics.prompt_tokens + agent_metrics.prompt_cached_tokens
+            logger.debug(f"LLM metrics: +{agent_metrics.completion_tokens + agent_metrics.prompt_tokens + agent_metrics.prompt_cached_tokens} tokens (total: {session_metrics['llm_tokens']})")
+        elif isinstance(agent_metrics, metrics.STTMetrics):
+            session_metrics['stt_duration'] += agent_metrics.audio_duration
+            logger.debug(f"STT metrics: +{agent_metrics.audio_duration:.2f}s (total: {session_metrics['stt_duration']:.2f}s)")
+        elif isinstance(agent_metrics, metrics.TTSMetrics):
+            session_metrics['tts_characters'] += agent_metrics.characters_count
+            logger.debug(f"TTS metrics: +{agent_metrics.characters_count} characters (total: {session_metrics['tts_characters']})")
+        elif isinstance(agent_metrics, metrics.RealtimeModelMetrics):
+            session_metrics['llm_tokens'] += agent_metrics.input_tokens + agent_metrics.output_tokens
+            logger.debug(f"Realtime model metrics: +{agent_metrics.input_tokens + agent_metrics.output_tokens} tokens (total: {session_metrics['llm_tokens']})")
 
     session = AgentSession(
         vad=ctx.proc.userdata["vad"],
