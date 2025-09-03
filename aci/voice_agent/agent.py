@@ -31,13 +31,14 @@ from aci.common.db import crud
 from aci.common.utils import create_db_session
 from livekit.agents import llm
 from livekit.agents import get_job_context, ToolError
+from aci.common.db.crud import usage as usage_crud
 
 
 logger = logging.getLogger("voice-agent")
 
 
 class Assistant(Agent):
-    _core_tool_names = {"load_tools", "display_mini_app", "get_app_info", "create_automation", "get_automation_runs", "list_user_automations", "run_automation"}
+    _core_tool_names = {"load_tools", "display_mini_app", "get_app_info", "create_automation", "get_automation_runs", "list_user_automations", "run_automation", "get_current_session_usage"}
 
     def __init__(self, user_id: str) -> None:
         self.db_session = create_db_session(DB_FULL_URL)
@@ -369,6 +370,8 @@ Finally, if none of the available apps can fulfill the user's request, you must 
                 core_tools["list_user_automations"] = self.list_user_automations
             elif core_name == "run_automation":
                 core_tools["run_automation"] = self.run_automation
+            elif core_name == "get_current_session_usage":
+                core_tools["get_current_session_usage"] = self.get_current_session_usage
             elif core_name in self.tools_names:
                 core_tools[core_name] = self.tools_names[core_name]
 
@@ -861,6 +864,56 @@ Finally, if none of the available apps can fulfill the user's request, you must 
             logger.error(f"[AUTOMATION_TOOL] Error in run_automation: {str(e)}", exc_info=True)
             return f"An unexpected error occurred while starting the automation: {str(e)}"
 
+    @function_tool(raw_schema={
+        "type": "function",
+        "name": "get_current_session_usage",
+        "description": "Shows the current voice session usage metrics including time spent and processing costs.",
+        "strict": True,
+        "parameters": {
+            "type": "object",
+            "properties": {},
+        }
+    })
+    async def get_current_session_usage(
+        self,
+        raw_arguments: dict[str, object],
+        context: RunContext
+    ):
+        """
+        Shows the current voice session usage metrics.
+        
+        This tool provides real-time information about the current session including:
+        - Session duration so far
+        - LLM tokens used
+        - Speech-to-text processing time
+        - Text-to-speech characters generated
+        """
+        try:
+            # This would need to be implemented with session state tracking
+            # For now, we can query the current month's usage
+            from aci.common.db.crud import usage as usage_crud
+            
+            current_usage = usage_crud.get_current_month_usage(self.db_session, self.user_id)
+            
+            if not current_usage:
+                return "No usage data found for this month yet."
+            
+            response_lines = [
+                "Your Current Month Usage:",
+                f"Voice Agent Time: {current_usage.voice_agent_minutes:.1f} minutes",
+                f"Automation Runs: {current_usage.automation_runs_count}",
+                "",
+                "Processing Metrics:",
+                f"LLM Tokens: {current_usage.llm_tokens_used:,}",
+                f"Speech Processing: {current_usage.stt_audio_minutes:.1f} minutes", 
+                f"Voice Generation: {current_usage.tts_characters_used:,} characters"
+            ]
+            
+            return "\n".join(response_lines)
+            
+        except Exception as e:
+            logger.error(f"Error getting session usage: {str(e)}", exc_info=True)
+            return f"Sorry, I couldn't retrieve your usage information right now."
 
 
 def prewarm(proc: JobProcess):
@@ -894,13 +947,65 @@ async def entrypoint(ctx: JobContext):
 
     session.on("metrics_collected", on_metrics_collected)
 
-    await session.start(
-        room=ctx.room,
-        agent=Assistant(user_id=user_id),
-        room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
-        ),
-    )
+    # Track session start time for voice minutes calculation
+    session_start_time = time()
+    logger.info(f"Session started for user {user_id} at {session_start_time}")
+
+    try:
+        await session.start(
+            room=ctx.room,
+            agent=Assistant(user_id=user_id),
+            room_input_options=RoomInputOptions(
+                noise_cancellation=noise_cancellation.BVC(),
+            ),
+        )
+    finally:
+        # Calculate session duration and save usage metrics when session ends
+        session_end_time = time()
+        session_duration_minutes = (session_end_time - session_start_time) / 60
+        
+        logger.info(f"Session ended for user {user_id}. Duration: {session_duration_minutes:.2f} minutes")
+        
+        # Get the collected usage data from LiveKit
+        usage_summary = usage_collector.get_summary()
+        
+        logger.info(f"Usage summary for user {user_id}: "
+                   f"LLM tokens: {usage_summary.llm_prompt_tokens + usage_summary.llm_completion_tokens}, "
+                   f"STT duration: {usage_summary.stt_audio_duration:.2f}s, "
+                   f"TTS characters: {usage_summary.tts_characters_count}")
+        
+        # Save all usage metrics to database
+        try:
+            with create_db_session(DB_FULL_URL) as db_session:
+                # Save voice session minutes
+                if session_duration_minutes > 0:
+                    usage_crud.increment_voice_minutes(db_session, user_id, session_duration_minutes)
+                    logger.info(f"Recorded {session_duration_minutes:.2f} voice minutes for user {user_id}")
+                
+                # Calculate total LLM tokens (prompt + completion + cached)
+                total_llm_tokens = (usage_summary.llm_prompt_tokens + 
+                                  usage_summary.llm_completion_tokens + 
+                                  usage_summary.llm_prompt_cached_tokens)
+                
+                # Save LiveKit usage metrics using bulk increment for efficiency
+                if total_llm_tokens > 0 or usage_summary.stt_audio_duration > 0 or usage_summary.tts_characters_count > 0:
+                    stt_minutes = usage_summary.stt_audio_duration / 60  # Convert seconds to minutes
+                    
+                    usage_crud.increment_usage_from_livekit_metrics(
+                        db_session, 
+                        user_id,
+                        llm_tokens=total_llm_tokens,
+                        stt_minutes=stt_minutes,
+                        tts_characters=usage_summary.tts_characters_count
+                    )
+                    
+                    logger.info(f"Recorded LiveKit metrics for user {user_id}: "
+                               f"{total_llm_tokens} LLM tokens, "
+                               f"{stt_minutes:.2f} STT minutes, "
+                               f"{usage_summary.tts_characters_count} TTS characters")
+                
+        except Exception as e:
+            logger.error(f"Error saving usage metrics for user {user_id}: {str(e)}", exc_info=True)
 
 
 if __name__ == "__main__":
