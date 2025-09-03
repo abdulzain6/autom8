@@ -1037,11 +1037,13 @@ async def entrypoint(ctx: JobContext):
                 noise_cancellation=noise_cancellation.BVC(),
             ),
         )
-    finally:
-        # Final fallback to ensure usage is recorded if events didn't fire
+    except Exception as e:
+        logger.error(f"Error in session for user {user_id}: {str(e)}", exc_info=True)
+        # Only save usage on actual errors, not normal disconnections
         if not usage_recorded:
-            logger.info(f"Session ended without disconnect event, saving usage metrics for user {user_id}")
+            logger.info(f"Session error occurred, saving usage metrics for user {user_id}")
             save_usage_metrics()
+        raise
 
 
 if __name__ == "__main__":
