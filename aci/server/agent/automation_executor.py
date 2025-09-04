@@ -47,11 +47,13 @@ class AutomationExecutor:
             (f'You must accomplish the following goal:\n"{self.automation.goal}"'),
             (
                 "### Detailed Task Instructions & Rules\n"
-                "1.  **Plan First**: Formulate a clear, step-by-step plan before executing any tools.\n"
-                "2.  **Tool Adherence**: You may ONLY use the tools provided in the tool list. Do not invent tools.\n"
-                "3.  **Artifact Chaining**: If a task requires multiple steps (e.g., create a file, then edit it), you MUST use the `artifact_id` from the first step as an input to the second.\n"
-                "4.  **Crucial Rule on Artifacts**: You MUST NOT invent, guess, or hallucinate `artifact_id`s. An `artifact_id` can ONLY be used if it was explicitly present in the output of a previous tool call.\n"
-                "5.  **Final Answer Formatting**: After all tool calls are complete and you have gathered all necessary information, you MUST format your final, synthesized answer using the `AutomationResult` schema. Do NOT call `AutomationResult` as a tool."
+                "1.  **Efficiency First**: Use the MINIMUM number of tool calls necessary to complete the task. Each tool call has overhead, so be strategic.\n"
+                "2.  **Plan Concisely**: Think through the task but avoid over-planning. Execute tools when you have enough information.\n"
+                "3.  **Tool Adherence**: You may ONLY use the tools provided in the tool list. Do not invent tools.\n"
+                "4.  **Artifact Chaining**: If a task requires multiple steps (e.g., create a file, then edit it), you MUST use the `artifact_id` from the first step as an input to the second.\n"
+                "5.  **Crucial Rule on Artifacts**: You MUST NOT invent, guess, or hallucinate `artifact_id`s. An `artifact_id` can ONLY be used if it was explicitly present in the output of a previous tool call.\n"
+                "6.  **Consolidate Operations**: When possible, combine multiple operations into single tool calls rather than making separate calls.\n"
+                "7.  **Final Answer Formatting**: After all tool calls are complete and you have gathered all necessary information, you MUST format your final, synthesized answer using the `AutomationResult` schema. Do NOT call `AutomationResult` as a tool."
             ),
             (
                 "### Exemplar\n"
@@ -60,6 +62,13 @@ class AutomationExecutor:
                 "1.  Use the `image_generation_tool` with the prompt \"a majestic lion\". This will return an artifact with ID 'artifact-123'.\n"
                 "2.  Use the `image_resizing_tool`, providing the `artifact_id` 'artifact-123' from the previous step. This will return a new artifact with ID 'artifact-456'.\n"
                 "3.  The goal is now complete. I will format my final answer using the `AutomationResult` schema, including the final artifact ID 'artifact-456'."
+            ),
+            (
+                "### Performance Guidelines\n"
+                "- **Be Concise**: Keep your reasoning brief and action-oriented.\n"
+                "- **Tool Response Awareness**: Tool responses are automatically trimmed to reduce overhead. Focus on key data and artifact IDs.\n"
+                "- **Batch Operations**: When possible, request multiple related items in a single tool call rather than making separate calls.\n"
+                "- **Success Criteria**: Complete the task with the minimum viable set of actions that achieve the goal."
             ),
         ]
         self.system_prompt = "\n\n---\n\n".join(prompt_components)
@@ -86,6 +95,56 @@ class AutomationExecutor:
 
         return functions
 
+    def _trim_tool_response(self, response, max_length: int = 2000):
+        """
+        Trim tool responses to keep only essential information and reduce token usage.
+        """
+        # Handle FunctionExecutionResult objects
+        if hasattr(response, 'model_dump'):
+            response_dict = response.model_dump()
+        elif hasattr(response, '__dict__'):
+            response_dict = response.__dict__
+        elif isinstance(response, dict):
+            response_dict = response
+        else:
+            return response
+        
+        trimmed = {}
+        for key, value in response_dict.items():
+            if isinstance(value, str):
+                if len(value) > max_length:
+                    # Keep first part, add truncation notice, keep last part if it contains important info
+                    trimmed[key] = f"{value[:max_length//2]}...[TRUNCATED {len(value)-max_length} chars]...{value[-max_length//4:]}"
+                else:
+                    trimmed[key] = value
+            elif isinstance(value, (list, tuple)):
+                # For lists, limit the number of items and truncate each item
+                if len(value) > 10:
+                    trimmed_list = []
+                    for item in value[:8]:  # Keep first 8 items
+                        if isinstance(item, str) and len(item) > 200:
+                            trimmed_list.append(f"{item[:150]}...[TRUNCATED]")
+                        else:
+                            trimmed_list.append(item)
+                    trimmed_list.append(f"...[{len(value)-8} more items truncated]")
+                    trimmed[key] = trimmed_list
+                else:
+                    # Truncate individual items if they're too long
+                    trimmed_list = []
+                    for item in value:
+                        if isinstance(item, str) and len(item) > 300:
+                            trimmed_list.append(f"{item[:250]}...[TRUNCATED]")
+                        else:
+                            trimmed_list.append(item)
+                    trimmed[key] = trimmed_list
+            elif isinstance(value, dict):
+                # Recursively trim nested dictionaries
+                trimmed[key] = self._trim_tool_response(value, max_length)
+            else:
+                trimmed[key] = value
+        
+        return trimmed
+
     def _execute_tool_logic(self, function: Function, **kwargs):
         """
         A helper method containing the actual logic for executing a tool.
@@ -95,9 +154,13 @@ class AutomationExecutor:
         with get_db_session() as tool_db_session:
             try:
                 logger.info(f"Executing tool: {function.name} with args: {kwargs}")
-                return execute_function(
+                result = execute_function(
                     tool_db_session, function.name, self.automation.user_id, kwargs, run_id=self.run_id
                 )
+                # Trim the response to reduce token usage while preserving essential information
+                trimmed_result = self._trim_tool_response(result, 3000)
+                logger.info(f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(str(trimmed_result))} chars")
+                return trimmed_result
             except Exception as e:
                 logger.error(f"Error executing tool: {function.name} with args: {kwargs}, error: {e}")
                 import traceback
@@ -134,6 +197,8 @@ class AutomationExecutor:
                 model="Qwen/Qwen3-235B-A22B-Instruct-2507",
                 timeout=300,
                 max_retries=3,
+                # Add temperature control for more focused responses
+                temperature=0.1,
             ),
             tools=self.get_tools(),
             response_format=AutomationResult,
