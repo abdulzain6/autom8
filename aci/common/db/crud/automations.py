@@ -81,10 +81,13 @@ def create_automation(
         db, user_id, linked_account_ids
     )
 
+    # Generate description using LLM if not provided and OpenAI API key is available
+    description = automation_in.description
+
     new_automation = Automation(
         user_id=user_id,
         name=automation_in.name,
-        description=automation_in.description,
+        description=description,
         goal=automation_in.goal,
         is_recurring=automation_in.is_recurring,
         cron_schedule=automation_in.cron_schedule,

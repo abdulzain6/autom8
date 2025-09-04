@@ -116,6 +116,7 @@ class AutomationUpdate(BaseModel):
     cron_schedule: Optional[str] = None
     is_deep: Optional[bool] = None
     active: Optional[bool] = None
+    description: Optional[str] = Field(None, description="A new description for the automation.")
 
     @model_validator(mode="after")
     def check_cron_format(self) -> "AutomationUpdate":

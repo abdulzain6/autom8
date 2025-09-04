@@ -1,6 +1,7 @@
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from aci.common.db import crud
+from aci.common.db.crud.automations import _validate_and_fetch_linked_accounts
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.automations import (
     AutomationCreate,
@@ -12,6 +13,8 @@ from aci.common.schemas.automations import (
 )
 from aci.server import dependencies as deps
 from aci.server.tasks.tasks import execute_automation
+from aci.common.utils import generate_automation_description
+
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -24,8 +27,21 @@ def create_new_automation(
 ):
     """
     Create a new automation for the authenticated user.
+    Automatically generates a description using LLM if none is provided.
     """
     try:
+        if not automation_in.description:
+            linked_accounts = _validate_and_fetch_linked_accounts(
+                db=context.db_session, 
+                user_id=context.user.id, 
+                linked_account_ids=automation_in.linked_account_ids
+            )
+            automation_in.description = generate_automation_description(
+                name=automation_in.name,
+                goal=automation_in.goal,
+                app_names=[la.app_name for la in linked_accounts]
+            )
+            logger.info(f"Generated description for new automation: {automation_in.description}")
         new_automation = crud.automations.create_automation(
             db=context.db_session,
             user_id=context.user.id,

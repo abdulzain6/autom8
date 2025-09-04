@@ -13,6 +13,7 @@ from livekit.agents import (
     WorkerOptions,
     cli,
     metrics,
+    MetricsCollectedEvent,
     RoomInputOptions,
 )
 from livekit.rtc import ConnectionState
@@ -1031,26 +1032,6 @@ async def entrypoint(ctx: JobContext):
     ctx.room.on("disconnected", on_room_disconnected)
     ctx.room.on("connection_state_changed", on_connection_state_changed)
 
-    # Log metrics and collect usage data
-    def on_metrics_collected(agent_metrics: metrics.AgentMetrics):
-        logger.info(f"Metrics collected callback triggered: {type(agent_metrics).__name__}")
-        metrics.log_metrics(agent_metrics)
-        usage_collector.collect(agent_metrics)
-        
-        # Accumulate metrics in real-time based on metric type
-        if isinstance(agent_metrics, metrics.LLMMetrics):
-            session_metrics['llm_tokens'] += agent_metrics.completion_tokens + agent_metrics.prompt_tokens + agent_metrics.prompt_cached_tokens
-            logger.info(f"LLM metrics: +{agent_metrics.completion_tokens + agent_metrics.prompt_tokens + agent_metrics.prompt_cached_tokens} tokens (total: {session_metrics['llm_tokens']})")
-        elif isinstance(agent_metrics, metrics.STTMetrics):
-            session_metrics['stt_duration'] += agent_metrics.audio_duration
-            logger.info(f"STT metrics: +{agent_metrics.audio_duration:.2f}s (total: {session_metrics['stt_duration']:.2f}s)")
-        elif isinstance(agent_metrics, metrics.TTSMetrics):
-            session_metrics['tts_characters'] += agent_metrics.characters_count
-            logger.info(f"TTS metrics: +{agent_metrics.characters_count} characters (total: {session_metrics['tts_characters']})")
-        elif isinstance(agent_metrics, metrics.RealtimeModelMetrics):
-            session_metrics['llm_tokens'] += agent_metrics.input_tokens + agent_metrics.output_tokens
-            logger.info(f"Realtime model metrics: +{agent_metrics.input_tokens + agent_metrics.output_tokens} tokens (total: {session_metrics['llm_tokens']})")
-
     session = AgentSession(
         vad=ctx.proc.userdata["vad"],
         min_endpointing_delay=0.5,
@@ -1059,7 +1040,34 @@ async def entrypoint(ctx: JobContext):
     )
 
     logger.info(f"Registering metrics_collected callback for user {user_id}")
-    session.on("metrics_collected", on_metrics_collected)
+    
+    # Use the correct decorator syntax for metrics collection
+    @session.on("metrics_collected")
+    def _on_metrics_collected(ev: MetricsCollectedEvent):
+        logger.info(f"Metrics collected callback triggered: {type(ev.metrics).__name__}")
+        metrics.log_metrics(ev.metrics)
+        usage_collector.collect(ev.metrics)
+        
+        # Accumulate metrics in real-time based on metric type
+        if isinstance(ev.metrics, metrics.LLMMetrics):
+            session_metrics['llm_tokens'] += ev.metrics.completion_tokens + ev.metrics.prompt_tokens + ev.metrics.prompt_cached_tokens
+            logger.info(f"LLM metrics: +{ev.metrics.completion_tokens + ev.metrics.prompt_tokens + ev.metrics.prompt_cached_tokens} tokens (total: {session_metrics['llm_tokens']})")
+        elif isinstance(ev.metrics, metrics.STTMetrics):
+            session_metrics['stt_duration'] += ev.metrics.audio_duration
+            logger.info(f"STT metrics: +{ev.metrics.audio_duration:.2f}s (total: {session_metrics['stt_duration']:.2f}s)")
+        elif isinstance(ev.metrics, metrics.TTSMetrics):
+            session_metrics['tts_characters'] += ev.metrics.characters_count
+            logger.info(f"TTS metrics: +{ev.metrics.characters_count} characters (total: {session_metrics['tts_characters']})")
+        elif isinstance(ev.metrics, metrics.RealtimeModelMetrics):
+            session_metrics['llm_tokens'] += ev.metrics.input_tokens + ev.metrics.output_tokens
+            logger.info(f"Realtime model metrics: +{ev.metrics.input_tokens + ev.metrics.output_tokens} tokens (total: {session_metrics['llm_tokens']})")
+
+    # Add shutdown callback to log usage summary
+    async def log_usage():
+        summary = usage_collector.get_summary()
+        logger.info(f"Final usage summary: {summary}")
+
+    ctx.add_shutdown_callback(log_usage)
 
     try:
         await session.start(
