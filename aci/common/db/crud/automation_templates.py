@@ -96,7 +96,7 @@ def create_template(
     new_template.required_apps = required_apps
 
     db.add(new_template)
-    db.flush()  # Flush to get ID and other defaults
+    db.commit()  # Flush to get ID and other defaults
     return new_template
 
 
@@ -117,7 +117,7 @@ def update_template(
     for key, value in update_data.items():
         setattr(existing_template, key, value)
 
-    db.flush()
+    db.commit()
     return existing_template
 
 
@@ -126,6 +126,7 @@ def delete_template_by_name(db: Session, name: str) -> None:
     template = get_template_by_name(db, name)
     if template:
         db.delete(template)
+        db.commit()
 
 
 def delete_template(db: Session, template_id: str) -> None:
@@ -133,4 +134,5 @@ def delete_template(db: Session, template_id: str) -> None:
     template = get_template(db, template_id)
     if template:
         db.delete(template)
+        db.commit()
         db.commit()

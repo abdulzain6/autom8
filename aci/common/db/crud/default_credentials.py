@@ -27,7 +27,7 @@ def create_default_app_credential(
         credentials=credential_data.credentials.model_dump(mode="json"),
     )
     db_session.add(credential)
-    db_session.flush()
+    db_session.commit()
 
     return credential
 

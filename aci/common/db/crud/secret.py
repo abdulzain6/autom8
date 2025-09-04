@@ -22,7 +22,7 @@ def create_secret(
         value=secret_create.value,
     )
     db_session.add(secret)
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(secret)
 
     return secret
@@ -55,7 +55,7 @@ def update_secret(
     Update a secret's value.
     """
     secret.value = update.value
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(secret)
     return secret
 
@@ -65,4 +65,4 @@ def delete_secret(db_session: Session, secret: Secret) -> None:
     Delete a secret.
     """
     db_session.delete(secret)
-    db_session.flush()
+    db_session.commit()

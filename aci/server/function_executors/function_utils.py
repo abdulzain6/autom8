@@ -170,7 +170,7 @@ def execute_function(
         f"app_name={function.app.name}, user_id={user_id}, "
         f"linked_account_id={linked_account.id}, is_updated={security_credentials_response.is_updated}, "
     )
-    db_session.flush()
+    db_session.commit()
 
     function_executor = get_executor(function.protocol, linked_account, run_id=run_id)
     logger.info(
@@ -192,7 +192,7 @@ def execute_function(
         last_used_at,
         linked_account,
     )
-    db_session.flush()
+    db_session.commit()
 
     if not execution_result.success:
         logger.error(

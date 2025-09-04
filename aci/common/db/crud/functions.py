@@ -42,7 +42,7 @@ def create_functions(
         db_session.add(function)
         functions.append(function)
 
-    db_session.flush()
+    db_session.commit()
 
     return functions
 
@@ -72,7 +72,7 @@ def update_functions(
             function.embedding = functions_embeddings[i]  # type: ignore
         functions.append(function)
 
-    db_session.flush()
+    db_session.commit()
 
     return functions
 

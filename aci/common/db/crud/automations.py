@@ -95,8 +95,10 @@ def create_automation(
         is_deep=automation_in.is_deep,
     )
     db.add(new_automation)
-    db.flush()
+    db.commit()
+    db.refresh(new_automation)
 
+    # Now create associations after we have the automation ID
     assoc_objs = [
         AutomationLinkedAccount(
             automation_id=new_automation.id,
@@ -106,8 +108,8 @@ def create_automation(
     ]
     if assoc_objs:
         db.add_all(assoc_objs)
+        db.commit()
 
-    db.commit()
     db.refresh(new_automation)
     return new_automation
 

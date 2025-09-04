@@ -86,7 +86,7 @@ def delete_linked_account(db_session: Session, linked_account: LinkedAccount) ->
     Deletes a linked account instance from the database.
     """
     db_session.delete(linked_account)
-    db_session.flush()
+    db_session.commit()
 
 
 def create_linked_account(
@@ -116,7 +116,7 @@ def create_linked_account(
         disabled_functions=[],
     )
     db_session.add(linked_account)
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(linked_account)
     return linked_account
 
@@ -138,7 +138,7 @@ def update_linked_account_credentials(
     )
 
     linked_account.security_credentials = security_credentials.model_dump(mode="json")
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(linked_account)
     return linked_account
 
@@ -149,7 +149,7 @@ def update_linked_account(
     linked_account_update: LinkedAccountUpdate,
 ) -> LinkedAccount:
     linked_account.disabled_functions = linked_account_update.disabled_functions
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(linked_account)
     return linked_account
 
@@ -160,7 +160,7 @@ def update_linked_account_last_used_at(
     linked_account: LinkedAccount,
 ) -> LinkedAccount:
     linked_account.last_used_at = last_used_at
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(linked_account)
     return linked_account
 
@@ -178,7 +178,7 @@ def delete_linked_accounts_by_app_name(db_session: Session, app_name: str) -> in
 
     for linked_account in linked_accounts_to_delete:
         db_session.delete(linked_account)
-    db_session.flush()
+    db_session.commit()
     return len(linked_accounts_to_delete)
 
 

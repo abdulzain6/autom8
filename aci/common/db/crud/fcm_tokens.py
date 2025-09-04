@@ -34,8 +34,8 @@ def upsert_fcm_token(
         # If one exists, update its token value if it's different.
         if existing_token_for_device.token != token_in.token:
             existing_token_for_device.token = token_in.token
+            db.commit()
         
-        db.flush()
         db.refresh(existing_token_for_device)
         return existing_token_for_device
     else:
@@ -48,7 +48,7 @@ def upsert_fcm_token(
 
         if existing_token_any_user:
             db.delete(existing_token_any_user)
-            db.flush()
+            db.commit()
             
         new_token = FCMToken(
             user_id=user_id,
@@ -56,7 +56,7 @@ def upsert_fcm_token(
             device_type=token_in.device_type,
         )
         db.add(new_token)
-        db.flush()
+        db.commit()
         db.refresh(new_token)
         return new_token
 
@@ -78,5 +78,5 @@ def get_token_by_id_and_user(
 def delete_token(db: Session, *, token: FCMToken) -> None:
     """Deletes an FCMToken object from the database."""
     db.delete(token)
-    db.flush()
+    db.commit()
 

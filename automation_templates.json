@@ -2,11 +2,11 @@
   "templates": [
     {
       "name": "Get Top News Headlines",
-      "description": "Fetches the current top 5 news headlines for a specific country and sends them to you in an email.",
+      "description": "Generates a comprehensive daily news intelligence briefing with analysis, categorization, and professional formatting for a specific country.",
       "tags": [
         "News"
       ],
-      "goal": "Fetch the top 5 news headlines from Google News for the '{{ variables['Country'] }}' region. Then, format these headlines into a clean summary and send it to me in an email with the subject 'Your Daily News Briefing'.",
+      "goal": "Fetch the top 10 current news headlines from Google News for the '{{ variables['Country'] }}' region. Analyze and categorize the headlines by topic (Politics, Business, Technology, Health, Sports, etc.). Create a professional news briefing document that includes: 1) Executive summary of key trends, 2) Detailed breakdown of each headline with source and timestamp, 3) Regional impact analysis, and 4) Key takeaways for the day. Format this comprehensive briefing into a well-structured email with the subject 'Daily News Intelligence Briefing - {{ variables['Country'] }}' and send it to me.",
       "variable_names": [
         "Country"
       ],
@@ -18,11 +18,11 @@
     },
     {
       "name": "Comprehensive Stock Analysis Report",
-      "description": "Generates a detailed report for a stock, including fundamental data, historical performance, search trends, and the latest news.",
+      "description": "Generates an institutional-grade investment research report with comprehensive financial, technical, and sentiment analysis for informed decision-making.",
       "tags": [
         "Finance"
       ],
-      "goal": "For the stock ticker '{{ variables['Stock Ticker'] }}', create a comprehensive research report. For fundamental analysis, retrieve the company's key info like its business summary and market cap. For technical analysis, fetch the historical stock data for the past year. For market trends, get the latest company news and the Google search interest over the last 3 months. Finally, synthesize all of this information into a well-structured report.",
+      "goal": "For the stock ticker '{{ variables['Stock Ticker'] }}', create a comprehensive institutional-grade investment research report. SECTION 1 - Company Overview: Retrieve detailed company information including business description, sector analysis, market capitalization, employee count, and key executives. SECTION 2 - Financial Analysis: Gather fundamental metrics including P/E ratio, revenue growth, profit margins, debt-to-equity ratio, and quarterly earnings trends. SECTION 3 - Technical Analysis: Fetch 2-year historical price data, calculate moving averages (50-day, 200-day), identify support/resistance levels, and analyze volume patterns. SECTION 4 - Market Sentiment: Collect the latest 20 news articles about the company, perform sentiment analysis, and identify key themes affecting stock performance. SECTION 5 - Search Trends: Analyze Google search interest over the past 12 months to gauge public interest and correlation with stock movements. SECTION 6 - Investment Thesis: Synthesize all data into actionable insights including risk assessment, growth prospects, competitive positioning, and recommendation framework. Format this as a professional PDF report with charts, graphs, and executive summary suitable for investment decision-making.",
       "variable_names": [
         "Stock Ticker"
       ],
@@ -34,11 +34,11 @@
     },
     {
       "name": "Domain DNS Report",
-      "description": "Performs a DNS lookup for a domain to get key records and emails you the results.",
+      "description": "Performs a comprehensive DNS security audit with vulnerability assessment, compliance checking, and professional reporting.",
       "tags": [
         "Utilities"
       ],
-      "goal": "Perform a DNS lookup for the domain '{{ variables['Domain Name'] }}' to get its 'A', 'MX', and 'TXT' records. Format the results into a clear report and send it to me in an email with the subject 'DNS Report for {{ variables['Domain Name'] }}'.",
+      "goal": "Perform a comprehensive DNS security audit for the domain '{{ variables['Domain Name'] }}'. Conduct multiple DNS record lookups including A, AAAA, MX, TXT, NS, CNAME, and SOA records. Analyze the results for security vulnerabilities, misconfigurations, and best practices compliance. Check for SPF, DKIM, and DMARC email authentication records. Verify SSL certificate status and expiration dates. Assess subdomain enumeration and potential exposure risks. Compile findings into a professional cybersecurity assessment report with risk ratings, remediation recommendations, and compliance status. Send the detailed DNS Security Audit Report via email with the subject 'Professional DNS Security Assessment - {{ variables['Domain Name'] }}'.",
       "variable_names": [
         "Domain Name"
       ],
@@ -50,11 +50,11 @@
     },
     {
       "name": "Wikipedia Article to DOCX",
-      "description": "Summarizes a Wikipedia article on any topic and saves the summary as a Microsoft Word document.",
+      "description": "Creates a comprehensive multi-page research report from Wikipedia content with professional formatting, cross-references, and detailed analysis.",
       "tags": [
         "Research"
       ],
-      "goal": "Get the summary of the Wikipedia article for the topic '{{ variables['Topic'] }}'. Then, take that summary content and convert it into a Microsoft Word document. The title of the document should be the topic itself. The output filename should also be based on the topic (e.g., 'Topic_Summary.docx'). Save the final file.",
+      "goal": "Create a comprehensive research document for the topic '{{ variables['Topic'] }}' using Wikipedia as the primary source. PHASE 1 - Data Collection: Retrieve the full Wikipedia article content, including main sections, subsections, references, and related articles. Extract key facts, dates, statistics, and notable information. PHASE 2 - Content Enhancement: Expand the summary by researching related Wikipedia pages and cross-referencing information to provide context and depth. Include historical background, current relevance, key figures, and significant developments. PHASE 3 - Document Creation: Structure the content into a professional Microsoft Word document with the following sections: Executive Summary, Detailed Overview, Historical Context, Key Facts & Statistics, Notable Figures/Events, Current Relevance, References, and Further Reading. PHASE 4 - Formatting: Apply professional formatting including proper headings, bullet points, tables for data, and consistent styling. The document should be 3-5 pages long with comprehensive coverage. Save as '{{ variables['Topic'] }}_Comprehensive_Research_Report.docx'.",
       "variable_names": [
         "Topic"
       ],

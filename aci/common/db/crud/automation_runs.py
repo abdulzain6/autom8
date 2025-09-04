@@ -62,7 +62,7 @@ def create_run(db: Session, automation_id: str) -> AutomationRun:
     automation.last_run_status = RunStatus.in_progress
     automation.last_run_at = start_time
 
-    db.flush()
+    db.commit()
     db.refresh(run)
     db.refresh(automation)
     return run
@@ -121,7 +121,7 @@ def finalize_run(
         run.automation.last_run_status = status
         run.automation.last_run_at = finish_time
 
-    db.flush()
+    db.commit()
     db.refresh(run)
     if run.automation:
         db.refresh(run.automation)

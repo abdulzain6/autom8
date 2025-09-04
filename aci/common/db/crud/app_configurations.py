@@ -18,7 +18,7 @@ def delete_app_configurations_by_app_id(db_session: Session, app_id: str) -> Non
     logger.info(f"Deleting all app configurations for app_id='{app_id}'")
     statement = delete(AppConfiguration).where(AppConfiguration.app_id == app_id)
     db_session.execute(statement)
-    db_session.flush()
+    db_session.commit()
 
 def create_app_configuration(
     db_session: Session, app_configuration_create: AppConfigurationCreate
@@ -43,7 +43,7 @@ def create_app_configuration(
         enabled_functions=app_configuration_create.enabled_functions,
     )
     db_session.add(app_configuration)
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(app_configuration)
 
     return app_configuration
@@ -65,7 +65,7 @@ def update_app_configuration(
     for key, value in update_data.items():
         setattr(app_configuration, key, value)
 
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(app_configuration)
 
     return app_configuration
@@ -82,7 +82,7 @@ def delete_app_configuration(db_session: Session, app_name: str) -> None:
     )
     app_to_delete = db_session.execute(statement).scalar_one()
     db_session.delete(app_to_delete)
-    db_session.flush()
+    db_session.commit()
 
 
 def get_app_configurations(

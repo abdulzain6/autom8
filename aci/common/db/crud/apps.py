@@ -25,7 +25,7 @@ def create_app(
     app_data = app_upsert.model_dump(mode="json", exclude_none=True)
     app = App(**app_data, embedding=app_embedding)
     db_session.add(app)
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(app)
     return app
 
@@ -51,7 +51,7 @@ def update_app(
         setattr(app, field, value)
     if app_embedding is not None:
         app.embedding = app_embedding
-    db_session.flush()
+    db_session.commit()
     db_session.refresh(app)
     return app
 
