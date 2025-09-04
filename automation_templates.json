@@ -44,7 +44,7 @@
       ],
       "required_app_names": [
         "IP_TOOLS",
-        "NOTIFYME"
+        "DOCX_TOOLS"
       ],
       "is_deep": false
     },
@@ -60,9 +60,93 @@
       ],
       "required_app_names": [
         "WIKIPEDIA_API",
-        "DOCX_TOOLS"
+        "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Daily Market Summary Report",
+      "description": "Creates a comprehensive daily financial market overview with stock performance, news analysis, and trend insights.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Generate a comprehensive daily market summary report for today. PHASE 1 - Market Overview: Retrieve current market indices performance (S&P 500, NASDAQ, Dow Jones) and major stock movements. PHASE 2 - Top Movers: Identify and analyze the biggest gainers and losers of the day with percentage changes. PHASE 3 - News Analysis: Collect top financial news stories and analyze their potential market impact. PHASE 4 - Professional Report: Create a formatted document with market summary, key insights, and outlook. PHASE 5 - Distribution: Send the daily market report with subject 'Daily Market Intelligence Report - [Current Date]'.",
+      "variable_names": [],
+      "required_app_names": [
+        "YAHOO_FINANCE",
+        "GOOGLE_NEWS",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "YouTube Content Research Report",
+      "description": "Researches YouTube content trends and competitor analysis for content strategy planning.",
+      "tags": [
+        "Research"
+      ],
+      "goal": "Create a comprehensive YouTube content research report for the topic '{{ variables['Content Topic'] }}'. PHASE 1 - Trending Content: Search for top-performing videos related to your topic and analyze their titles, descriptions, and view counts. PHASE 2 - Competitor Analysis: Identify popular channels in your niche and analyze their recent content strategies. PHASE 3 - Content Gaps: Discover underserved topics and content opportunities in your field. PHASE 4 - Trend Analysis: Examine video categories and identify what types of content perform best. PHASE 5 - Strategic Recommendations: Compile insights into actionable content strategy recommendations. PHASE 6 - Report Delivery: Create a formatted research document and send it with subject 'YouTube Content Strategy Report - {{ variables['Content Topic'] }}'.",
+      "variable_names": [
+        "Content Topic"
+      ],
+      "required_app_names": [
+        "YOUTUBE",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Weekly GitHub Activity Summary",
+      "description": "Tracks your GitHub activity and creates a weekly productivity summary with project insights.",
+      "tags": [
+        "Development"
+      ],
+      "goal": "Generate a weekly GitHub activity summary for your authenticated account. PHASE 1 - Activity Analysis: Retrieve commits, pull requests, and issues created/resolved during the week. PHASE 2 - Repository Overview: Analyze contributions across different repositories and programming languages used. PHASE 3 - Productivity Metrics: Calculate coding frequency, project diversity, and collaboration patterns. PHASE 4 - Skill Tracking: Identify new technologies or languages explored during the week. PHASE 5 - Goal Progress: Compare current week's activity with previous weeks to track productivity trends. PHASE 6 - Weekly Report: Create a formatted summary document and send it with subject 'Weekly GitHub Activity Summary - Your Account'.",
+      "variable_names": [],
+      "required_app_names": [
+        "GITHUB",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Event Planning Assistant",
+      "description": "Creates calendar events with automated invitations and planning documentation.",
+      "tags": [
+        "Utilities"
+      ],
+      "goal": "Create a comprehensive event planning workflow for '{{ variables['Event Name'] }}' at {{ variables['Event Location'] }}'. PHASE 1 - Calendar Event: Create a Google Calendar event with the specified name and location (user will specify date/time during event creation). PHASE 2 - Attendee Management: Add attendees from the provided email list with automatic invitation sending. PHASE 3 - Event Documentation: Generate an agenda template and planning checklist document. PHASE 4 - Confirmation: Send a planning confirmation summary with event details and next steps.",
+      "variable_names": [
+        "Event Name",
+        "Event Location"
+      ],
+      "required_app_names": [
+        "GOOGLE_CALENDAR",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Topic Research Compilation",
+      "description": "Researches any topic across multiple sources and creates a comprehensive research document with citations.",
+      "tags": [
+        "Research"
+      ],
+      "goal": "Conduct comprehensive research on '{{ variables['Research Topic'] }}' and compile findings into a professional document. PHASE 1 - Wikipedia Research: Gather detailed information from Wikipedia including historical context, key facts, and current relevance. PHASE 2 - News Analysis: Collect recent news articles and developments related to the topic. PHASE 3 - Document Creation: Structure all findings into a comprehensive research report with sections for overview, current developments, and key insights. PHASE 4 - Delivery: Send the research compilation with subject 'Research Report: {{ variables['Research Topic'] }}'.",
+      "variable_names": [
+        "Research Topic"
+      ],
+      "required_app_names": [
+        "WIKIPEDIA_API",
+        "GOOGLE_NEWS",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }

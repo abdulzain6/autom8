@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import Literal, cast, List
 from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field, SecretStr
@@ -43,6 +44,7 @@ class AutomationExecutor:
             (
                 "You are an expert automation agent named Autom8. Your primary objective is to "
                 "successfully execute the user's defined task by formulating a plan and using the provided tools."
+                f"Today is {datetime.utcnow().strftime('%A, %B %d, %Y')} (UTC)."
             ),
             (f'You must accomplish the following goal:\n"{self.automation.goal}"'),
             (
