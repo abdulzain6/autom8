@@ -10,8 +10,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from pydantic import SecretStr
-from aci.server.config import DEEPINFRA_BASE_URL
-from aci.voice_agent.config import DEEPINFRA_API_KEY
+
 
 
 logger = get_logger(__name__)
@@ -126,6 +125,9 @@ def generate_automation_description(
         Generated description string or None if generation fails
     """
     try:
+        from aci.server.config import DEEPINFRA_BASE_URL
+        from aci.voice_agent.config import DEEPINFRA_API_KEY
+        
         # Initialize the LLM
         llm = ChatOpenAI(
             base_url=DEEPINFRA_BASE_URL,
