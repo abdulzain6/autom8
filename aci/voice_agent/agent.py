@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import logging
 from time import time
@@ -52,7 +52,7 @@ class Assistant(Agent):
             instructions=f"""
 You are Autom8, a friendly and efficient AI voice assistant. Your goal is to help users by accomplishing tasks quickly and communicating clearly.
 
-Today is {datetime.now().strftime('%Y-%m-%d')}.
+Today is {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UTC.
 
 ---
 ### Your Voice and Personality: CRITICAL RULES
