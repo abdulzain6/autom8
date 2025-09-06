@@ -104,6 +104,7 @@ def list_all_templates(
                 variable_names=template.variable_names,
                 required_apps=required_apps_with_status,
                 all_apps_linked=all_linked,
+                banner_image_url=template.banner_image_url,
             )
         )
 
@@ -167,4 +168,5 @@ def get_template_by_id(
         variable_names=template.variable_names,
         required_apps=required_apps_with_status,
         all_apps_linked=all_linked,
+        banner_image_url=template.banner_image_url
     )

@@ -11,7 +11,6 @@ class AppForTemplatePublic(BaseModel):
     id: str
     name: str
     display_name: str
-    banner_image_url: Optional[str] = None
     logo: Optional[str] = None
     is_linked: bool = Field(False, description="Indicates if the current user has linked this app.")
     model_config = ConfigDict(from_attributes=True)
