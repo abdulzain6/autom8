@@ -545,6 +545,7 @@ class AutomationTemplate(Base):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     description: Mapped[str] = mapped_column(Text)
+    banner_image_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     goal: Mapped[str] = mapped_column(
         Text, nullable=False, comment="A Jinja2 template for the automation's goal."
     )

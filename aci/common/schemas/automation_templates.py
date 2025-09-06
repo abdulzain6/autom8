@@ -11,6 +11,7 @@ class AppForTemplatePublic(BaseModel):
     id: str
     name: str
     display_name: str
+    banner_image_url: Optional[str] = None
     logo: Optional[str] = None
     is_linked: bool = Field(False, description="Indicates if the current user has linked this app.")
     model_config = ConfigDict(from_attributes=True)
@@ -25,6 +26,7 @@ class AutomationTemplatePublic(BaseModel):
     """The public representation of an AutomationTemplate."""
     id: str
     name: str
+    banner_image_url: Optional[str] = None
     description: Optional[str] = None
     tags: List[str] = []
     goal: str
@@ -38,6 +40,7 @@ class AutomationTemplatePublic(BaseModel):
 class AutomationTemplateUpsert(BaseModel):
     """Schema for creating or updating a template from a file."""
     name: str = Field(..., max_length=255)
+    banner_image_url: Optional[str] = None
     description: Optional[str] = Field(None, description="A brief description of what the template does.")
     tags: List[str] = Field(default_factory=list, description="A list of tags for categorization.")
     goal: str = Field(..., description="A Jinja2 template string.")

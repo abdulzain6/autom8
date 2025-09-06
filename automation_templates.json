@@ -2,6 +2,7 @@
   "templates": [
     {
       "name": "Get Top News Headlines",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/top_headlines.png?raw=true",
       "description": "Generates a comprehensive daily news intelligence briefing with analysis, categorization, and professional formatting for a specific country.",
       "tags": [
         "News"
@@ -18,6 +19,7 @@
     },
     {
       "name": "Comprehensive Stock Analysis Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/stock_report.jpeg?raw=true",
       "description": "Generates an institutional-grade investment research report with comprehensive financial, technical, and sentiment analysis for informed decision-making.",
       "tags": [
         "Finance"
@@ -28,15 +30,17 @@
       ],
       "required_app_names": [
         "YAHOO_FINANCE",
-        "GOOGLE_TRENDS"
+        "GOOGLE_TRENDS",
+        "DOCX_TOOLS"
       ],
       "is_deep": false
     },
     {
       "name": "Domain DNS Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/dns_report.jpeg?raw=true",
       "description": "Performs a comprehensive DNS security audit with vulnerability assessment, compliance checking, and professional reporting.",
       "tags": [
-        "Utilities"
+        "Security"
       ],
       "goal": "Perform a comprehensive DNS security audit for the domain '{{ variables['Domain Name'] }}'. Conduct multiple DNS record lookups including A, AAAA, MX, TXT, NS, CNAME, and SOA records. Analyze the results for security vulnerabilities, misconfigurations, and best practices compliance. Check for SPF, DKIM, and DMARC email authentication records. Verify SSL certificate status and expiration dates. Assess subdomain enumeration and potential exposure risks. Compile findings into a professional cybersecurity assessment report with risk ratings, remediation recommendations, and compliance status. Send the detailed DNS Security Audit Report via email with the subject 'Professional DNS Security Assessment - {{ variables['Domain Name'] }}'.",
       "variable_names": [
@@ -50,6 +54,7 @@
     },
     {
       "name": "Wikipedia Article to DOCX",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/wikipedia_summary.jpeg?raw=true",
       "description": "Creates a comprehensive multi-page research report from Wikipedia content with professional formatting, cross-references, and detailed analysis.",
       "tags": [
         "Research"
@@ -66,6 +71,7 @@
     },
     {
       "name": "Daily Market Summary Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/market_summary.jpeg?raw=true",
       "description": "Creates a comprehensive daily financial market overview with stock performance, news analysis, and trend insights.",
       "tags": [
         "Finance"
@@ -81,57 +87,8 @@
       "is_deep": true
     },
     {
-      "name": "YouTube Content Research Report",
-      "description": "Researches YouTube content trends and competitor analysis for content strategy planning.",
-      "tags": [
-        "Research"
-      ],
-      "goal": "Create a comprehensive YouTube content research report for the topic '{{ variables['Content Topic'] }}'. PHASE 1 - Trending Content: Search for top-performing videos related to your topic and analyze their titles, descriptions, and view counts. PHASE 2 - Competitor Analysis: Identify popular channels in your niche and analyze their recent content strategies. PHASE 3 - Content Gaps: Discover underserved topics and content opportunities in your field. PHASE 4 - Trend Analysis: Examine video categories and identify what types of content perform best. PHASE 5 - Strategic Recommendations: Compile insights into actionable content strategy recommendations. PHASE 6 - Report Delivery: Create a formatted research document and send it with subject 'YouTube Content Strategy Report - {{ variables['Content Topic'] }}'.",
-      "variable_names": [
-        "Content Topic"
-      ],
-      "required_app_names": [
-        "YOUTUBE",
-        "DOCX_TOOLS",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
-      "name": "Weekly GitHub Activity Summary",
-      "description": "Tracks your GitHub activity and creates a weekly productivity summary with project insights.",
-      "tags": [
-        "Development"
-      ],
-      "goal": "Generate a weekly GitHub activity summary for your authenticated account. PHASE 1 - Activity Analysis: Retrieve commits, pull requests, and issues created/resolved during the week. PHASE 2 - Repository Overview: Analyze contributions across different repositories and programming languages used. PHASE 3 - Productivity Metrics: Calculate coding frequency, project diversity, and collaboration patterns. PHASE 4 - Skill Tracking: Identify new technologies or languages explored during the week. PHASE 5 - Goal Progress: Compare current week's activity with previous weeks to track productivity trends. PHASE 6 - Weekly Report: Create a formatted summary document and send it with subject 'Weekly GitHub Activity Summary - Your Account'.",
-      "variable_names": [],
-      "required_app_names": [
-        "GITHUB",
-        "DOCX_TOOLS",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
-      "name": "Event Planning Assistant",
-      "description": "Creates calendar events with automated invitations and planning documentation.",
-      "tags": [
-        "Utilities"
-      ],
-      "goal": "Create a comprehensive event planning workflow for '{{ variables['Event Name'] }}' at {{ variables['Event Location'] }}'. PHASE 1 - Calendar Event: Create a Google Calendar event with the specified name and location (user will specify date/time during event creation). PHASE 2 - Attendee Management: Add attendees from the provided email list with automatic invitation sending. PHASE 3 - Event Documentation: Generate an agenda template and planning checklist document. PHASE 4 - Confirmation: Send a planning confirmation summary with event details and next steps.",
-      "variable_names": [
-        "Event Name",
-        "Event Location"
-      ],
-      "required_app_names": [
-        "GOOGLE_CALENDAR",
-        "DOCX_TOOLS",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
       "name": "Topic Research Compilation",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/topic_research.jpeg?raw=true",
       "description": "Researches any topic across multiple sources and creates a comprehensive research document with citations.",
       "tags": [
         "Research"
@@ -144,9 +101,127 @@
         "WIKIPEDIA_API",
         "GOOGLE_NEWS",
         "DOCX_TOOLS",
-        "NOTIFYME"
+        "NOTIFYME",
+        "SEARXNG"
       ],
       "is_deep": true
+    },
+    {
+      "name": "Survey Creation & Setup",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/survey_creation.png?raw=true",
+      "description": "Creates professional surveys and sets them up for data collection with sharing information.",
+      "tags": [
+        "Surveys"
+      ],
+      "goal": "Create a professional survey for '{{ variables['Survey Topic'] }}' and prepare it for distribution. STEP 1 - Create Survey: Use TYPEFORM__CREATE_FORM to create a new form with title 'Survey: {{ variables['Survey Topic'] }}'. STEP 2 - Add Questions: Use TYPEFORM__UPDATE_FORM_STRUCTURE to add 5-7 relevant questions including: 1) multiple_choice question about main topic areas, 2) rating question (1-10 scale) for satisfaction/agreement, 3) short_text question for specific feedback, 4) long_text question for detailed comments, 5) yes_no question for follow-up interest. STEP 3 - Prepare Distribution: Use TYPEFORM__LIST_FORMS to get the form details and sharing URL. STEP 4 - Send Setup Confirmation: Use NOTIFYME to send survey creation confirmation with form URL, question summary, and instructions for sharing with target audience.",
+      "variable_names": [
+        "Survey Topic"
+      ],
+      "required_app_names": [
+        "TYPEFORM",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Water Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/water_reminder.jpeg?raw=true",
+      "description": "Sends a friendly reminder to drink water and stay hydrated.",
+      "tags": [
+        "Health"
+      ],
+      "goal": "Send a hydration reminder message: 'Time to hydrate! 💧 Drink a glass of water to stay healthy and energized. Your body needs regular hydration to function at its best.' Include a motivational tip about the benefits of staying hydrated and maintaining good health habits throughout the day.",
+      "variable_names": [],
+      "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Take a Break Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/take_a_break.jpeg?raw=true",
+      "description": "Reminds you to take a break from work or screen time for better productivity.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Send an encouraging break reminder: 'Time for a quick break! 🧘 Stand up, stretch, or step away from your screen for 5 minutes. Taking regular breaks helps maintain focus and prevents eye strain.' Include suggestions for break activities like walking, stretching, deep breathing, or simply looking away from screens.",
+      "variable_names": [],
+      "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Daily Gratitude Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/daily_gratitude.jpeg?raw=true",
+      "description": "Sends a daily prompt to practice gratitude and positive thinking.",
+      "tags": [
+        "Wellness"
+      ],
+      "goal": "Send a gratitude reminder with a positive prompt: 'What are you grateful for today? ✨ Take a moment to appreciate three good things that happened. Practicing gratitude helps improve mental wellness and cultivate a positive mindset.' Include a mindfulness tip or positive affirmation to support emotional well-being.",
+      "variable_names": [],
+      "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Exercise Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/excersise_reminder.jpeg?raw=true",
+      "description": "Motivational reminder to stay active and maintain fitness goals.",
+      "tags": [
+        "Health"
+      ],
+      "goal": "Send a motivational fitness reminder: 'Time to move your body! 💪 Even 10 minutes of activity makes a difference. Whether it's a quick walk, some stretches, or a full workout, your body will thank you.' Include encouraging words about the benefits of staying active and maintaining consistent exercise habits.",
+      "variable_names": [],
+      "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Medication Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/medication_reminder.jpeg?raw=true",
+      "description": "Important health reminder to take medication or supplements.",
+      "tags": [
+        "Health"
+      ],
+      "goal": "Send a critical medication reminder for '{{ variables['Medication Name'] }}': '⚕️ MEDICATION REMINDER: Time to take your {{ variables['Medication Name'] }}. Don't skip your dose! Consistent medication adherence is important for your health.' Include a gentle reminder about the importance of following prescribed medication schedules.",
+      "variable_names": [
+        "Medication Name"
+      ],
+      "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Daily Goal Check-in",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/productivity_goal.jpeg?raw=true",
+      "description": "Prompt to review progress on daily goals and tasks.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Send a goal check-in prompt: 'How are your goals coming along today? 🎯 Take a moment to review your progress and plan your next steps. Small daily actions lead to big achievements!' Include motivational words about maintaining focus on important objectives and building consistent daily habits.",
+      "variable_names": [],
+      "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Posture Check Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/posture_check.jpeg?raw=true",
+      "description": "Reminder to maintain good posture while working or sitting.",
+      "tags": [
+        "Health"
+      ],
+      "goal": "Send a posture awareness reminder: 'Posture check! 🪑 Sit up straight, relax your shoulders, and adjust your screen height. Good posture prevents back pain and helps you stay comfortable during work.' Include ergonomic tips and reminders about proper sitting position for spinal health.",
+      "variable_names": [],
+      "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }
