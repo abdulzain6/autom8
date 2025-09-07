@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from typing import Optional, List
+from aci.common.fcm import FCMManager
 from aci.common.utils import create_db_session
 from aci.server import config
 from aci.server.file_management import FileManager
@@ -264,4 +265,34 @@ class Notifyme(AppConnectorBase):
             logger.error(f"Failed to send email to {self.user_email}: {e}")
             raise Exception(
                 f"An unexpected error occurred while sending the email: {e}"
+            ) from e
+
+    def send_me_mobile_notification(
+        self, title: str, body: str
+    ) -> dict:
+        """
+        Sends a simple mobile notification to the user's mobile device.
+
+        Args:
+            title: The title of the notification.
+            body: The main content of the notification.
+
+        Returns:
+            A dictionary with a success message.
+        """
+        logger.info(f"Preparing to send mobile notification to {self.user_email}")
+        fcm_manager = FCMManager()
+
+        try:
+            fcm_manager.send_notification_to_user(
+                db=self.db,
+                user_id=self.linked_account.user_id,
+                title=title,
+                body=body
+            )
+            return {"status": "success", "message": "Mobile notification sent."}
+        except Exception as e:
+            logger.error(f"Failed to send mobile notification: {e}")
+            raise Exception(
+                f"An unexpected error occurred while sending the mobile notification: {e}"
             ) from e

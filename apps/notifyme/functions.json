@@ -37,5 +37,30 @@
       "visible": ["subject", "body", "artifact_ids"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "NOTIFYME__SEND_ME_MOBILE_NOTIFICATION",
+    "description": "Sends a mobile push notification to your mobile device.",
+    "tags": ["notification", "mobile", "push", "alert"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title/heading for the mobile notification."
+        },
+        "body": {
+          "type": "string",
+          "description": "The main content/message of the mobile notification."
+        }
+      },
+      "required": ["title", "body"],
+      "visible": ["title", "body"],
+      "additionalProperties": false
+    }
   }
 ]
