@@ -1,6 +1,13 @@
 import whois
 import dns.resolver
 import geocoder
+import requests
+import ssl
+import socket
+import time
+import ipaddress
+from datetime import datetime, timedelta
+from urllib.parse import urlparse
 from typing import Optional, List, Dict, Any
 
 from aci.common.db.sql_models import LinkedAccount
@@ -34,6 +41,105 @@ class IpTools(AppConnectorBase):
     def _before_execute(self) -> None:
         pass
 
+    def _is_private_or_reserved_ip(self, ip_str: str) -> bool:
+        """
+        Checks if an IP address is private, reserved, or in a restricted range.
+        
+        Args:
+            ip_str: IP address string to check
+            
+        Returns:
+            True if the IP should be blocked, False if it's safe to access
+        """
+        try:
+            ip = ipaddress.ip_address(ip_str)
+            
+            # Block private networks
+            if ip.is_private:
+                return True
+                
+            # Block reserved ranges
+            if ip.is_reserved:
+                return True
+                
+            # Block loopback
+            if ip.is_loopback:
+                return True
+                
+            # Block link-local
+            if ip.is_link_local:
+                return True
+                
+            # Block multicast
+            if ip.is_multicast:
+                return True
+                
+            # Block unspecified (0.0.0.0 or ::)
+            if ip.is_unspecified:
+                return True
+                
+            # Additional explicit blocks for common internal ranges
+            if isinstance(ip, ipaddress.IPv4Address):
+                # Block additional RFC 1918 ranges and other internal ranges
+                blocked_networks = [
+                    ipaddress.IPv4Network('10.0.0.0/8'),      # Private Class A
+                    ipaddress.IPv4Network('172.16.0.0/12'),   # Private Class B  
+                    ipaddress.IPv4Network('192.168.0.0/16'),  # Private Class C
+                    ipaddress.IPv4Network('127.0.0.0/8'),     # Loopback
+                    ipaddress.IPv4Network('169.254.0.0/16'),  # Link-local
+                    ipaddress.IPv4Network('224.0.0.0/4'),     # Multicast
+                    ipaddress.IPv4Network('240.0.0.0/4'),     # Reserved
+                    ipaddress.IPv4Network('0.0.0.0/8'),       # "This network"
+                ]
+                
+                for network in blocked_networks:
+                    if ip in network:
+                        return True
+                        
+            return False
+            
+        except ValueError:
+            # If we can't parse the IP, block it for safety
+            return True
+
+    def _resolve_and_validate_hostname(self, hostname: str) -> str:
+        """
+        Resolves a hostname to IP and validates it's not internal.
+        
+        Args:
+            hostname: Hostname to resolve and validate
+            
+        Returns:
+            The resolved IP address if safe
+            
+        Raises:
+            Exception: If hostname resolves to private/internal IP
+        """
+        try:
+            # Remove protocol and path if present
+            if '://' in hostname:
+                hostname = urlparse(hostname).netloc or hostname
+                
+            # Extract hostname without port
+            if ':' in hostname and not hostname.startswith('['):
+                hostname = hostname.split(':')[0]
+                
+            # Resolve hostname to IP
+            resolved_ip = socket.gethostbyname(hostname)
+            
+            # Check if resolved IP is private/internal
+            if self._is_private_or_reserved_ip(resolved_ip):
+                raise Exception(f"Access denied: {hostname} resolves to internal/private IP {resolved_ip}")
+                
+            return resolved_ip
+            
+        except socket.gaierror as e:
+            raise Exception(f"Could not resolve hostname {hostname}: {str(e)}")
+        except Exception as e:
+            if "Access denied" in str(e):
+                raise
+            raise Exception(f"Hostname validation failed for {hostname}: {str(e)}")
+
     def get_ip_info(self, ip_address: str) -> Dict[str, Any]:
         """
         Retrieves geolocation and WHOIS information for a given IP address.
@@ -46,6 +152,10 @@ class IpTools(AppConnectorBase):
         """
         self._before_execute()
         logger.info(f"Fetching info for IP address: {ip_address}")
+
+        # Validate IP is not private/internal
+        if self._is_private_or_reserved_ip(ip_address):
+            raise Exception(f"Access denied: Cannot lookup private/internal IP address {ip_address}")
 
         try:
             # Geolocation lookup
@@ -112,3 +222,278 @@ class IpTools(AppConnectorBase):
                 results["records"][record_type] = [f"An error occurred: {str(e)}"]
 
         return results
+
+    def check_website_status(self, url: str, timeout: int = 10) -> Dict[str, Any]:
+        """
+        Checks the HTTP status and response time of a website.
+
+        Args:
+            url: The website URL to check (e.g., 'https://example.com').
+            timeout: Request timeout in seconds (default: 10).
+
+        Returns:
+            A dictionary containing status code, response time, and availability info.
+        """
+        self._before_execute()
+        logger.info(f"Checking website status for: {url}")
+
+        # Extract hostname and validate it doesn't resolve to internal IPs
+        try:
+            parsed_url = urlparse(url)
+            hostname = parsed_url.netloc
+            if ':' in hostname and not hostname.startswith('['):
+                hostname = hostname.split(':')[0]
+            
+            self._resolve_and_validate_hostname(hostname)
+        except Exception as e:
+            return {
+                "url": url,
+                "status": "BLOCKED",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+        try:
+            start_time = time.time()
+            response = requests.get(url, timeout=timeout, allow_redirects=True)
+            end_time = time.time()
+            
+            response_time = round((end_time - start_time) * 1000, 2)  # Convert to milliseconds
+            
+            return {
+                "url": url,
+                "status_code": response.status_code,
+                "status": "UP" if 200 <= response.status_code < 400 else "DOWN",
+                "response_time_ms": response_time,
+                "response_size_bytes": len(response.content),
+                "final_url": response.url,
+                "headers": dict(response.headers),
+                "timestamp": datetime.now().isoformat()
+            }
+        except requests.exceptions.Timeout:
+            return {
+                "url": url,
+                "status": "TIMEOUT",
+                "error": f"Request timed out after {timeout} seconds",
+                "timestamp": datetime.now().isoformat()
+            }
+        except requests.exceptions.ConnectionError:
+            return {
+                "url": url,
+                "status": "CONNECTION_ERROR",
+                "error": "Could not connect to the website",
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Website check failed for {url}: {e}")
+            return {
+                "url": url,
+                "status": "ERROR",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+    def check_ssl_certificate(self, hostname: str, port: int = 443) -> Dict[str, Any]:
+        """
+        Checks SSL certificate information for a domain.
+
+        Args:
+            hostname: The hostname to check (e.g., 'example.com').
+            port: The port to connect to (default: 443).
+
+        Returns:
+            A dictionary containing SSL certificate details and expiration info.
+        """
+        self._before_execute()
+        logger.info(f"Checking SSL certificate for: {hostname}:{port}")
+
+        # Validate hostname doesn't resolve to internal IPs
+        try:
+            self._resolve_and_validate_hostname(hostname)
+        except Exception as e:
+            return {
+                "hostname": hostname,
+                "port": port,
+                "valid": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+        try:
+            # Create SSL context
+            context = ssl.create_default_context()
+            
+            # Connect and get certificate
+            with socket.create_connection((hostname, port), timeout=10) as sock:
+                with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                    cert = ssock.getpeercert()
+            
+            if not cert:
+                return {
+                    "hostname": hostname,
+                    "port": port,
+                    "valid": False,
+                    "error": "No certificate found",
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            # Parse certificate dates
+            not_before_str = cert.get('notBefore', '')
+            not_after_str = cert.get('notAfter', '')
+            
+            if not_before_str and not_after_str and isinstance(not_before_str, str) and isinstance(not_after_str, str):
+                not_before = datetime.strptime(not_before_str, '%b %d %H:%M:%S %Y %Z')
+                not_after = datetime.strptime(not_after_str, '%b %d %H:%M:%S %Y %Z')
+                days_until_expiry = (not_after - datetime.now()).days
+            else:
+                not_before = None
+                not_after = None
+                days_until_expiry = -1
+            
+            # Extract certificate details safely
+            subject_dict = {}
+            if cert.get('subject'):
+                for item in cert['subject']:
+                    if isinstance(item, tuple) and len(item) >= 2:
+                        for pair in item:
+                            if isinstance(pair, tuple) and len(pair) >= 2:
+                                subject_dict[pair[0]] = pair[1]
+            
+            issuer_dict = {}
+            if cert.get('issuer'):
+                for item in cert['issuer']:
+                    if isinstance(item, tuple) and len(item) >= 2:
+                        for pair in item:
+                            if isinstance(pair, tuple) and len(pair) >= 2:
+                                issuer_dict[pair[0]] = pair[1]
+            
+            return {
+                "hostname": hostname,
+                "port": port,
+                "valid": True,
+                "subject_common_name": subject_dict.get('commonName', 'N/A'),
+                "issuer": issuer_dict.get('organizationName', issuer_dict.get('commonName', 'N/A')),
+                "issued_date": not_before.isoformat() if not_before else 'N/A',
+                "expiry_date": not_after.isoformat() if not_after else 'N/A',
+                "days_until_expiry": days_until_expiry,
+                "expires_soon": days_until_expiry <= 30 and days_until_expiry >= 0,
+                "serial_number": cert.get('serialNumber', 'N/A'),
+                "version": str(cert.get('version', 'N/A')),
+                "timestamp": datetime.now().isoformat()
+            }
+        except socket.gaierror:
+            return {
+                "hostname": hostname,
+                "port": port,
+                "valid": False,
+                "error": "Hostname could not be resolved",
+                "timestamp": datetime.now().isoformat()
+            }
+        except socket.timeout:
+            return {
+                "hostname": hostname,
+                "port": port,
+                "valid": False,
+                "error": "Connection timed out",
+                "timestamp": datetime.now().isoformat()
+            }
+        except ssl.SSLError as e:
+            return {
+                "hostname": hostname,
+                "port": port,
+                "valid": False,
+                "error": f"SSL Error: {str(e)}",
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"SSL certificate check failed for {hostname}: {e}")
+            return {
+                "hostname": hostname,
+                "port": port,
+                "valid": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+    def ping_host(self, hostname: str, count: int = 4) -> Dict[str, Any]:
+        """
+        Performs a ping test to check host reachability and response times.
+
+        Args:
+            hostname: The hostname or IP to ping.
+            count: Number of ping attempts (default: 4).
+
+        Returns:
+            A dictionary containing ping statistics and response times.
+        """
+        self._before_execute()
+        logger.info(f"Pinging host: {hostname} ({count} times)")
+
+        # Validate target is not internal/private
+        try:
+            # Check if it's already an IP address
+            try:
+                ipaddress.ip_address(hostname)
+                if self._is_private_or_reserved_ip(hostname):
+                    raise Exception(f"Access denied: Cannot ping private/internal IP {hostname}")
+            except ValueError:
+                # It's a hostname, resolve and validate
+                self._resolve_and_validate_hostname(hostname)
+        except Exception as e:
+            return {
+                "hostname": hostname,
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+        import subprocess
+        import platform
+
+        try:
+            # Determine ping command based on OS
+            param = "-n" if platform.system().lower() == "windows" else "-c"
+            command = ["ping", param, str(count), hostname]
+            
+            # Execute ping command
+            result = subprocess.run(
+                command, 
+                capture_output=True, 
+                text=True, 
+                timeout=30
+            )
+            
+            output = result.stdout
+            success = result.returncode == 0
+            
+            # Parse basic statistics (simplified)
+            packet_loss = "0%" if success else "100%"
+            if "% packet loss" in output or "% loss" in output:
+                import re
+                loss_match = re.search(r'(\d+)%.*loss', output)
+                if loss_match:
+                    packet_loss = f"{loss_match.group(1)}%"
+            
+            return {
+                "hostname": hostname,
+                "success": success,
+                "packet_loss": packet_loss,
+                "output": output,
+                "error": result.stderr if result.stderr else None,
+                "timestamp": datetime.now().isoformat()
+            }
+        except subprocess.TimeoutExpired:
+            return {
+                "hostname": hostname,
+                "success": False,
+                "error": "Ping command timed out",
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"Ping failed for {hostname}: {e}")
+            return {
+                "hostname": hostname,
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }

@@ -7,7 +7,7 @@
       "tags": [
         "News"
       ],
-      "goal": "Fetch the top 10 current news headlines from Google News for the '{{ variables['Country'] }}' region. Analyze and categorize the headlines by topic (Politics, Business, Technology, Health, Sports, etc.). Create a professional news briefing document that includes: 1) Executive summary of key trends, 2) Detailed breakdown of each headline with source and timestamp, 3) Regional impact analysis, and 4) Key takeaways for the day. Format this comprehensive briefing into a well-structured email with the subject 'Daily News Intelligence Briefing - {{ variables['Country'] }}' and send it to me.",
+      "goal": "Fetch the top 10 current news headlines from Google News for the '{{ variables['Country'] }}' region. Analyze and categorize the headlines by topic (Politics, Business, Technology, Health, Sports, etc.). Create a professional news briefing document that includes: 1) Executive summary of key trends, 2) Detailed breakdown of each headline with source and timestamp, 3) Regional impact analysis, and 4) Key takeaways for the day. Format this comprehensive briefing into a well-structured email with the subject 'Daily News Intelligence Briefing - {{ variables['Country'] }}' and send it to me via email.",
       "variable_names": [
         "Country"
       ],
@@ -59,7 +59,7 @@
       "tags": [
         "Research"
       ],
-      "goal": "Create a comprehensive research document for the topic '{{ variables['Topic'] }}' using Wikipedia as the primary source. PHASE 1 - Data Collection: Retrieve the full Wikipedia article content, including main sections, subsections, references, and related articles. Extract key facts, dates, statistics, and notable information. PHASE 2 - Content Enhancement: Expand the summary by researching related Wikipedia pages and cross-referencing information to provide context and depth. Include historical background, current relevance, key figures, and significant developments. PHASE 3 - Document Creation: Structure the content into a professional Microsoft Word document with the following sections: Executive Summary, Detailed Overview, Historical Context, Key Facts & Statistics, Notable Figures/Events, Current Relevance, References, and Further Reading. PHASE 4 - Formatting: Apply professional formatting including proper headings, bullet points, tables for data, and consistent styling. The document should be 3-5 pages long with comprehensive coverage. Save as '{{ variables['Topic'] }}_Comprehensive_Research_Report.docx'.",
+      "goal": "Create a comprehensive research document for the topic '{{ variables['Topic'] }}' using Wikipedia as the primary source. PHASE 1 - Data Collection: Retrieve the full Wikipedia article content, including main sections, subsections, references, and related articles. Extract key facts, dates, statistics, and notable information. PHASE 2 - Content Enhancement: Expand the summary by researching related Wikipedia pages and cross-referencing information to provide context and depth. Include historical background, current relevance, key figures, and significant developments. PHASE 3 - Document Creation: Structure the content into a professional Microsoft Word document with the following sections: Executive Summary, Detailed Overview, Historical Context, Key Facts & Statistics, Notable Figures/Events, Current Relevance, References, and Further Reading. PHASE 4 - Formatting: Apply professional formatting including proper headings, bullet points, tables for data, and consistent styling. The document should be 3-5 pages long with comprehensive coverage. Save as '{{ variables['Topic'] }}_Comprehensive_Research_Report.docx'. Notify me using push notification when the document is ready.",
       "variable_names": [
         "Topic"
       ],
@@ -81,8 +81,7 @@
       "required_app_names": [
         "YAHOO_FINANCE",
         "GOOGLE_NEWS",
-        "DOCX_TOOLS",
-        "NOTIFYME"
+        "DOCX_TOOLS"
       ],
       "is_deep": true
     },
@@ -101,7 +100,6 @@
         "WIKIPEDIA_API",
         "GOOGLE_NEWS",
         "DOCX_TOOLS",
-        "NOTIFYME",
         "SEARXNG"
       ],
       "is_deep": true
@@ -118,8 +116,7 @@
         "Survey Topic"
       ],
       "required_app_names": [
-        "TYPEFORM",
-        "NOTIFYME"
+        "TYPEFORM"
       ],
       "is_deep": false
     },
@@ -128,9 +125,9 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/water_reminder.jpeg?raw=true",
       "description": "Sends a friendly reminder to drink water and stay hydrated.",
       "tags": [
-        "Health"
+        "Reminders"
       ],
-      "goal": "Send a hydration reminder message: 'Time to hydrate! 💧 Drink a glass of water to stay healthy and energized. Your body needs regular hydration to function at its best.' Include a motivational tip about the benefits of staying hydrated and maintaining good health habits throughout the day.",
+      "goal": "Send a hydration reminder via mobile push notification: 'Time to hydrate! 💧 Drink a glass of water to stay healthy and energized. Your body needs regular hydration to function at its best.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with an encouraging message about hydration benefits.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -142,9 +139,9 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/take_a_break.jpeg?raw=true",
       "description": "Reminds you to take a break from work or screen time for better productivity.",
       "tags": [
-        "Productivity"
+        "Reminders"
       ],
-      "goal": "Send an encouraging break reminder: 'Time for a quick break! 🧘 Stand up, stretch, or step away from your screen for 5 minutes. Taking regular breaks helps maintain focus and prevents eye strain.' Include suggestions for break activities like walking, stretching, deep breathing, or simply looking away from screens.",
+      "goal": "Send an encouraging break reminder via mobile push notification: 'Time for a quick break! 🧘 Stand up, stretch, or step away from your screen for 5 minutes. Taking regular breaks helps maintain focus and prevents eye strain.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with suggestions for break activities.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -156,9 +153,9 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/daily_gratitude.jpeg?raw=true",
       "description": "Sends a daily prompt to practice gratitude and positive thinking.",
       "tags": [
-        "Wellness"
+        "Reminders"
       ],
-      "goal": "Send a gratitude reminder with a positive prompt: 'What are you grateful for today? ✨ Take a moment to appreciate three good things that happened. Practicing gratitude helps improve mental wellness and cultivate a positive mindset.' Include a mindfulness tip or positive affirmation to support emotional well-being.",
+      "goal": "Send a gratitude reminder via mobile push notification: 'What are you grateful for today? ✨ Take a moment to appreciate three good things that happened. Practicing gratitude helps improve mental wellness and cultivate a positive mindset.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with mindfulness prompts.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -170,9 +167,9 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/excersise_reminder.jpeg?raw=true",
       "description": "Motivational reminder to stay active and maintain fitness goals.",
       "tags": [
-        "Health"
+        "Reminders"
       ],
-      "goal": "Send a motivational fitness reminder: 'Time to move your body! 💪 Even 10 minutes of activity makes a difference. Whether it's a quick walk, some stretches, or a full workout, your body will thank you.' Include encouraging words about the benefits of staying active and maintaining consistent exercise habits.",
+      "goal": "Send a motivational fitness reminder via mobile push notification: 'Time to move your body! 💪 Even 10 minutes of activity makes a difference. Whether it's a quick walk, some stretches, or a full workout, your body will thank you.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with encouraging fitness motivation.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -184,9 +181,9 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/medication_reminder.jpeg?raw=true",
       "description": "Important health reminder to take medication or supplements.",
       "tags": [
-        "Health"
+        "Reminders"
       ],
-      "goal": "Send a critical medication reminder for '{{ variables['Medication Name'] }}': '⚕️ MEDICATION REMINDER: Time to take your {{ variables['Medication Name'] }}. Don't skip your dose! Consistent medication adherence is important for your health.' Include a gentle reminder about the importance of following prescribed medication schedules.",
+      "goal": "Send a critical medication reminder via mobile push notification for '{{ variables['Medication Name'] }}': '⚕️ MEDICATION REMINDER: Time to take your {{ variables['Medication Name'] }}. Don't skip your dose! Consistent medication adherence is important for your health.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION for immediate attention.",
       "variable_names": [
         "Medication Name"
       ],
@@ -200,9 +197,9 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/productivity_goal.jpeg?raw=true",
       "description": "Prompt to review progress on daily goals and tasks.",
       "tags": [
-        "Productivity"
+        "Reminders"
       ],
-      "goal": "Send a goal check-in prompt: 'How are your goals coming along today? 🎯 Take a moment to review your progress and plan your next steps. Small daily actions lead to big achievements!' Include motivational words about maintaining focus on important objectives and building consistent daily habits.",
+      "goal": "Send a goal check-in prompt via mobile push notification: 'How are your goals coming along today? 🎯 Take a moment to review your progress and plan your next steps. Small daily actions lead to big achievements!' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with motivational productivity messages.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -214,11 +211,63 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/posture_check.jpeg?raw=true",
       "description": "Reminder to maintain good posture while working or sitting.",
       "tags": [
-        "Health"
+        "Reminders"
       ],
-      "goal": "Send a posture awareness reminder: 'Posture check! 🪑 Sit up straight, relax your shoulders, and adjust your screen height. Good posture prevents back pain and helps you stay comfortable during work.' Include ergonomic tips and reminders about proper sitting position for spinal health.",
+      "goal": "Send a posture awareness reminder via mobile push notification: 'Posture check! 🪑 Sit up straight, relax your shoulders, and adjust your screen height. Good posture prevents back pain and helps you stay comfortable during work.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with ergonomic health tips.",
       "variable_names": [],
       "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Custom Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/custom_reminder.jpeg?raw=true",
+      "description": "Creates a personalized reminder for anything you want to remember.",
+      "tags": [
+        "Reminders"
+      ],
+      "goal": "Send a custom reminder about '{{ variables['Reminder Topic'] }}' via mobile push notification with the message: '{{ variables['Reminder Message'] }}' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with the custom title and message, including encouraging words and relevant tips for consistency.",
+      "variable_names": [
+        "Reminder Topic",
+        "Reminder Message"
+      ],
+      "required_app_names": [
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Weekly Team Progress Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/jira_team_report.jpeg?raw=true",
+      "description": "Generates a comprehensive weekly team progress report from JIRA with project status, issue summaries, and team performance insights.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Generate a comprehensive weekly team progress report from JIRA for '{{ variables['Project Key'] }}'. STEP 1 - Setup: Use JIRA__GET_ACCESSIBLE_RESOURCES to get the cloud ID, then JIRA__GET_PROJECTS to verify project access. STEP 2 - Collect Data: Use JIRA__SEARCH_ISSUES with JQL queries to gather: a) Issues completed this week (status changed to Done), b) Issues currently in progress, c) High priority issues, d) Issues assigned to each team member. STEP 3 - Analyze Metrics: Calculate completion rates, identify blockers, track sprint progress, and summarize team workload distribution. STEP 4 - Generate Report: Create a structured document with executive summary, team achievements, current focus areas, upcoming deadlines, and key metrics. STEP 5 - Distribute: Send via email with subject 'Weekly Team Progress Report - {{ variables['Project Key'] }} - [Current Date]' including charts and actionable insights for stakeholders.",
+      "variable_names": [
+        "Project Key"
+      ],
+      "required_app_names": [
+        "JIRA",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Website Monitor & Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/website_monitor.jpeg?raw=true",
+      "description": "Monitors website availability and performance with instant alerts when issues are detected.",
+      "tags": [
+        "Monitoring"
+      ],
+      "goal": "Monitor the website '{{ variables['Website URL'] }}' for availability and performance issues. Use IP_TOOLS functions to perform regular health checks including: 1) HTTP response status verification, 2) Response time measurement, 3) SSL certificate validation, 4) DNS resolution checks. If any issues are detected (site down, slow response >5 seconds, SSL expiring within 30 days), immediately send alert via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with specific details about the problem and recommended actions for quick resolution.",
+      "variable_names": [
+        "Website URL"
+      ],
+      "required_app_names": [
+        "IP_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": false

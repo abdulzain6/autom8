@@ -72,24 +72,6 @@ def execute_automation(run_id: str):
                     f"Parent Automation with ID {automation_id} not found."
                 )
 
-            # Send notification that automation is starting
-            try:
-                fcm_manager.send_notification_to_user(
-                    db=db_session,
-                    user_id=automation.user_id,
-                    title="🚀 Automation Started",
-                    body=f"'{automation.name}' is now running...",
-                    data={
-                        "type": "automation_started",
-                        "automation_id": automation_id,
-                        "run_id": run_id,
-                        "automation_name": automation.name
-                    }
-                )
-                logger.info(f"Sent start notification for automation {automation.name} to user {automation.user_id}")
-            except Exception as e:
-                logger.warning(f"Failed to send start notification: {e}")
-
             executor = AutomationExecutor(automation, run_id=run_id)
             automation_output = executor.run()
 
@@ -111,24 +93,31 @@ def execute_automation(run_id: str):
                 logger.warning(f"Failed to track automation usage: {e}")
             
             # Send success notification
-            try:
-                fcm_manager.send_notification_to_user(
-                    db=db_session,
-                    user_id=automation.user_id,
-                    title="✅ Automation Completed",
-                    body=f"'{automation.name}' finished successfully!",
-                    data={
-                        "type": "automation_completed",
-                        "automation_id": automation_id,
-                        "run_id": run_id,
-                        "automation_name": automation.name,
-                        "status": automation_output.status,
-                        "message": automation_output.automation_output[:100] if automation_output.automation_output else ""
-                    }
-                )
-                logger.info(f"Sent success notification for automation {automation.name} to user {automation.user_id}")
-            except Exception as e:
-                logger.warning(f"Failed to send success notification: {e}")
+            # Check if any linked account has "NOTIFYME" app
+            has_notifyme = any(
+                linked_acc.linked_account.app_name == "NOTIFYME"
+                for linked_acc in automation.linked_accounts
+            )
+            
+            if not has_notifyme:
+                try:
+                    fcm_manager.send_notification_to_user(
+                        db=db_session,
+                        user_id=automation.user_id,
+                        title="✅ Automation Completed",
+                        body=f"'{automation.name}' finished successfully!",
+                        data={
+                            "type": "automation_completed",
+                            "automation_id": automation_id,
+                            "run_id": run_id,
+                            "automation_name": automation.name,
+                            "status": automation_output.status,
+                            "message": automation_output.automation_output[:100] if automation_output.automation_output else ""
+                        }
+                    )
+                    logger.info(f"Sent success notification for automation {automation.name} to user {automation.user_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to send success notification: {e}")
             
             logger.info(
                 f"Automation {automation_id} executed successfully for run {run_id}."

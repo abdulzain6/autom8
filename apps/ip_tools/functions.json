@@ -48,5 +48,83 @@
       "visible": ["domain", "record_types"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "IP_TOOLS__CHECK_WEBSITE_STATUS",
+    "description": "Checks the HTTP status, response time, and availability of a website URL.",
+    "tags": ["website", "monitoring", "http", "status", "performance"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The website URL to check (e.g., 'https://example.com')."
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Request timeout in seconds (default: 10).",
+          "default": 10
+        }
+      },
+      "required": ["url"],
+      "visible": ["url", "timeout"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "IP_TOOLS__CHECK_SSL_CERTIFICATE",
+    "description": "Checks SSL certificate information, expiration dates, and validity for a domain.",
+    "tags": ["ssl", "security", "certificate", "monitoring", "expiration"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "The hostname to check SSL certificate for (e.g., 'example.com')."
+        },
+        "port": {
+          "type": "integer",
+          "description": "The port to connect to (default: 443).",
+          "default": 443
+        }
+      },
+      "required": ["hostname"],
+      "visible": ["hostname", "port"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "IP_TOOLS__PING_HOST",
+    "description": "Performs a ping test to check host reachability and response times.",
+    "tags": ["ping", "network", "connectivity", "latency", "monitoring"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "The hostname or IP address to ping."
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of ping attempts (default: 4).",
+          "default": 4
+        }
+      },
+      "required": ["hostname"],
+      "visible": ["hostname", "count"],
+      "additionalProperties": false
+    }
   }
 ]
