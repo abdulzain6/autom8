@@ -271,6 +271,53 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Daily arXiv Research Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/arxiv_digest.jpeg?raw=true",
+      "description": "Curates and delivers a personalized daily digest of the latest research papers from arXiv based on your interests.",
+      "tags": [
+        "Research"
+      ],
+      "goal": "Create a comprehensive daily arXiv research digest for '{{ variables['Research Field'] }}'. STEP 1 - Paper Collection: Use ARXIV to search for the latest papers in {{ variables['Research Field'] }} published in the last 24 hours, focusing on high-impact research with relevance scoring. STEP 2 - Content Analysis: For each paper, extract key information including title, authors, abstract summary, methodology highlights, and potential impact. Identify breakthrough findings, novel approaches, and significant contributions. STEP 3 - Digest Creation: Structure findings into a professional HTML email briefing with sections for: Featured Papers (top 3 most significant), Emerging Trends, Methodological Innovations, and Quick Reads (papers under 10 pages). STEP 4 - Intelligence Report: Format as a comprehensive email with paper summaries, author insights, citation potential, and relevance to current research landscape. STEP 5 - Delivery: Send the arXiv Research Digest via NOTIFYME__SEND_ME_EMAIL with subject 'Daily arXiv Research Digest - {{ variables['Research Field'] }} - [Current Date]' including direct links to papers and reading recommendations in a well-formatted HTML email.",
+      "variable_names": [
+        "Research Field"
+      ],
+      "required_app_names": [
+        "ARXIV",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Daily Hacker News Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/hackernews_digest.jpeg?raw=true",
+      "description": "Delivers a curated daily summary of top stories, discussions, and tech trends from Hacker News with community insights.",
+      "tags": [
+        "News"
+      ],
+      "goal": "Generate a comprehensive daily Hacker News digest with the most engaging tech stories and discussions. STEP 1 - Story Collection: Use HACKERNEWS to fetch today's top stories, trending discussions, and highly-commented posts. Focus on stories with high engagement (upvotes + comments) and tech relevance. STEP 2 - Content Categorization: Organize stories into categories: Startup News, Technology Trends, Programming & Development, AI/ML Updates, Open Source Projects, Industry Analysis, and Community Discussions. STEP 3 - Engagement Analysis: For each top story, include upvote count, comment highlights, and community sentiment. Identify controversial topics and emerging debates. STEP 4 - Trend Identification: Analyze recurring themes, popular technologies mentioned, and emerging patterns in the tech community discourse. STEP 5 - Email Digest: Format as a comprehensive HTML email with executive summary of key tech trends, detailed story breakdowns with community insights, notable comments from experts, and clickable links for deeper reading. STEP 6 - Distribution: Send the Hacker News Tech Digest via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Hacker News Tech Digest - [Current Date]' including story links and community discussion highlights in a well-structured HTML email format.",
+      "variable_names": [],
+      "required_app_names": [
+        "HACKERNEWS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Daily Joke Notification",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/daily_joke.jpeg?raw=true",
+      "description": "Brightens your day with a funny joke delivered via mobile push notification.",
+      "tags": [
+        "Entertainment"
+      ],
+      "goal": "Fetch a random joke from JOKES_API and deliver it via mobile push notification to brighten the user's day. Use JOKES_API to get a clean, family-friendly joke (avoiding offensive categories). Format the notification with the joke setup and punchline in an engaging way. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Daily Joke 😄' and the joke content formatted with emojis and clear setup/punchline structure for maximum entertainment value.",
+      "variable_names": [],
+      "required_app_names": [
+        "JOKES_API",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }
