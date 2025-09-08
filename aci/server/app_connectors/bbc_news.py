@@ -6,6 +6,7 @@ from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
+from aci.server.config import HTTP_PROXY
 
 logger = get_logger(__name__)
 
@@ -27,6 +28,16 @@ class BbcNews(AppConnectorBase):
         super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.news_client = bbc_feeds.news()
         self.http_session = requests.Session()
+        
+        # Configure proxy if available
+        if HTTP_PROXY:
+            proxy_config = {
+                'http': HTTP_PROXY,
+                'https': HTTP_PROXY
+            }
+            self.http_session.proxies.update(proxy_config)
+            logger.info(f"BBC News connector configured with proxy: {HTTP_PROXY}")
+        
         self.html_converter = html2text.HTML2Text()
         logger.info("BBCNewsConnector initialized using bbc-feeds.")
 
@@ -51,6 +62,8 @@ class BbcNews(AppConnectorBase):
             edition: The regional edition to use ('uk', 'us', or 'int' for international).
         """
         logger.info(f"Fetching top {limit} headlines for '{edition}' edition.")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for BBC News headlines request: {HTTP_PROXY}")
         try:
             stories = self.news_client.top_stories(limit=limit, edition=edition) # type: ignore
             return [self._format_story(story) for story in stories]
@@ -71,6 +84,8 @@ class BbcNews(AppConnectorBase):
             raise ValueError(f"Invalid category: '{category}'.")
 
         logger.info(f"Fetching {limit} articles from category '{category}'.")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for BBC News category request: {HTTP_PROXY}")
         try:
             stories = cast(Iterable, category_method(limit=limit))
             return [self._format_story(story) for story in stories]
@@ -89,6 +104,8 @@ class BbcNews(AppConnectorBase):
             A dictionary containing the article's URL and its full content in Markdown format.
         """
         logger.info(f"Fetching and converting article content from: {url}")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for BBC News article content request: {HTTP_PROXY}")
         try:
             response = self.http_session.get(url, timeout=15)
             response.raise_for_status()

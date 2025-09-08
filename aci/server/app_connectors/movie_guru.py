@@ -4,6 +4,7 @@ from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
+from aci.server.config import HTTP_PROXY
 import os
 
 logger = get_logger(__name__)
@@ -18,7 +19,19 @@ class MovieGuru(AppConnectorBase):
         run_id: Optional[str] = None,
     ):
         super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
-        self.ia = Cinemagoer()
+        
+        # Configure Cinemagoer with proxy if available
+        if HTTP_PROXY:
+            # Cinemagoer accepts proxy configuration in its constructor
+            proxy_config = {
+                'http': HTTP_PROXY,
+                'https': HTTP_PROXY
+            }
+            self.ia = Cinemagoer(proxy=proxy_config)
+            logger.info(f"MovieGuru configured with proxy: {HTTP_PROXY}")
+        else:
+            self.ia = Cinemagoer()
+            
         self._imdb_base = os.getenv("IMDB_BASE_URL", "https://www.imdb.com")
         logger.info("MovieGuru initialized.")
 
@@ -28,6 +41,8 @@ class MovieGuru(AppConnectorBase):
     def search_movie(self, title: str, limit: int = 5) -> List[Dict[str, Any]]:
         self._before_execute()
         logger.info(f"Searching for '{title}' (limit={limit})")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for MovieGuru search request: {HTTP_PROXY}")
         try:
             results = self.ia.search_movie(title)[: max(limit, 0)]
             summaries = []
@@ -45,6 +60,8 @@ class MovieGuru(AppConnectorBase):
     def get_top_250_movies(self, limit: int = 10) -> List[Dict[str, Any]]:
         self._before_execute()
         logger.info(f"Fetching Top 250 (limit={limit})")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for MovieGuru Top 250 request: {HTTP_PROXY}")
         try:
             results = self.ia.get_top250_movies() or []
             if not results:
@@ -60,6 +77,8 @@ class MovieGuru(AppConnectorBase):
     def get_upcoming_movies(self, limit: int = 10) -> List[Dict[str, Any]]:
         self._before_execute()
         logger.info(f"Fetching upcoming (popular100) (limit={limit})")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for MovieGuru upcoming movies request: {HTTP_PROXY}")
         try:
             results = self.ia.get_popular100_movies()[: max(limit, 0)]
             return [self._movie_summary(m) for m in results]
@@ -70,6 +89,8 @@ class MovieGuru(AppConnectorBase):
     def get_movie_details(self, movie_id: str, info_sets: Optional[List[str]] = None) -> Dict[str, Any]:
         self._before_execute()
         logger.info(f"Fetching details for ID {movie_id} (info_sets={info_sets})")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for MovieGuru movie details request: {HTTP_PROXY}")
         try:
             movie = self.ia.get_movie(str(movie_id))
             if not movie:

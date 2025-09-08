@@ -5,6 +5,7 @@ from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
+from aci.server.config import HTTP_PROXY
 
 logger = get_logger(__name__)
 
@@ -27,6 +28,17 @@ class Hackernews(AppConnectorBase):
         """
         super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.api_base_url = "https://hacker-news.firebaseio.com/v0"
+        
+        # Configure HTTP session with proxy if available
+        self.session = requests.Session()
+        if HTTP_PROXY:
+            proxy_config = {
+                'http': HTTP_PROXY,
+                'https': HTTP_PROXY
+            }
+            self.session.proxies.update(proxy_config)
+            logger.info(f"Hacker News connector configured with proxy: {HTTP_PROXY}")
+        
         logger.info("HackerNews connector initialized (direct API mode).")
 
     def _before_execute(self) -> None:
@@ -64,10 +76,12 @@ class Hackernews(AppConnectorBase):
         """
         self._before_execute()
         logger.info(f"Fetching {limit} 'top' stories from Hacker News API.")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for Hacker News top stories request: {HTTP_PROXY}")
         try:
             # 1. Get the list of top story IDs
             top_stories_url = f"{self.api_base_url}/topstories.json"
-            response = requests.get(top_stories_url, timeout=10)
+            response = self.session.get(top_stories_url, timeout=10)
             response.raise_for_status()  # Raise an exception for bad status codes
             story_ids = response.json()
 
@@ -75,7 +89,7 @@ class Hackernews(AppConnectorBase):
             stories = []
             for story_id in story_ids[:limit]:
                 item_url = f"{self.api_base_url}/item/{story_id}.json"
-                item_response = requests.get(item_url, timeout=10)
+                item_response = self.session.get(item_url, timeout=10)
                 item_response.raise_for_status()
                 story_data = item_response.json()
                 if story_data and story_data.get("type") == "story":
@@ -92,9 +106,11 @@ class Hackernews(AppConnectorBase):
         """
         self._before_execute()
         logger.info(f"Fetching details for Hacker News user: '{username}'")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for Hacker News user details request: {HTTP_PROXY}")
         try:
             user_url = f"{self.api_base_url}/user/{username}.json"
-            response = requests.get(user_url, timeout=10)
+            response = self.session.get(user_url, timeout=10)
             response.raise_for_status()
             user_data = response.json()
 
@@ -139,17 +155,19 @@ class Hackernews(AppConnectorBase):
             raise ValueError(f"Invalid story_type: '{story_type}'.")
 
         logger.info(f"Fetching {limit} '{story_type}' stories from Hacker News API.")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for Hacker News {story_type} stories request: {HTTP_PROXY}")
         try:
             # Use the mapped endpoint in the URL
             stories_url = f"{self.api_base_url}/{story_endpoint}.json"
-            response = requests.get(stories_url, timeout=10)
+            response = self.session.get(stories_url, timeout=10)
             response.raise_for_status()
             story_ids = response.json()
 
             stories = []
             for story_id in story_ids[:limit]:
                 item_url = f"{self.api_base_url}/item/{story_id}.json"
-                item_response = requests.get(item_url, timeout=10)
+                item_response = self.session.get(item_url, timeout=10)
                 item_response.raise_for_status()
                 story_data = item_response.json()
                 if story_data:
@@ -171,6 +189,8 @@ class Hackernews(AppConnectorBase):
             A list of stories matching the search query.
         """
         logger.info(f"Searching for '{query}' using Algolia API.")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for Hacker News search request: {HTTP_PROXY}")
         search_url = "https://hn.algolia.com/api/v1/search"
         params = {
             "query": query,
@@ -178,7 +198,7 @@ class Hackernews(AppConnectorBase):
         }
         
         try:
-            response = requests.get(search_url, params=params, timeout=10)
+            response = self.session.get(search_url, params=params, timeout=10)
             response.raise_for_status()
             results = response.json()
             

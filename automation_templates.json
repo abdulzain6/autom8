@@ -314,10 +314,114 @@
       "goal": "Fetch a random joke from JOKES_API and deliver it via mobile push notification to brighten the user's day. Use JOKES_API to get a clean, family-friendly joke (avoiding offensive categories). Format the notification with the joke setup and punchline in an engaging way. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Daily Joke 😄' and the joke content formatted with emojis and clear setup/punchline structure for maximum entertainment value.",
       "variable_names": [],
       "required_app_names": [
-        "JOKES_API",
+        "JOKE_API",
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "URL to PDF Converter",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/url_to_pdf.png?raw=true",
+      "description": "Converts any web page or article to a clean, formatted PDF document for offline reading and archiving.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Convert the webpage at '{{ variables['Website URL'] }}' to PDF using PDF_TOOLS.",
+      "variable_names": [
+        "Website URL"
+      ],
+      "required_app_names": [
+        "PDF_TOOLS"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Work Schedule Setup",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/work_schedule.jpeg?raw=true",
+      "description": "Creates a professional work schedule in Cal.com with specified working hours and timezone for optimal meeting booking.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Create work schedule using CAL__CREATE_SCHEDULE with name '{{ variables['Schedule Name'] }}', timezone '{{ variables['Timezone'] }}', and availability for Monday through Friday from {{ variables['Start Time'] }} to {{ variables['End Time'] }}.",
+      "variable_names": [
+        "Schedule Name",
+        "Timezone", 
+        "Start Time",
+        "End Time"
+      ],
+      "required_app_names": [
+        "CAL"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Weekend Availability Setup",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/weekend_schedule.jpeg?raw=true",
+      "description": "Sets up weekend availability in Cal.com for flexible meeting scheduling outside regular business hours.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Create weekend schedule using CAL__CREATE_SCHEDULE with name '{{ variables['Schedule Name'] }}', timezone '{{ variables['Timezone'] }}', and availability for Saturday and Sunday from {{ variables['Start Time'] }} to {{ variables['End Time'] }}.",
+      "variable_names": [
+        "Schedule Name",
+        "Timezone",
+        "Start Time", 
+        "End Time"
+      ],
+      "required_app_names": [
+        "CAL"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Schedule Overview Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/schedule_report.jpeg?raw=true",
+      "description": "Generates a comprehensive report of all your Cal.com schedules with availability details and settings.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Generate schedule overview report using CAL__GET_SCHEDULES to retrieve all schedules, then create professional summary document with DOCX_TOOLS showing schedule details and availability patterns.",
+      "variable_names": [],
+      "required_app_names": [
+        "CAL",
+        "DOCX_TOOLS"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Custom Schedule Creator",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/custom_schedule.jpeg?raw=true",
+      "description": "Creates a fully customized schedule in Cal.com with specific days, hours, and availability patterns tailored to your needs.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Create custom schedule using CAL__CREATE_SCHEDULE with name '{{ variables['Schedule Name'] }}', timezone '{{ variables['Timezone'] }}', and availability for {{ variables['Available Days'] }} from {{ variables['Start Time'] }} to {{ variables['End Time'] }}.",
+      "variable_names": [
+        "Schedule Name",
+        "Timezone",
+        "Available Days",
+        "Start Time",
+        "End Time"
+      ],
+      "required_app_names": [
+        "CAL"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Schedule Backup & Documentation",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/schedule_backup.jpeg?raw=true", 
+      "description": "Creates a comprehensive backup and documentation of all your Cal.com schedules for safekeeping and reference.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Backup all Cal.com schedules using CAL__GET_SCHEDULES to retrieve schedule data, then create detailed backup document with DOCX_TOOLS containing all schedule configurations and settings.",
+      "variable_names": [],
+      "required_app_names": [
+        "CAL",
+        "DOCX_TOOLS"
+      ],
+      "is_deep": true
     }
   ]
 }

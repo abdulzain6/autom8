@@ -99,7 +99,12 @@ class Amazon(AppConnectorBase):
         """
         super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
         self.base_url = "https://www.amazon.com"
-        self.client = CycleTlsServerClient(server_url=CYCLE_TLS_SERVER_URL, proxy=HTTP_PROXY)
+        if HTTP_PROXY:
+            logging.info(f"Using HTTP proxy for Amazon connector: {HTTP_PROXY}")
+            self.client = CycleTlsServerClient(server_url=CYCLE_TLS_SERVER_URL, proxy=HTTP_PROXY)
+        else:
+            self.client = CycleTlsServerClient(server_url=CYCLE_TLS_SERVER_URL)
+    
         self.affiliate_tag = None
         self.text_converter = html2text.HTML2Text()
         self.text_converter.ignore_links = True

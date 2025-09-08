@@ -4,6 +4,10 @@ from pytrends.request import TrendReq
 from aci.common.db.sql_models import LinkedAccount
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
+from aci.server.config import HTTP_PROXY
+from aci.common.logging_setup import get_logger
+
+logger = get_logger(__name__)
 
 
 class GoogleTrends(AppConnectorBase):
@@ -20,10 +24,17 @@ class GoogleTrends(AppConnectorBase):
         run_id: str | None = None,
     ):
         """
-        Initializes the GoogleNews connector.
+        Initializes the GoogleTrends connector.
         """
         super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
-        self.pytrends = TrendReq(hl='en-US', tz=360)
+        
+        # Configure proxy settings if available
+        if HTTP_PROXY:
+            logger.info(f"Google Trends connector configured with proxy: {HTTP_PROXY}")
+            self.pytrends = TrendReq(hl='en-US', tz=360, proxies=HTTP_PROXY)
+        else:
+            self.pytrends = TrendReq(hl='en-US', tz=360)
+        logger.info("Google Trends connector initialized.")
 
     def _before_execute(self) -> None:
         """
@@ -59,6 +70,9 @@ class GoogleTrends(AppConnectorBase):
         Returns:
             A list of dictionaries, where each dictionary represents a time point and the interest for each keyword.
         """
+        logger.info(f"Getting interest over time for keywords: {keywords}, timeframe: {timeframe}, geo: {geo}")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for Google Trends interest over time request: {HTTP_PROXY}")
         self.pytrends.build_payload(kw_list=keywords, cat=0, timeframe=timeframe, geo=geo, gprop='')
         interest_df = self.pytrends.interest_over_time()
         if 'isPartial' in interest_df.columns:
@@ -76,6 +90,9 @@ class GoogleTrends(AppConnectorBase):
         Returns:
             A list of the top trending search terms.
         """
+        logger.info(f"Getting trending searches for country: {country_code}, max_results: {max_results}")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for Google Trends trending searches request: {HTTP_PROXY}")
         try:
             trending_df = self.pytrends.trending_searches(pn=country_code.lower())
             return trending_df[0].tolist()[:max_results]
@@ -93,6 +110,9 @@ class GoogleTrends(AppConnectorBase):
         Returns:
             A dictionary with two keys, 'top' and 'rising', each containing a list of related queries.
         """
+        logger.info(f"Getting related queries for keyword: {keyword}, max_results: {max_results}")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for Google Trends related queries request: {HTTP_PROXY}")
         self.pytrends.build_payload(kw_list=[keyword])
         related_queries_dict = self.pytrends.related_queries()
         
@@ -131,6 +151,9 @@ class GoogleTrends(AppConnectorBase):
         Returns:
             A list of dictionaries, each showing the interest for the keywords in a specific region.
         """
+        logger.info(f"Getting interest by region for keywords: {keywords}, timeframe: {timeframe}, resolution: {resolution}")
+        if HTTP_PROXY:
+            logger.info(f"Using proxy for Google Trends interest by region request: {HTTP_PROXY}")
         self.pytrends.build_payload(kw_list=keywords, timeframe=timeframe)
         region_df = self.pytrends.interest_by_region(resolution=resolution, inc_low_vol=True, inc_geo_code=False)
         

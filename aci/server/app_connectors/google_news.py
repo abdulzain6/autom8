@@ -1,6 +1,7 @@
 from aci.common.db.sql_models import LinkedAccount
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
+from aci.server.config import HTTP_PROXY
 from pygooglenews import GoogleNews as PyGoogleNews
 from typing import List, Dict, Any, Optional
 
@@ -26,6 +27,16 @@ class GoogleNews(AppConnectorBase):
         Initializes the GoogleNews connector.
         """
         super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
+        
+        # Configure proxy settings if available
+        self.proxies = None
+        if HTTP_PROXY:
+            self.proxies = {
+                'http': HTTP_PROXY,
+                'https': HTTP_PROXY
+            }
+            logger.info(f"Google News connector configured with proxy: {HTTP_PROXY}")
+        
         logger.info("GoogleNews connector initialized.")
 
     def _before_execute(self) -> None:
@@ -65,9 +76,11 @@ class GoogleNews(AppConnectorBase):
             A list of dictionaries, each representing a top news article.
         """
         logger.info(f"Fetching top headlines for country='{country}', lang='{lang}'")
+        if self.proxies:
+            logger.info(f"Using proxy for Google News top headlines request: {self.proxies['http']}")
         try:
             gn = PyGoogleNews(lang=lang, country=country)
-            stories = gn.top_news()
+            stories = gn.top_news(proxies=self.proxies)
             return self._format_entries(stories["entries"]) # type: ignore
         except Exception as e:
             logger.error(f"Failed to get top headlines: {e}")
@@ -91,11 +104,13 @@ class GoogleNews(AppConnectorBase):
         """
         self._before_execute()
         logger.info(f"Searching for topic: '{query}' in country '{country}' within period: '{period}'")
+        if self.proxies:
+            logger.info(f"Using proxy for Google News search request: {self.proxies['http']}")
         try:
             # --- THE FIX IS HERE ---
             # Now uses the provided lang and country parameters instead of being locked to US/en.
             gn = PyGoogleNews(lang=lang, country=country)
-            search_result = gn.search(query, when=period)
+            search_result = gn.search(query, when=period, proxies=self.proxies)
             return self._format_entries(search_result["entries"]) # type: ignore
         except Exception as e:
             logger.error(f"Failed to search for topic '{query}': {e}")
