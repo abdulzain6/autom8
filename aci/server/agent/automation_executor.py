@@ -26,7 +26,7 @@ class AutomationResult(BaseModel):
     """The required schema for the final output of the automation run."""
 
     status: Literal["success", "failure"] = Field(..., description="The final status of the automation execution.")
-    automation_output: str = Field(..., description="The final, synthesized output, report, or result of the automation. This should be a human-readable summary of everything that was done.")
+    automation_output: str = Field(..., description="A plain text, human-readable summary of the final result. This field must NOT contain JSON or any other machine-readable format. It should clearly explain the outcome of the automation to a person.")
     artifact_ids: list[str] = Field(default_factory=list, description="A list of final artifact IDs to be returned to the user. ONLY include IDs that were explicitly returned by a tool in a previous step.")
 
 
@@ -55,15 +55,20 @@ class AutomationExecutor:
                 "4.  **Artifact Chaining**: If a task requires multiple steps (e.g., create a file, then edit it), you MUST use the `artifact_id` from the first step as an input to the second.\n"
                 "5.  **Crucial Rule on Artifacts**: You MUST NOT invent, guess, or hallucinate `artifact_id`s. An `artifact_id` can ONLY be used if it was explicitly present in the output of a previous tool call.\n"
                 "6.  **Consolidate Operations**: When possible, combine multiple operations into single tool calls rather than making separate calls.\n"
-                "7.  **Final Answer Formatting**: After all tool calls are complete and you have gathered all necessary information, you MUST format your final, synthesized answer using the `AutomationResult` schema. Do NOT call `AutomationResult` as a tool."
+                "7.  **Final Answer Formatting**: Your final answer MUST use the `AutomationResult` schema. The `automation_output` field is critical: it must be a **plain, human-readable string** that summarizes the outcome for a non-technical user. It should **NOT** be a JSON string or a raw data dump. Think of it as the final report you'd give to a person."
             ),
             (
+                # --- UPDATED EXEMPLAR ---
                 "### Exemplar\n"
                 '**User Goal**: "Generate a picture of a lion and resize it for a profile picture."\n\n'
                 "**Your Plan**:\n"
                 "1.  Use the `image_generation_tool` with the prompt \"a majestic lion\". This will return an artifact with ID 'artifact-123'.\n"
                 "2.  Use the `image_resizing_tool`, providing the `artifact_id` 'artifact-123' from the previous step. This will return a new artifact with ID 'artifact-456'.\n"
-                "3.  The goal is now complete. I will format my final answer using the `AutomationResult` schema, including the final artifact ID 'artifact-456'."
+                "3.  The goal is now complete. I will format my final answer using the `AutomationResult` schema.\n\n"
+                "**Good `automation_output` Example:**\n"
+                '"I successfully generated an image of a lion and resized it to be suitable for a profile picture. The final image is available with artifact ID \'artifact-456\'."\n\n'
+                "**Bad `automation_output` Example (Do NOT do this):**\n"
+                '"`{\"status\": \"complete\", \"final_artifact\": \"artifact-456\"}`" (This is incorrect because it is a JSON string, not a human-readable summary.)'
             ),
             (
                 "### Performance Guidelines\n"

@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 from typing import List, Dict, Any
 from pytrends.request import TrendReq
@@ -25,142 +26,233 @@ class GoogleTrends(AppConnectorBase):
     ):
         """
         Initializes the GoogleTrends connector.
-        """
-        super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
-        
-        # Configure proxy settings if available
-        if HTTP_PROXY:
-            logger.info(f"Google Trends connector configured with proxy: {HTTP_PROXY}")
-            self.pytrends = TrendReq(hl='en-US', tz=360, proxies=HTTP_PROXY)
-        else:
-            self.pytrends = TrendReq(hl='en-US', tz=360)
-        logger.info("Google Trends connector initialized.")
 
-    def _before_execute(self) -> None:
+        This constructor configures pytrends to use custom headers and a proxy
+        via the 'requests_args' parameter to ensure reliable communication with Google Trends.
         """
-        A hook for pre-execution logic. Not required for pygooglenews.
-        """
-        pass
-    def _format_dataframe(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
-        """
-        Helper function to convert a pandas DataFrame into a list of dictionaries.
-        """
-        if df.empty:
-            return []
-        # Reset index to make the date/region a column, then convert to dicts
-        return df.reset_index().to_dict('records')
+        super().__init__(
+            linked_account, security_scheme, security_credentials, run_id=run_id
+        )
 
-    def get_interest_over_time(
-        self,
-        keywords: List[str],
-        timeframe: str = 'today 3-m',
-        geo: str = ''
-    ) -> List[Dict[str, Any]]:
-        """
-        Fetches the interest for a list of keywords over a specified time period.
-        The interest is represented on a scale of 0 to 100.
-
-        Args:
-            keywords: A list of up to 5 keywords to compare (e.g., ['Python', 'JavaScript']).
-            timeframe: The time period to analyze. Defaults to 'today 3-m' (last 3 months).
-                       Examples: 'now 7-d', '2020-01-01 2020-12-31'.
-            geo: The geographical region for the trends, as a two-letter country code (e.g., 'US', 'GB').
-                 Defaults to worldwide.
-
-        Returns:
-            A list of dictionaries, where each dictionary represents a time point and the interest for each keyword.
-        """
-        logger.info(f"Getting interest over time for keywords: {keywords}, timeframe: {timeframe}, geo: {geo}")
-        if HTTP_PROXY:
-            logger.info(f"Using proxy for Google Trends interest over time request: {HTTP_PROXY}")
-        self.pytrends.build_payload(kw_list=keywords, cat=0, timeframe=timeframe, geo=geo, gprop='')
-        interest_df = self.pytrends.interest_over_time()
-        if 'isPartial' in interest_df.columns:
-            interest_df = interest_df.drop(columns=['isPartial'])
-        return self._format_dataframe(interest_df)
-
-    def get_trending_searches(self, country_code: str = 'US', max_results: int = 10) -> List[str]:
-        """
-        Fetches the top daily trending search queries for a specific country.
-
-        Args:
-            country_code: The two-letter country code (e.g., 'US', 'GB', 'PK'). Defaults to 'US'.
-            max_results: The maximum number of trending searches to return. Defaults to 10.
-
-        Returns:
-            A list of the top trending search terms.
-        """
-        logger.info(f"Getting trending searches for country: {country_code}, max_results: {max_results}")
-        if HTTP_PROXY:
-            logger.info(f"Using proxy for Google Trends trending searches request: {HTTP_PROXY}")
-        try:
-            trending_df = self.pytrends.trending_searches(pn=country_code.lower())
-            return trending_df[0].tolist()[:max_results]
-        except Exception:
-            return []
-
-    def get_related_queries(self, keyword: str, max_results: int = 10) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Finds queries related to a given keyword, categorized as 'top' and 'rising'.
-
-        Args:
-            keyword: The keyword to find related queries for (e.g., 'artificial intelligence').
-            max_results: The maximum number of results to return for both 'top' and 'rising' categories. Defaults to 10.
-
-        Returns:
-            A dictionary with two keys, 'top' and 'rising', each containing a list of related queries.
-        """
-        logger.info(f"Getting related queries for keyword: {keyword}, max_results: {max_results}")
-        if HTTP_PROXY:
-            logger.info(f"Using proxy for Google Trends related queries request: {HTTP_PROXY}")
-        self.pytrends.build_payload(kw_list=[keyword])
-        related_queries_dict = self.pytrends.related_queries()
-        
-        result = {
-            "top": [],
-            "rising": []
+        # Define arguments to be passed into every requests call made by pytrends.
+        requests_args = {
+            "headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Accept-Language": "en-US,en;q=0.5",
+            },
+            # Pass proxies directly to the requests library through this argument
+            "proxies": (
+                {"http": HTTP_PROXY, "https": HTTP_PROXY} if HTTP_PROXY else None
+            ),
         }
 
-        # The result is nested under the keyword itself
-        keyword_data = related_queries_dict.get(keyword, {})
-        
-        if 'top' in keyword_data and keyword_data['top'] is not None:
-            result['top'] = keyword_data['top'].head(max_results).to_dict('records')
-            
-        if 'rising' in keyword_data and keyword_data['rising'] is not None:
-            result['rising'] = keyword_data['rising'].head(max_results).to_dict('records')
-            
-        return result
+        if HTTP_PROXY:
+            logger.info("Configuring Google Trends connector with proxy.")
+        else:
+            logger.info("Initializing Google Trends connector without proxy.")
+
+        try:
+            self.pytrends = TrendReq(
+                hl="en-US",
+                tz=360,
+                timeout=(15, 30),
+                # Use requests_args to pass our custom configuration
+                requests_args=requests_args,
+            )
+            # Perform a small test request on initialization to fail fast if the connection is bad.
+            self.pytrends.build_payload(kw_list=["Google"], timeframe="now 1-H")
+            logger.info(
+                "Google Trends connector initialized and connection verified successfully."
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize Google Trends connector. Error: {e}")
+            raise ConnectionError(
+                f"Could not connect to Google Trends. Check proxy/network. Error: {e}"
+            )
+
+    def _before_execute(self) -> None:
+        pass
+
+    def _format_dataframe(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
+        if df.empty:
+            return []
+        return df.reset_index().to_dict("records")  # type: ignore
+
+    def _execute_with_retry(self, func, max_retries=3, delay=2):
+        for attempt in range(max_retries):
+            try:
+                return func()
+            except Exception as e:
+                error_str = str(e).lower()
+                if (
+                    "429" in error_str
+                    or "rate limit" in error_str
+                    or "timeout" in error_str
+                ):
+                    if attempt < max_retries - 1:
+                        wait_time = delay * (2**attempt)
+                        logger.warning(
+                            f"Rate limit/timeout detected. Retrying in {wait_time}s (Attempt {attempt + 1}/{max_retries})"
+                        )
+                        time.sleep(wait_time)
+                        continue
+                if "400" in error_str:
+                    logger.error(
+                        f"HTTP 400 Bad Request. The request is malformed. Error: {e}"
+                    )
+                    raise
+                if attempt == max_retries - 1:
+                    logger.error(f"All {max_retries} attempts failed.")
+                    raise
+                else:
+                    time.sleep(delay)
+
+    def get_interest_over_time(
+        self, keywords: List[str], timeframe: str = "today 3-m", geo: str = ""
+    ) -> List[Dict[str, Any]]:
+        logger.info(
+            f"Getting interest over time for keywords: {keywords}, timeframe: {timeframe}, geo: {geo}"
+        )
+
+        def _fetch():
+            self.pytrends.build_payload(
+                kw_list=keywords, cat=0, timeframe=timeframe, geo=geo
+            )
+            df = self.pytrends.interest_over_time()
+            if "isPartial" in df.columns:
+                df = df.drop(columns=["isPartial"])
+            return df
+
+        result_df = self._execute_with_retry(_fetch)
+        return self._format_dataframe(result_df) if result_df is not None else []
+
+    def get_trending_searches(
+        self, country_code: str = "PK", max_results: int = 10
+    ) -> List[str]:
+        logger.info(
+            f"Getting trending searches for country: {country_code}, max_results: {max_results}"
+        )
+
+        def _fetch():
+            df = self.pytrends.trending_searches(pn=country_code.lower())
+            return df[0].tolist()[:max_results]
+
+        try:
+            return self._execute_with_retry(_fetch) or []
+        except Exception as e:
+            logger.warning(f"Could not get trending searches after retries: {e}")
+            return []
+
+    def get_related_queries(
+        self, keyword: str, max_results: int = 10
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        logger.info(
+            f"Getting related queries for keyword: {keyword}, max_results: {max_results}"
+        )
+
+        def _fetch():
+            self.pytrends.build_payload(kw_list=[keyword])
+            data = self.pytrends.related_queries().get(keyword)
+            result = {"top": [], "rising": []}
+            if data is not None:
+                if "top" in data and data["top"] is not None:
+                    result["top"] = data["top"].head(max_results).to_dict("records")
+                if "rising" in data and data["rising"] is not None:
+                    result["rising"] = (
+                        data["rising"].head(max_results).to_dict("records")
+                    )
+            return result
+
+        return self._execute_with_retry(_fetch) or {"top": [], "rising": []}
 
     def get_interest_by_region(
         self,
         keywords: List[str],
-        timeframe: str = 'today 3-m',
-        resolution: str = 'COUNTRY',
-        max_results: int = 20
+        timeframe: str = "today 3-m",
+        resolution: str = "COUNTRY",
+        max_results: int = 20,
     ) -> List[Dict[str, Any]]:
-        """
-        Fetches and compares search interest for keywords by geographical region.
+        logger.info(
+            f"Getting interest by region for keywords: {keywords}, timeframe: {timeframe}, resolution: {resolution}"
+        )
 
-        Args:
-            keywords: A list of keywords to compare.
-            timeframe: The time period to analyze. Defaults to 'today 3-m' (last 3 months).
-            resolution: The level of regional detail. Can be 'COUNTRY', 'REGION', 'CITY', or 'DMA'.
-            max_results: The maximum number of regions to return. Defaults to 20.
+        def _fetch():
+            self.pytrends.build_payload(kw_list=keywords, timeframe=timeframe)
+            df = self.pytrends.interest_by_region(
+                resolution=resolution, inc_low_vol=True
+            )
+            if not df.empty and keywords:
+                return df.sort_values(by=keywords[0], ascending=False).head(max_results)
+            return df
 
-        Returns:
-            A list of dictionaries, each showing the interest for the keywords in a specific region.
-        """
-        logger.info(f"Getting interest by region for keywords: {keywords}, timeframe: {timeframe}, resolution: {resolution}")
-        if HTTP_PROXY:
-            logger.info(f"Using proxy for Google Trends interest by region request: {HTTP_PROXY}")
-        self.pytrends.build_payload(kw_list=keywords, timeframe=timeframe)
-        region_df = self.pytrends.interest_by_region(resolution=resolution, inc_low_vol=True, inc_geo_code=False)
-        
-        if not region_df.empty and len(keywords) > 0:
-            # Sort by the interest of the first keyword to get the most relevant regions
-            sorted_df = region_df.sort_values(by=keywords[0], ascending=False)
-            limited_df = sorted_df.head(max_results)
-            return self._format_dataframe(limited_df)
-            
-        return self._format_dataframe(region_df)
+        result_df = self._execute_with_retry(_fetch)
+        return self._format_dataframe(result_df) if result_df is not None else []
+
+
+def test_google_trends_functions():
+    """
+    Test function to verify all Google Trends connector functions work properly
+    by instantiating and using the GoogleTrends class.
+    """
+    print("\n" + "=" * 50)
+    print("🚀 Starting Google Trends Connector Test 🚀")
+    print("=" * 50)
+
+    try:
+        print("\n--> Step 1: Initializing the connector...")
+        # Create a default instance of LinkedAccount for the test.
+        connector = GoogleTrends(
+            linked_account=None,  # type: ignore
+            security_scheme=NoAuthScheme(),
+            security_credentials=NoAuthSchemeCredentials(),
+        )
+        print("    ✅ Connector initialized successfully.")
+    except Exception as e:
+        print(f"    ❌ FATAL: Connector initialization failed: {e}")
+        print(
+            "\n💡 Please check your proxy configuration (HTTP_PROXY) and network connection."
+        )
+        return
+
+    print("\n--> Step 2: Testing get_interest_over_time...")
+    try:
+        keywords = ["Cricket", "Football"]
+        data = connector.get_interest_over_time(
+            keywords=keywords, timeframe="today 1-m", geo="PK"
+        )
+        if data:
+            print(
+                f"    ✅ Success! Returned {len(data)} data points for {keywords} in Pakistan."
+            )
+        else:
+            print("    ⚠️  Call successful, but no data returned.")
+    except Exception as e:
+        print(f"    ❌ Test failed: {e}")
+
+    print("\n--> Step 3: Testing get_trending_searches...")
+    try:
+        data = connector.get_trending_searches(country_code="PK", max_results=5)
+        if data:
+            print(f"    ✅ Success! Top 5 trending topics in Pakistan:")
+            for i, topic in enumerate(data, 1):
+                print(f"      {i}. {topic}")
+        else:
+            print("    ⚠️  Call successful, but no trending topics returned.")
+    except Exception as e:
+        print(f"    ❌ Test failed: {e}")
+
+    print("\n" + "=" * 50)
+    print("🎉 All connector tests completed. 🎉")
+    print("=" * 50)
+
+
+def main():
+    """Main function to run the tests."""
+    try:
+        test_google_trends_functions()
+    except Exception as e:
+        print(f"\n❌ Testing failed with an unexpected error: {e}")
+
+
+if __name__ == "__main__":
+    main()
