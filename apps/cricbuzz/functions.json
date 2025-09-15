@@ -1,0 +1,104 @@
+[
+  {
+    "name": "CRICBUZZ__GET_LIVE_MATCHES",
+    "description": "Retrieves all currently live cricket matches with real-time scores, match status, and links to detailed scorecards.",
+    "tags": ["cricbuzz", "live", "matches", "scores", "cricket", "real-time"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "visible": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "CRICBUZZ__GET_UPCOMING_SCHEDULE",
+    "description": "Fetches upcoming international cricket matches with comprehensive scheduling details including dates, times, venues, and series information.",
+    "tags": ["cricbuzz", "schedule", "upcoming", "matches", "international", "cricket", "fixtures"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "pages": {
+          "type": "integer",
+          "description": "Number of pages to scrape for upcoming matches. Each page contains multiple matches. Defaults to 6.",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": [],
+      "visible": ["pages"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "CRICBUZZ__GET_FULL_SCORECARD",
+    "description": "Retrieves comprehensive match details including complete batting and bowling scorecards, fall of wickets, and match information for a specific cricket match.",
+    "tags": ["cricbuzz", "scorecard", "match", "details", "batting", "bowling", "cricket", "statistics"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "scorecard_url": {
+          "type": "string",
+          "description": "The full URL of the Cricbuzz scorecard page (e.g., 'https://www.cricbuzz.com/live-cricket-scorecard/...')."
+        }
+      },
+      "required": ["scorecard_url"],
+      "visible": ["scorecard_url"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "CRICBUZZ__GET_MATCH_DETAILS",
+    "description": "Extracts detailed information about a specific cricket match including header, status, scores, and comprehensive match information.",
+    "tags": ["cricbuzz", "match", "details", "info", "cricket", "summary"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "match_url": {
+          "type": "string",
+          "description": "The full URL of the Cricbuzz match page (e.g., 'https://www.cricbuzz.com/live-cricket-scores/...')."
+        }
+      },
+      "required": ["match_url"],
+      "visible": ["match_url"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "CRICBUZZ__GET_SQUADS",
+    "description": "Retrieves team squads including playing XI, bench players, and support staff for a specific cricket match with detailed player information and roles.",
+    "tags": ["cricbuzz", "squads", "teams", "players", "playing-xi", "cricket", "lineup"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "squads_url": {
+          "type": "string",
+          "description": "The full URL of the Cricbuzz match squads page (e.g., 'https://www.cricbuzz.com/cricket-match-squads/...')."
+        }
+      },
+      "required": ["squads_url"],
+      "visible": ["squads_url"],
+      "additionalProperties": false
+    }
+  }
+]

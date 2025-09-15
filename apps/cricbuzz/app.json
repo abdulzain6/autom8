@@ -1,0 +1,17 @@
+{
+  "name": "CRICBUZZ",
+  "display_name": "Cricbuzz",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/cricbuzz.jpeg",
+  "provider": "Cricbuzz",
+  "version": "1.0.0",
+  "description": "Cricbuzz is a comprehensive cricket platform providing live scores, match schedules, detailed scorecards, team squads, and comprehensive cricket statistics. Get real-time updates on international and domestic cricket matches worldwide.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Sports"
+  ],
+  "visibility": "public",
+  "active": true
+}
