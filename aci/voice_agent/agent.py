@@ -83,11 +83,19 @@ You have a special tool called `display_mini_app`. This is your most creative ab
 
 ### TASK EXECUTION PRIORITY:
 **FIRST: Use Available Tools Directly** - For immediate tasks, always use the user's connected apps directly:
-- Get information (weather, news, emails, calendar events)
+- Get information (weather, news, emails, calendar events, cricket matches, scores)
 - Send messages or notifications
 - Process files or documents
 - Search and retrieve data
 - Perform calculations or conversions
+
+**CRITICAL: NEVER CREATE AUTOMATIONS FOR THESE REQUESTS:**
+- "Get cricket matches for Pakistan" → Use cricket tools directly
+- "Show me today's weather" → Use weather tools directly
+- "Check my emails" → Use email tools directly
+- "What's the news?" → Use news tools directly
+- "Get live scores" → Use sports tools directly
+- ANY request for current/immediate information → Use tools directly
 
 **NOTIFICATIONS & REMINDERS: Always Use NOTIFYME First** - When users want notifications, alerts, or reminders:
 - Check if user has NOTIFYME app connected
@@ -96,13 +104,13 @@ You have a special tool called `display_mini_app`. This is your most creative ab
 - NOTIFYME is perfect for one-time notifications - don't create automations for these
 - Only create automations if user specifically wants recurring/scheduled notifications
 
-**ONLY THEN: Consider Automations** - Create automations ONLY for long-term, recurring tasks that need to run automatically:
+**ONLY THEN: Consider Automations** - Create automations ONLY when user explicitly asks for recurring/scheduled tasks:
 
-**create_automation**: Creates automations for recurring, scheduled tasks only
-- CRITICAL: Only use for tasks that need to run automatically on a schedule (daily, weekly, monthly)
-- NOT for one-time tasks - use the available tools directly instead
-- Examples of GOOD automation use cases: "Daily news digest every morning", "Weekly expense reports", "Monthly backup reminders"
-- Examples of BAD automation use cases: "Check my email now", "Get today's weather", "Send this message"
+**create_automation**: ONLY for tasks that user explicitly wants automated/scheduled
+- CRITICAL: User must use words like "daily", "weekly", "monthly", "automatically", "schedule", "every day"
+- NEVER use for immediate information requests
+- Examples of GOOD automation requests: "Send me cricket scores every morning at 9 AM", "Weekly news digest", "Daily weather report"
+- Examples of BAD automation requests: "Get cricket matches", "Show me scores", "What's happening in cricket"
 - Before creating, always list existing automations to check for duplicates
 - All cron schedules use UTC time - make this clear to users
 - Minimum scheduling interval is 30 minutes
@@ -112,12 +120,19 @@ You have a special tool called `display_mini_app`. This is your most creative ab
 **get_automation_runs**: Shows automation execution history
 **list_user_automations**: Lists all user's automations
 
-DECISION TREE:
-1. User asks for immediate task → Use available tools directly
+DECISION TREE - FOLLOW THIS EXACTLY:
+1. User asks "get/show/find/check" current information → Use tools directly, NEVER create automation
 2. User asks for notification/reminder/alert → Use NOTIFYME if available
-3. User asks for "daily/weekly/monthly" or "automatically" → Consider automation
-4. User asks to "schedule" or "remind me regularly" → Consider automation
-5. User wants one-time reminder → Use NOTIFYME, NOT automation
+3. User says "daily/weekly/monthly/automatically/schedule/every day" → Then consider automation
+4. User wants immediate results → Use tools directly, NEVER create automation
+5. User wants one-time task → Use tools directly, NEVER create automation
+
+AUTOMATION RED FLAGS - NEVER create automation if user says:
+- "Get cricket matches" → Use cricket tools
+- "Show me scores" → Use sports tools  
+- "Check weather" → Use weather tools
+- "Find news" → Use news tools
+- ANY immediate information request → Use tools directly
 ---
 
 ### CRITICAL INSTRUCTIONS FOR EXTERNAL TOOLS:
@@ -701,9 +716,6 @@ Finally, if none of the available apps can fulfill the user's request, you must 
                     # Truncate long messages
                     message = run.message[:200] + "..." if len(run.message) > 200 else run.message
                     response_lines.append(f"   Message: {message}")
-                
-                if hasattr(run, 'artifacts') and run.artifacts:
-                    response_lines.append(f"   Artifacts: {len(run.artifacts)} files created")
                 
                 response_lines.append("")  # Empty line between runs
             
