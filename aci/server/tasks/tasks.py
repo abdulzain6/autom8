@@ -19,28 +19,46 @@ def schedule_due_automations():
     to "lock" them, and then enqueues the execution task.
     """
     logger.info("Scheduler beat: Checking for due automations...")
-    with get_db_session() as db_session:
-        try:
-            due_automations = automations.get_due_recurring_automations(db_session)
-            if not due_automations:
-                logger.info("Scheduler beat: No automations are due.")
-                return # No commit needed as no changes were made
+    
+    # Use a fresh database session for each scheduler run to avoid transaction state issues
+    try:
+        with get_db_session() as db_session:
+            try:
+                due_automations = automations.get_due_recurring_automations(db_session)
+                if not due_automations:
+                    logger.info("Scheduler beat: No automations are due.")
+                    return # No commit needed as no changes were made
 
-            logger.info(
-                f"Scheduler beat: Found {len(due_automations)} due automation(s)."
-            )
-            for automation in due_automations:
                 logger.info(
-                    f"Scheduler beat: Creating run and enqueuing task for automation {automation.id}."
+                    f"Scheduler beat: Found {len(due_automations)} due automation(s)."
                 )
-                automation_run = automation_runs.create_run(db_session, automation.id)
-                execute_automation(automation_run.id)
+                
+                # Process each automation individually to avoid large transaction blocks
+                for automation in due_automations:
+                    try:
+                        logger.info(
+                            f"Scheduler beat: Creating run and enqueuing task for automation {automation.id}."
+                        )
+                        automation_run = automation_runs.create_run(db_session, automation.id)
+                        
+                        # Commit this individual run creation immediately
+                        db_session.commit()
+                        
+                        # Enqueue the execution task
+                        execute_automation(automation_run.id)
+                        
+                    except Exception as automation_error:
+                        logger.error(f"Scheduler beat: Failed to process automation {automation.id}: {automation_error}", exc_info=True)
+                        # Rollback only this automation's changes
+                        db_session.rollback()
+                        continue
 
-            db_session.commit()
-
-        except Exception as e:
-            logger.error(f"Scheduler beat: An error occurred: {e}", exc_info=True)
-            db_session.rollback()
+            except Exception as e:
+                logger.error(f"Scheduler beat: Database error occurred: {e}", exc_info=True)
+                db_session.rollback()
+                
+    except Exception as e:
+        logger.error(f"Scheduler beat: Critical error - failed to establish database connection: {e}", exc_info=True)
 
 
 @huey.task()
@@ -53,114 +71,118 @@ def execute_automation(run_id: str):
     # Initialize FCM manager
     fcm_manager = FCMManager()
     
-    with get_db_session() as db_session:
-        automation_run = automation_runs.get_run(db_session, run_id)
-        if not automation_run:
-            logger.error(
-                f"Could not execute task, AutomationRun with ID {run_id} not found."
-            )
-            return
+    try:
+        with get_db_session() as db_session:
+            automation_run = automation_runs.get_run(db_session, run_id)
+            if not automation_run:
+                logger.error(
+                    f"Could not execute task, AutomationRun with ID {run_id} not found."
+                )
+                return
 
-        automation_id = automation_run.automation_id
+            automation_id = automation_run.automation_id
 
-        try:
-            automation = automations.get_automation_with_eager_loaded_functions(
-                db_session, automation_id
-            )
-            if not automation:
-                raise ValueError(
-                    f"Parent Automation with ID {automation_id} not found."
+            try:
+                automation = automations.get_automation_with_eager_loaded_functions(
+                    db_session, automation_id
+                )
+                if not automation:
+                    raise ValueError(
+                        f"Parent Automation with ID {automation_id} not found."
+                    )
+
+                executor = AutomationExecutor(automation, run_id=run_id)
+                automation_output = executor.run()
+
+                logger.info(f"Automation Output: {automation_output}")
+
+                automation_runs.finalize_run(
+                    db_session,
+                    run_id=automation_run.id,
+                    status=RunStatus[automation_output.status],
+                    message=automation_output.automation_output,
+                    artifact_ids=automation_output.artifact_ids,
+                )
+                
+                # Track successful automation run in usage
+                try:
+                    increment_automation_runs(db_session, automation.user_id, success=True)
+                    logger.info(f"Tracked successful automation run for user {automation.user_id}")
+                except Exception as usage_e:
+                    logger.warning(f"Failed to track automation usage: {usage_e}")
+                
+                # Send success notification
+                # Check if any linked account has "NOTIFYME" app
+                has_notifyme = any(
+                    linked_acc.linked_account.app_name == "NOTIFYME"
+                    for linked_acc in automation.linked_accounts
+                )
+                
+                if not has_notifyme:
+                    try:
+                        fcm_manager.send_notification_to_user(
+                            db=db_session,
+                            user_id=automation.user_id,
+                            title="✅ Automation Completed",
+                            body=f"'{automation.name}' finished successfully!",
+                            data={
+                                "type": "automation_completed",
+                                "automation_id": automation_id,
+                                "run_id": run_id,
+                                "automation_name": automation.name,
+                                "status": automation_output.status,
+                                "message": automation_output.automation_output[:100] if automation_output.automation_output else ""
+                            }
+                        )
+                        logger.info(f"Sent success notification for automation {automation.name} to user {automation.user_id}")
+                    except Exception as notif_e:
+                        logger.warning(f"Failed to send success notification: {notif_e}")
+                
+                logger.info(
+                    f"Automation {automation_id} executed successfully for run {run_id}."
                 )
 
-            executor = AutomationExecutor(automation, run_id=run_id)
-            automation_output = executor.run()
-
-            logger.info(f"Automation Output: {automation_output}")
-
-            automation_runs.finalize_run(
-                db_session,
-                run_id=automation_run.id,
-                status=RunStatus[automation_output.status],
-                message=automation_output.automation_output,
-                artifact_ids=automation_output.artifact_ids,
-            )
-            
-            # Track successful automation run in usage
-            try:
-                increment_automation_runs(db_session, automation.user_id, success=True)
-                logger.info(f"Tracked successful automation run for user {automation.user_id}")
             except Exception as e:
-                logger.warning(f"Failed to track automation usage: {e}")
-            
-            # Send success notification
-            # Check if any linked account has "NOTIFYME" app
-            has_notifyme = any(
-                linked_acc.linked_account.app_name == "NOTIFYME"
-                for linked_acc in automation.linked_accounts
-            )
-            
-            if not has_notifyme:
+                logger.error(
+                    f"Error executing automation {automation_id} for run {run_id}: {e}",
+                    exc_info=True,
+                )
+                automation_runs.finalize_run(
+                    db_session,
+                    run_id=run_id,
+                    status=RunStatus.failure,
+                    message=f"An unexpected error occurred: {e}",
+                )
+                
+                # Track failed automation run in usage
                 try:
-                    fcm_manager.send_notification_to_user(
-                        db=db_session,
-                        user_id=automation.user_id,
-                        title="✅ Automation Completed",
-                        body=f"'{automation.name}' finished successfully!",
-                        data={
-                            "type": "automation_completed",
-                            "automation_id": automation_id,
-                            "run_id": run_id,
-                            "automation_name": automation.name,
-                            "status": automation_output.status,
-                            "message": automation_output.automation_output[:100] if automation_output.automation_output else ""
-                        }
-                    )
-                    logger.info(f"Sent success notification for automation {automation.name} to user {automation.user_id}")
-                except Exception as e:
-                    logger.warning(f"Failed to send success notification: {e}")
-            
-            logger.info(
-                f"Automation {automation_id} executed successfully for run {run_id}."
-            )
-
-        except Exception as e:
-            logger.error(
-                f"Error executing automation {automation_id} for run {run_id}: {e}",
-                exc_info=True,
-            )
-            automation_runs.finalize_run(
-                db_session,
-                run_id=run_id,
-                status=RunStatus.failure,
-                message=f"An unexpected error occurred: {e}",
-            )
-            
-            # Track failed automation run in usage
-            try:
-                automation = automations.get_automation(db_session, automation_id)
-                if automation:
-                    increment_automation_runs(db_session, automation.user_id, success=False)
-                    logger.info(f"Tracked failed automation run for user {automation.user_id}")
-            except Exception as usage_error:
-                logger.warning(f"Failed to track automation usage: {usage_error}")
-            
-            # Send failure notification
-            try:
-                automation = automations.get_automation(db_session, automation_id)
-                if automation:
-                    fcm_manager.send_notification_to_user(
-                        db=db_session,
-                        user_id=automation.user_id,
-                        title="❌ Automation Failed",
-                        body=f"'{automation.name}' encountered an error",
-                        data={
-                            "type": "automation_failed",
-                            "automation_id": automation_id,
-                            "run_id": run_id,
-                            "automation_name": automation.name,
-                            "error_message": str(e)[:100]
-                        }
-                    )
-                    logger.info(f"Sent failure notification for automation {automation.name} to user {automation.user_id}")
-            except Exception as notification_error:
-                logger.warning(f"Failed to send failure notification: {notification_error}")
+                    automation = automations.get_automation(db_session, automation_id)
+                    if automation:
+                        increment_automation_runs(db_session, automation.user_id, success=False)
+                        logger.info(f"Tracked failed automation run for user {automation.user_id}")
+                except Exception as usage_error:
+                    logger.warning(f"Failed to track automation usage: {usage_error}")
+                
+                # Send failure notification
+                try:
+                    automation = automations.get_automation(db_session, automation_id)
+                    if automation:
+                        fcm_manager.send_notification_to_user(
+                            db=db_session,
+                            user_id=automation.user_id,
+                            title="❌ Automation Failed",
+                            body=f"'{automation.name}' encountered an error",
+                            data={
+                                "type": "automation_failed",
+                                "automation_id": automation_id,
+                                "run_id": run_id,
+                                "automation_name": automation.name,
+                                "error_message": str(e)[:100]
+                            }
+                        )
+                        logger.info(f"Sent failure notification for automation {automation.name} to user {automation.user_id}")
+                except Exception as notification_error:
+                    logger.warning(f"Failed to send failure notification: {notification_error}")
+                    
+    except Exception as critical_e:
+        logger.error(f"Critical error in execute_automation for run_id {run_id}: {critical_e}", exc_info=True)

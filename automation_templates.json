@@ -422,6 +422,193 @@
         "DOCX_TOOLS"
       ],
       "is_deep": true
+    },
+    {
+      "name": "Daily Cricket Live Scores",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cricket_live_scores.jpeg?raw=true",
+      "description": "Delivers real-time cricket match updates and live scores directly to your mobile device throughout the day.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Fetch live cricket matches and scores using CRICBUZZ__GET_LIVE_MATCHES. Format the results into an engaging summary including match status, current scores, key player performances, and match highlights. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Live Cricket Updates 🏏' and comprehensive score updates with team names, overs played, and match situation for immediate awareness of ongoing cricket action.",
+      "variable_names": [],
+      "required_app_names": [
+        "CRICBUZZ",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Cricket Schedule Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cricket_schedule.jpeg?raw=true",
+      "description": "Provides a comprehensive overview of upcoming international cricket matches with dates, venues, and series information.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Generate upcoming cricket schedule using CRICBUZZ__GET_UPCOMING_SCHEDULE to get all upcoming international matches. Organize matches by series, format (Test/ODI/T20), and chronological order. Create a detailed schedule report with match dates, venues, team matchups, and series context. Format as a professional cricket calendar and send via NOTIFYME__SEND_ME_EMAIL with subject 'Upcoming Cricket Schedule Digest' including match timings and broadcasting information for comprehensive cricket planning.",
+      "variable_names": [],
+      "required_app_names": [
+        "CRICBUZZ",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Latest Cricket Squad Updates",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cricket_squads.jpeg?raw=true",
+      "description": "Gets the latest cricket team squad information and player updates from ongoing matches.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Find current live matches using CRICBUZZ__GET_LIVE_MATCHES and get squad information using CRICBUZZ__GET_SQUADS for the most recent match. If no live matches, use SEARXNG to search for 'latest cricket squad announcements' as backup. Create a summary of team selections, key players, and any squad changes. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Cricket Squad Update 🏏' and player lineup information.",
+      "variable_names": [],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Latest Match Scorecard",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cricket_scorecard.jpeg?raw=true",
+      "description": "Gets the latest completed cricket match scorecard with player performances and match highlights.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Find recent matches using CRICBUZZ__GET_LIVE_MATCHES and get detailed scorecard using CRICBUZZ__GET_FULL_SCORECARD for the most recent completed match. If no recent matches found, use SEARXNG to search for 'latest cricket match results scorecard' as backup. Extract batting and bowling statistics, key performances, and match highlights. Send comprehensive scorecard summary via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Latest Cricket Scorecard 🏏' including top performers and match result.",
+      "variable_names": [],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Daily Cricket News Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cricket_news.jpeg?raw=true",
+      "description": "Delivers a comprehensive daily cricket update combining live matches, news, and upcoming fixtures.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Create daily cricket briefing combining live matches from CRICBUZZ__GET_LIVE_MATCHES, upcoming schedule from CRICBUZZ__GET_UPCOMING_SCHEDULE, and latest cricket news using SEARXNG search for 'cricket news today'. Analyze current match situations, breaking news, player updates, and upcoming fixtures. Format as comprehensive cricket digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Cricket Digest' including live scores, news highlights, and schedule updates for complete cricket awareness.",
+      "variable_names": [],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Next Cricket Match Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cricket_reminder.jpeg?raw=true",
+      "description": "Sends alerts about the next upcoming international cricket match with match details.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Get the next upcoming international match using CRICBUZZ__GET_UPCOMING_SCHEDULE. If no matches found, use SEARXNG to search for 'next international cricket match' as backup. Create alert about the upcoming match including teams, format, venue, and start time. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Next Cricket Match 🏏' and message containing match details with teams, format, and timing. Include series context for engaging cricket alerts.",
+      "variable_names": [],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "My Team Cricket Updates",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cricket_team_updates.jpeg?raw=true",
+      "description": "Get personalized updates for your favorite cricket team including matches, news, and player information.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Search for matches involving '{{ variables['Favorite Team'] }}' using CRICBUZZ__GET_UPCOMING_SCHEDULE and CRICBUZZ__GET_LIVE_MATCHES. Also search for team-specific news using SEARXNG with query '{{ variables['Favorite Team'] }} cricket news latest'. Compile comprehensive team update including upcoming matches, current match status if playing, recent news, and key player updates. Send personalized team digest via NOTIFYME__SEND_ME_EMAIL with subject '{{ variables['Favorite Team'] }} Cricket Update' including match schedules, live scores, and breaking news about your team.",
+      "variable_names": [
+        "Favorite Team"
+      ],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Team Match Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/team_match_reminder.jpeg?raw=true",
+      "description": "Get reminded about your favorite team's upcoming matches so you never miss a game.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Find upcoming matches for '{{ variables['Team Name'] }}' using CRICBUZZ__GET_UPCOMING_SCHEDULE. Search through the schedule to identify matches where {{ variables['Team Name'] }} is playing. If no matches found in Cricbuzz, use SEARXNG to search for '{{ variables['Team Name'] }} next cricket match' as backup. Create personalized match reminder with opponent, match format, venue, date and time. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Team Name'] }} Match Alert 🏏' and message containing next match details, countdown, and viewing information.",
+      "variable_names": [
+        "Team Name"
+      ],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Favorite Team Live Score",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/team_live_score.jpeg?raw=true",
+      "description": "Get live score updates specifically for your favorite team when they're playing.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Check if '{{ variables['Favorite Team'] }}' is currently playing using CRICBUZZ__GET_LIVE_MATCHES. Filter live matches to find games involving {{ variables['Favorite Team'] }}. If team is playing, get detailed match information and current score. If not currently playing, use SEARXNG to search for '{{ variables['Favorite Team'] }} latest match result' for recent performance. Send focused team update via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Favorite Team'] }} Live Update 🏏' including current score, match situation, key performances, and match status specifically for your team.",
+      "variable_names": [
+        "Favorite Team"
+      ],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Team Performance Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/team_performance.jpeg?raw=true",
+      "description": "Comprehensive performance analysis of your favorite cricket team with recent matches and statistics.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Generate detailed performance report for '{{ variables['Team Name'] }}' by searching recent matches in CRICBUZZ__GET_UPCOMING_SCHEDULE and checking current status in CRICBUZZ__GET_LIVE_MATCHES. Use SEARXNG to search for '{{ variables['Team Name'] }} cricket recent performance statistics' to get additional context. Analyze recent form, key player performances, win-loss record, and upcoming challenges. Create comprehensive team report using DOCX_TOOLS with sections for: Recent Match Results, Key Player Stats, Team Strengths/Weaknesses, Upcoming Fixtures, and Performance Trends. Send detailed analysis via NOTIFYME__SEND_ME_EMAIL with subject '{{ variables['Team Name'] }} Performance Report' including statistical insights and team outlook.",
+      "variable_names": [
+        "Team Name"
+      ],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Multi-Team Match Tracker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/multi_team_tracker.jpeg?raw=true",
+      "description": "Track multiple favorite teams and get consolidated updates about all their matches and news.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Monitor matches and news for multiple teams: '{{ variables['Team 1'] }}', '{{ variables['Team 2'] }}', and '{{ variables['Team 3'] }}'. Use CRICBUZZ__GET_LIVE_MATCHES and CRICBUZZ__GET_UPCOMING_SCHEDULE to find all matches involving these teams. Use SEARXNG to search for news about each team with queries like '{{ variables['Team 1'] }} {{ variables['Team 2'] }} {{ variables['Team 3'] }} cricket news'. Create consolidated multi-team update with sections for each team including live scores, upcoming matches, and recent news. Send comprehensive tracker via NOTIFYME__SEND_ME_EMAIL with subject 'My Cricket Teams Update' organizing all information by team for easy tracking of multiple favorites.",
+      "variable_names": [
+        "Team 1",
+        "Team 2", 
+        "Team 3"
+      ],
+      "required_app_names": [
+        "CRICBUZZ",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }
