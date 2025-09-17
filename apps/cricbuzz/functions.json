@@ -28,9 +28,7 @@
       "properties": {
         "pages": {
           "type": "integer",
-          "description": "Number of pages to scrape for upcoming matches. Each page contains multiple matches. Defaults to 6.",
-          "minimum": 1,
-          "maximum": 10
+          "description": "Number of pages to scrape for upcoming matches. Each page contains multiple matches. Must be between 1 and 10. Defaults to 6."
         }
       },
       "required": [],
