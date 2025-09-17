@@ -40,7 +40,7 @@ logger = logging.getLogger("voice-agent")
 
 
 class Assistant(Agent):
-    _core_tool_names = {"load_tools", "display_mini_app", "get_app_info", "create_automation", "get_automation_runs", "list_user_automations", "run_automation", "update_automation", "get_current_session_usage"}
+    _core_tool_names = {"load_tools", "display_mini_app", "get_user_timezone", "get_app_info", "create_automation", "get_automation_runs", "list_user_automations", "run_automation", "update_automation", "get_current_session_usage"}
 
     def __init__(self, user_id: str) -> None:
         self.db_session = create_db_session(DB_FULL_URL)
@@ -121,28 +121,47 @@ You have a special tool called `display_mini_app`. This is your most creative ab
 **list_user_automations**: Lists all user's automations
 
 DECISION TREE - FOLLOW THIS EXACTLY:
-1. User asks "get/show/find/check" current information → Use tools directly, NEVER create automation
-2. User asks for notification/reminder/alert → Use NOTIFYME if available
-3. User says "daily/weekly/monthly/automatically/schedule/every day" → Then consider automation
-4. User wants immediate results → Use tools directly, NEVER create automation
-5. User wants one-time task → Use tools directly, NEVER create automation
+1. User asks for immediate information → get_app_info → load_tools → ask permission → use tools
+2. User asks "get cricket matches" → get_app_info(cricbuzz) → load_tools → ask permission → use cricket tools
+3. User asks "check weather" → get_app_info(weather) → load_tools → ask permission → use weather tools
+4. User asks "send notification" → get_app_info(notifyme) → load_tools → ask permission → use notifyme
+5. User says "daily/weekly/monthly/schedule" → THEN consider automation (only after trying tools first)
+
+MANDATORY WORKFLOW FOR ALL REQUESTS:
+1. get_app_info to find relevant app
+2. load_tools to load the app's functions  
+3. Ask user "Would you like me to proceed with using [app] to [task]?"
+4. Use the loaded tools to complete the task
+5. NEVER skip to automation without trying this workflow first
 
 AUTOMATION RED FLAGS - NEVER create automation if user says:
-- "Get cricket matches" → Use cricket tools
-- "Show me scores" → Use sports tools  
-- "Check weather" → Use weather tools
-- "Find news" → Use news tools
-- ANY immediate information request → Use tools directly
+- "Get cricket matches" → WORKFLOW: get_app_info → load_tools → use cricbuzz
+- "Show me scores" → WORKFLOW: get_app_info → load_tools → use sports tools
+- "Check weather" → WORKFLOW: get_app_info → load_tools → use weather tools  
+- "Find news" → WORKFLOW: get_app_info → load_tools → use news tools
 ---
 
 ### CRITICAL INSTRUCTIONS FOR EXTERNAL TOOLS:
+**MANDATORY WORKFLOW - FOLLOW THIS EXACTLY:**
 First, determine if an external tool is actually needed. For simple conversation, respond directly.
 Second, if a tool is needed, you start with only two available: `get_app_info` and `load_tools`.
 Third, to figure out which app to use, you must first call `get_app_info`.
 Fourth, review the app and function descriptions to decide which app is the best fit for the user's task.
 Fifth, once you have identified the correct app, call `load_tools` with that app's name.
-Sixth, execute the newly loaded functions to complete the user's request.
-Finally, if none of the available apps can fulfill the user's request, you must inform the user that you cannot complete the task.
+Sixth, WAIT for load_tools to complete and ask user permission to proceed.
+Seventh, execute the newly loaded functions to complete the user's request.
+
+**NEVER CREATE AUTOMATIONS WHEN TOOLS EXIST:**
+- If user asks "get cricket matches" → Use get_app_info → load_tools → ask permission → use cricket tools
+- If user asks "check weather" → Use get_app_info → load_tools → ask permission → use weather tools  
+- If user asks "send notification" → Use get_app_info → load_tools → ask permission → use notifyme tools
+- ONLY create automations if user explicitly wants recurring/scheduled tasks
+
+**AUTOMATION IS LAST RESORT:**
+- Do NOT create automation as default solution
+- Do NOT create automation for immediate information requests
+- ALWAYS try to load appropriate tools first
+- Only suggest automation if no suitable tools exist AND user wants recurring task
 
 ### Available Apps for this User:
 {', '.join(user_app_names) if user_app_names else 'No apps are currently linked.'}
@@ -402,6 +421,8 @@ Finally, if none of the available apps can fulfill the user's request, you must 
                 core_tools["update_automation"] = self.update_automation
             elif core_name == "get_current_session_usage":
                 core_tools["get_current_session_usage"] = self.get_current_session_usage
+            elif core_name == "get_user_timezone":
+                core_tools["get_user_timezone"] = self.get_user_timezone
             elif core_name in self.tools_names:
                 core_tools[core_name] = self.tools_names[core_name]
 
@@ -728,7 +749,7 @@ Finally, if none of the available apps can fulfill the user's request, you must 
             return f"An unexpected error occurred while retrieving automation runs: {str(e)}"
 
     @function_tool(raw_schema={
-        "type": "function",
+        "type": "function", 
         "name": "list_user_automations", 
         "description": "Lists all automations created by the user with their current status.",
         "strict": True,
@@ -1144,6 +1165,60 @@ Finally, if none of the available apps can fulfill the user's request, you must 
             logger.error(f"Error getting session usage: {str(e)}", exc_info=True)
             return f"Sorry, I couldn't retrieve your usage information right now."
 
+    @function_tool(raw_schema={
+        "type": "function",
+        "name": "get_user_timezone",
+        "description": "Retrieves the user's local time and timezone information from their device/browser.",
+        "strict": True,
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    })
+    async def get_user_timezone(
+        self,
+        raw_arguments: dict[str, object],
+        context: RunContext
+    ):
+        """
+        Retrieves the user's local time and timezone information from their device/browser.
+
+        This tool requests the user's current local time, timezone offset, and timezone name
+        directly from their frontend client. This is useful for scheduling, time-based 
+        calculations, and providing accurate time references.
+
+        Returns:
+            A JSON string containing the user's timezone information including:
+            - local_time: Current local time in ISO format
+            - timezone_name: User's timezone name (e.g., "America/New_York")
+            - timezone_offset: UTC offset in minutes
+            - utc_time: Current UTC time for reference
+        """
+        try:
+            room = get_job_context().room
+            participant_identity = next(iter(room.remote_participants))
+
+            # The frontend client must have a listener for the "getUserTimezone" method
+            rpc_response = await room.local_participant.perform_rpc(
+                destination_identity=participant_identity,
+                method="getUserTimezone",
+                payload="{}",  # Empty payload since we don't need to send data
+                response_timeout=10,
+            )
+
+            # The frontend should send back timezone information as JSON
+            logger.info(f"Received timezone data from frontend: {rpc_response}")
+            return f"User timezone information retrieved: {rpc_response}"
+            
+        except StopIteration:
+            raise ToolError(
+                "No remote participants found in the room to get timezone information."
+            )
+        except Exception as e:
+            # This will catch RPC timeouts or other communication errors
+            logger.error(f"Failed to get user timezone: {e}", exc_info=True)
+            raise ToolError(f"Failed to get timezone information from the frontend: {e}")
 
 def prewarm(proc: JobProcess):
     proc.userdata["vad"] = silero.VAD.load()
