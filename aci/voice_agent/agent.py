@@ -89,6 +89,13 @@ You have a special tool called `display_mini_app`. This is your most creative ab
 - Search and retrieve data
 - Perform calculations or conversions
 
+**NOTIFICATIONS & REMINDERS: Always Use NOTIFYME First** - When users want notifications, alerts, or reminders:
+- Check if user has NOTIFYME app connected
+- Use NOTIFYME for immediate notifications, alerts, reminders, and messages
+- Examples: "Remind me in 1 hour", "Send me a notification", "Alert me about this"
+- NOTIFYME is perfect for one-time notifications - don't create automations for these
+- Only create automations if user specifically wants recurring/scheduled notifications
+
 **ONLY THEN: Consider Automations** - Create automations ONLY for long-term, recurring tasks that need to run automatically:
 
 **create_automation**: Creates automations for recurring, scheduled tasks only
@@ -107,8 +114,10 @@ You have a special tool called `display_mini_app`. This is your most creative ab
 
 DECISION TREE:
 1. User asks for immediate task → Use available tools directly
-2. User asks for "daily/weekly/monthly" or "automatically" → Consider automation
-3. User asks to "schedule" or "remind me regularly" → Consider automation
+2. User asks for notification/reminder/alert → Use NOTIFYME if available
+3. User asks for "daily/weekly/monthly" or "automatically" → Consider automation
+4. User asks to "schedule" or "remind me regularly" → Consider automation
+5. User wants one-time reminder → Use NOTIFYME, NOT automation
 ---
 
 ### CRITICAL INSTRUCTIONS FOR EXTERNAL TOOLS:
@@ -636,32 +645,34 @@ Finally, if none of the available apps can fulfill the user's request, you must 
             status_str = str(raw_arguments.get("status")) if raw_arguments.get("status") else None
             logger.info(f"[AUTOMATION_TOOL] Query parameters - limit: {limit}, status: {status_str}")
             
-            # Verify the automation exists and belongs to the user
-            automation = crud.automations.get_automation(self.db_session, automation_id)
-            if not automation:
-                logger.warning(f"[AUTOMATION_TOOL] Automation not found: {automation_id}")
-                return f"Error: Automation with ID '{automation_id}' not found."
-            
-            if automation.user_id != self.user_id:
-                logger.warning(f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}")
-                return f"Error: You don't have access to automation '{automation_id}'."
-            
-            logger.info(f"[AUTOMATION_TOOL] Verified access to automation '{automation.name}' (ID: {automation_id})")
-            
-            # Convert status string to enum if provided
-            status = None
-            if status_str:
-                try:
-                    status = RunStatus(status_str)
-                    logger.info(f"[AUTOMATION_TOOL] Filtering by status: {status}")
-                except ValueError:
-                    logger.error(f"[AUTOMATION_TOOL] Invalid status value: {status_str}")
-                    return f"Error: Invalid status '{status_str}'. Valid options are: pending, in_progress, success, failed"
-            
-            # Get the runs
-            runs = crud.automation_runs.list_runs_for_automation(
-                self.db_session, automation_id, limit, 0, status
-            )
+            # Use a fresh database session to avoid transaction issues
+            with get_db_session() as fresh_db_session:
+                # Verify the automation exists and belongs to the user
+                automation = crud.automations.get_automation(fresh_db_session, automation_id)
+                if not automation:
+                    logger.warning(f"[AUTOMATION_TOOL] Automation not found: {automation_id}")
+                    return f"Error: Automation with ID '{automation_id}' not found."
+                
+                if automation.user_id != self.user_id:
+                    logger.warning(f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}")
+                    return f"Error: You don't have access to automation '{automation_id}'."
+                
+                logger.info(f"[AUTOMATION_TOOL] Verified access to automation '{automation.name}' (ID: {automation_id})")
+                
+                # Convert status string to enum if provided
+                status = None
+                if status_str:
+                    try:
+                        status = RunStatus(status_str)
+                        logger.info(f"[AUTOMATION_TOOL] Filtering by status: {status}")
+                    except ValueError:
+                        logger.error(f"[AUTOMATION_TOOL] Invalid status value: {status_str}")
+                        return f"Error: Invalid status '{status_str}'. Valid options are: pending, in_progress, success, failed"
+                
+                # Get the runs
+                runs = crud.automation_runs.list_runs_for_automation(
+                    fresh_db_session, automation_id, limit, 0, status
+                )
             logger.info(f"[AUTOMATION_TOOL] Retrieved {len(runs)} runs for automation {automation_id}")
             
             if not runs:
@@ -746,46 +757,48 @@ Finally, if none of the available apps can fulfill the user's request, you must 
             
             logger.info(f"[AUTOMATION_TOOL] Listing automations with limit: {limit}")
             
-            automations = crud.automations.list_user_automations(
-                self.db_session, self.user_id, limit, 0
-            )
-            
-            logger.info(f"[AUTOMATION_TOOL] Found {len(automations)} automations for user {self.user_id}")
-            
-            if not automations:
-                result = "You haven't created any automations yet. Use the create_automation tool to create your first one!"
-                logger.info(f"[AUTOMATION_TOOL] No automations found - returning: {result}")
+            # Use a fresh database session to avoid transaction issues
+            with get_db_session() as fresh_db_session:
+                automations = crud.automations.list_user_automations(
+                    fresh_db_session, self.user_id, limit, 0
+                )
+                
+                logger.info(f"[AUTOMATION_TOOL] Found {len(automations)} automations for user {self.user_id}")
+                
+                if not automations:
+                    result = "You haven't created any automations yet. Use the create_automation tool to create your first one!"
+                    logger.info(f"[AUTOMATION_TOOL] No automations found - returning: {result}")
+                    return result
+                
+                response_lines = [f"Your Automations ({len(automations)} total):"]
+                response_lines.append("")
+                
+                logger.info(f"[AUTOMATION_TOOL] Formatting response for {len(automations)} automations")
+                
+                for i, automation in enumerate(automations, 1):
+                    response_lines.append(f"{i}. {automation.name}")
+                    response_lines.append(f"   ID: {automation.id}")
+                    response_lines.append(f"   Status: {'Active' if automation.active else 'Inactive'}")
+                    response_lines.append(f"   Type: {'Recurring' if automation.is_recurring else 'Manual'}")
+                    
+                    if automation.is_recurring and automation.cron_schedule:
+                        response_lines.append(f"   Schedule: {automation.cron_schedule} (UTC)")
+                    
+                    if automation.last_run_at:
+                        response_lines.append(f"   Last run: {automation.last_run_at.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+                        response_lines.append(f"   Last status: {automation.last_run_status.value}")
+                    else:
+                        response_lines.append("   Never run")
+                    
+                    if automation.description:
+                        desc = automation.description[:100] + "..." if len(automation.description) > 100 else automation.description
+                        response_lines.append(f"   Description: {desc}")
+                    
+                    response_lines.append("")  # Empty line between automations
+                
+                result = "\n".join(response_lines)
+                logger.info(f"[AUTOMATION_TOOL] list_user_automations completed successfully")
                 return result
-            
-            response_lines = [f"Your Automations ({len(automations)} total):"]
-            response_lines.append("")
-            
-            logger.info(f"[AUTOMATION_TOOL] Formatting response for {len(automations)} automations")
-            
-            for i, automation in enumerate(automations, 1):
-                response_lines.append(f"{i}. {automation.name}")
-                response_lines.append(f"   ID: {automation.id}")
-                response_lines.append(f"   Status: {'Active' if automation.active else 'Inactive'}")
-                response_lines.append(f"   Type: {'Recurring' if automation.is_recurring else 'Manual'}")
-                
-                if automation.is_recurring and automation.cron_schedule:
-                    response_lines.append(f"   Schedule: {automation.cron_schedule} (UTC)")
-                
-                if automation.last_run_at:
-                    response_lines.append(f"   Last run: {automation.last_run_at.strftime('%Y-%m-%d %H:%M:%S UTC')}")
-                    response_lines.append(f"   Last status: {automation.last_run_status.value}")
-                else:
-                    response_lines.append("   Never run")
-                
-                if automation.description:
-                    desc = automation.description[:100] + "..." if len(automation.description) > 100 else automation.description
-                    response_lines.append(f"   Description: {desc}")
-                
-                response_lines.append("")  # Empty line between automations
-            
-            result = "\n".join(response_lines)
-            logger.info(f"[AUTOMATION_TOOL] list_user_automations completed successfully")
-            return result
             
         except Exception as e:
             logger.error(f"[AUTOMATION_TOOL] Error in list_user_automations: {str(e)}", exc_info=True)
@@ -834,29 +847,31 @@ Finally, if none of the available apps can fulfill the user's request, you must 
             automation_id = str(raw_arguments["automation_id"])
             logger.info(f"[AUTOMATION_TOOL] Attempting to run automation ID: {automation_id}")
             
-            # Verify the automation exists and belongs to the user
-            automation = crud.automations.get_automation(self.db_session, automation_id)
-            if not automation:
-                logger.warning(f"[AUTOMATION_TOOL] Automation not found: {automation_id}")
-                return f"Error: Automation with ID '{automation_id}' not found."
-            
-            if automation.user_id != self.user_id:
-                logger.warning(f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}")
-                return f"Error: You don't have access to automation '{automation_id}'."
-            
-            if not automation.active:
-                logger.warning(f"[AUTOMATION_TOOL] Attempt to run inactive automation: {automation_id}")
-                return f"Error: Automation '{automation.name}' is currently inactive. Please activate it first."
-            
-            logger.info(f"[AUTOMATION_TOOL] Verified automation '{automation.name}' (ID: {automation_id}) is ready to run")
-            
-            # Create a new run record
-            automation_run = crud.automation_runs.create_run(self.db_session, automation_id)
-            logger.info(f"[AUTOMATION_TOOL] Created automation run with ID: {automation_run.id}")
-            
-            # Commit the run creation to the database
-            self.db_session.commit()
-            logger.info(f"[AUTOMATION_TOOL] Committed run creation to database")
+            # Use a fresh database session to avoid transaction issues
+            with get_db_session() as fresh_db_session:
+                # Verify the automation exists and belongs to the user
+                automation = crud.automations.get_automation(fresh_db_session, automation_id)
+                if not automation:
+                    logger.warning(f"[AUTOMATION_TOOL] Automation not found: {automation_id}")
+                    return f"Error: Automation with ID '{automation_id}' not found."
+                
+                if automation.user_id != self.user_id:
+                    logger.warning(f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}")
+                    return f"Error: You don't have access to automation '{automation_id}'."
+                
+                if not automation.active:
+                    logger.warning(f"[AUTOMATION_TOOL] Attempt to run inactive automation: {automation_id}")
+                    return f"Error: Automation '{automation.name}' is currently inactive. Please activate it first."
+                
+                logger.info(f"[AUTOMATION_TOOL] Verified automation '{automation.name}' (ID: {automation_id}) is ready to run")
+                
+                # Create a new run record
+                automation_run = crud.automation_runs.create_run(fresh_db_session, automation_id)
+                logger.info(f"[AUTOMATION_TOOL] Created automation run with ID: {automation_run.id}")
+                
+                # Commit the run creation to the database
+                fresh_db_session.commit()
+                logger.info(f"[AUTOMATION_TOOL] Committed run creation to database")
             
             # Queue the automation for execution
             execute_automation(automation_run.id)
@@ -947,83 +962,85 @@ Finally, if none of the available apps can fulfill the user's request, you must 
             automation_id = str(raw_arguments["automation_id"])
             logger.info(f"[AUTOMATION_TOOL] Updating automation ID: {automation_id}")
             
-            # Verify the automation exists and belongs to the user
-            automation = crud.automations.get_automation(self.db_session, automation_id)
-            if not automation:
-                logger.warning(f"[AUTOMATION_TOOL] Automation not found: {automation_id}")
-                return f"Error: Automation with ID '{automation_id}' not found."
-            
-            if automation.user_id != self.user_id:
-                logger.warning(f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}")
-                return f"Error: You don't have access to automation '{automation_id}'."
-            
-            logger.info(f"[AUTOMATION_TOOL] Verified access to automation '{automation.name}' (ID: {automation_id})")
-            
-            # Build update data from provided arguments
-            update_data = {}
-            
-            if "name" in raw_arguments and raw_arguments["name"]:
-                update_data["name"] = str(raw_arguments["name"])
+            # Use a fresh database session to avoid transaction issues
+            with get_db_session() as fresh_db_session:
+                # Verify the automation exists and belongs to the user
+                automation = crud.automations.get_automation(fresh_db_session, automation_id)
+                if not automation:
+                    logger.warning(f"[AUTOMATION_TOOL] Automation not found: {automation_id}")
+                    return f"Error: Automation with ID '{automation_id}' not found."
                 
-            if "description" in raw_arguments and raw_arguments["description"]:
-                update_data["description"] = str(raw_arguments["description"])
-                
-            if "goal" in raw_arguments and raw_arguments["goal"]:
-                update_data["goal"] = str(raw_arguments["goal"])
-                
-            if "is_deep" in raw_arguments:
-                update_data["is_deep"] = bool(raw_arguments["is_deep"])
-                
-            if "active" in raw_arguments:
-                update_data["active"] = bool(raw_arguments["active"])
-                
-            if "is_recurring" in raw_arguments:
-                update_data["is_recurring"] = bool(raw_arguments["is_recurring"])
-                
-            if "cron_schedule" in raw_arguments and raw_arguments["cron_schedule"]:
-                update_data["cron_schedule"] = str(raw_arguments["cron_schedule"])
+                if automation.user_id != self.user_id:
+                    logger.warning(f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}")
+                    return f"Error: You don't have access to automation '{automation_id}'."
             
-            # Handle app_names updates - this requires updating linked accounts
-            linked_account_ids = None
-            if "app_names" in raw_arguments and raw_arguments["app_names"]:
-                app_names = [str(app) for app in raw_arguments["app_names"]] if isinstance(raw_arguments["app_names"], list) else []
-                logger.info(f"[AUTOMATION_TOOL] Updating app requirements to: {app_names}")
+                logger.info(f"[AUTOMATION_TOOL] Verified access to automation '{automation.name}' (ID: {automation_id})")
                 
-                # Get linked accounts for the new apps
-                linked_accounts = []
-                for app_name in app_names:
-                    linked_account = linked_accounts_crud.get_linked_account(
-                        self.db_session, self.user_id, app_name
-                    )
-                    if not linked_account:
-                        logger.error(f"[AUTOMATION_TOOL] Missing linked account for app: {app_name}")
-                        return f"Error: You don't have the '{app_name}' app connected. Please connect this app first before updating the automation."
-                    linked_accounts.append(linked_account)
+                # Build update data from provided arguments
+                update_data = {}
                 
-                linked_account_ids = [la.id for la in linked_accounts]
-                logger.info(f"[AUTOMATION_TOOL] New linked account IDs: {linked_account_ids}")
-            
-            # Validate scheduling requirements
-            if update_data.get("is_recurring") and not update_data.get("cron_schedule") and not automation.cron_schedule:
-                return "Error: A cron schedule is required when setting an automation to recurring."
-            
-            # If no updates provided, return error
-            if not update_data and linked_account_ids is None:
-                return "Error: No update fields provided. Please specify at least one field to update."
-            
-            # Add linked_account_ids to update data if provided
-            if linked_account_ids is not None:
-                update_data["linked_account_ids"] = linked_account_ids
-            
-            logger.info(f"[AUTOMATION_TOOL] Update data: {update_data}")
-            
-            # Create the update schema
-            automation_update = AutomationUpdate(**update_data)
-            
-            # Perform the update
-            updated_automation = crud.automations.update_automation(
-                self.db_session, automation_id, automation_update
-            )
+                if "name" in raw_arguments and raw_arguments["name"]:
+                    update_data["name"] = str(raw_arguments["name"])
+                    
+                if "description" in raw_arguments and raw_arguments["description"]:
+                    update_data["description"] = str(raw_arguments["description"])
+                    
+                if "goal" in raw_arguments and raw_arguments["goal"]:
+                    update_data["goal"] = str(raw_arguments["goal"])
+                    
+                if "is_deep" in raw_arguments:
+                    update_data["is_deep"] = bool(raw_arguments["is_deep"])
+                    
+                if "active" in raw_arguments:
+                    update_data["active"] = bool(raw_arguments["active"])
+                    
+                if "is_recurring" in raw_arguments:
+                    update_data["is_recurring"] = bool(raw_arguments["is_recurring"])
+                    
+                if "cron_schedule" in raw_arguments and raw_arguments["cron_schedule"]:
+                    update_data["cron_schedule"] = str(raw_arguments["cron_schedule"])
+                
+                # Handle app_names updates - this requires updating linked accounts
+                linked_account_ids = None
+                if "app_names" in raw_arguments and raw_arguments["app_names"]:
+                    app_names = [str(app) for app in raw_arguments["app_names"]] if isinstance(raw_arguments["app_names"], list) else []
+                    logger.info(f"[AUTOMATION_TOOL] Updating app requirements to: {app_names}")
+                    
+                    # Get linked accounts for the new apps
+                    linked_accounts = []
+                    for app_name in app_names:
+                        linked_account = linked_accounts_crud.get_linked_account(
+                            fresh_db_session, self.user_id, app_name
+                        )
+                        if not linked_account:
+                            logger.error(f"[AUTOMATION_TOOL] Missing linked account for app: {app_name}")
+                            return f"Error: You don't have the '{app_name}' app connected. Please connect this app first before updating the automation."
+                        linked_accounts.append(linked_account)
+                    
+                    linked_account_ids = [la.id for la in linked_accounts]
+                    logger.info(f"[AUTOMATION_TOOL] New linked account IDs: {linked_account_ids}")
+                
+                # Validate scheduling requirements
+                if update_data.get("is_recurring") and not update_data.get("cron_schedule") and not automation.cron_schedule:
+                    return "Error: A cron schedule is required when setting an automation to recurring."
+                
+                # If no updates provided, return error
+                if not update_data and linked_account_ids is None:
+                    return "Error: No update fields provided. Please specify at least one field to update."
+                
+                # Add linked_account_ids to update data if provided
+                if linked_account_ids is not None:
+                    update_data["linked_account_ids"] = linked_account_ids
+                
+                logger.info(f"[AUTOMATION_TOOL] Update data: {update_data}")
+                
+                # Create the update schema
+                automation_update = AutomationUpdate(**update_data)
+                
+                # Perform the update
+                updated_automation = crud.automations.update_automation(
+                    fresh_db_session, automation_id, automation_update
+                )
             
             logger.info(f"[AUTOMATION_TOOL] Successfully updated automation '{updated_automation.name}' (ID: {automation_id})")
             
