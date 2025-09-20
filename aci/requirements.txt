@@ -295,4 +295,7 @@ xxhash==3.5.0
 yarl==1.20.1
 yfinance==0.2.65
 zipp==3.23.0
+yt-dlp==2024.12.23
+pytube==15.0.0
+youtube-comment-downloader==0.1.78
 zstandard==0.24.0

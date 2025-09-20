@@ -1,0 +1,96 @@
+[
+  {
+    "name": "YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS",
+    "description": "Fetches detailed information about a YouTube video including title, author, views, duration, and upload date.",
+    "tags": ["youtube", "video", "details", "metadata"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The full URL of the YouTube video to get details for."
+        }
+      },
+      "required": ["url"],
+      "visible": ["url"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "YOUTUBE_UNOFFICIAL__GET_CHANNEL_INFO",
+    "description": "Fetches information about a YouTube channel including title, subscriber count, and video count.",
+    "tags": ["youtube", "channel", "info", "metadata"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The full URL of the YouTube channel to get information for."
+        }
+      },
+      "required": ["url"],
+      "visible": ["url"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS",
+    "description": "Searches for YouTube videos based on a query and returns a list of matching videos.",
+    "tags": ["youtube", "search", "videos", "query"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search query to find videos for."
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "The maximum number of videos to return. Defaults to 10.",
+          "default": 10
+        }
+      },
+      "required": ["query"],
+      "visible": ["query", "max_results"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "YOUTUBE_UNOFFICIAL__GET_VIDEO_COMMENTS",
+    "description": "Fetches comments from a YouTube video.",
+    "tags": ["youtube", "comments", "video", "discussion"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The full URL of the YouTube video to get comments from."
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "The maximum number of comments to return. Defaults to 10.",
+          "default": 10
+        }
+      },
+      "required": ["url"],
+      "visible": ["url", "max_results"],
+      "additionalProperties": false
+    }
+  }
+]

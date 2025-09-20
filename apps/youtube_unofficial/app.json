@@ -1,0 +1,19 @@
+{
+  "name": "YOUTUBE_UNOFFICIAL",
+  "display_name": "YouTube By Autom8",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/youtube.svg",
+  "provider": "YouTube (via yt-dlp)",
+  "version": "2.0",
+  "description": "An unofficial YouTube connector for fetching video details, channel information, searching videos, and retrieving comments. Uses yt-dlp for reliable data extraction without official API limitations.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Media",
+    "Video",
+    "Entertainment"
+  ],
+  "visibility": "public",
+  "active": true
+}
