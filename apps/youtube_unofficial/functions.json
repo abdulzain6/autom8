@@ -69,8 +69,8 @@
   },
   {
     "name": "YOUTUBE_UNOFFICIAL__GET_VIDEO_COMMENTS",
-    "description": "Fetches comments from a YouTube video.",
-    "tags": ["youtube", "comments", "video", "discussion"],
+    "description": "Fetches comments from a YouTube video for community engagement analysis.",
+    "tags": ["youtube", "comments", "video", "community", "engagement"],
     "visibility": "public",
     "active": true,
     "protocol": "connector",
@@ -90,6 +90,32 @@
       },
       "required": ["url"],
       "visible": ["url", "max_results"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "YOUTUBE_UNOFFICIAL__GET_VIDEO_TRANSCRIPT",
+    "description": "Fetches the transcript/captions from a YouTube video for content analysis and summarization.",
+    "tags": ["youtube", "transcript", "captions", "video", "content"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The full URL of the YouTube video to get transcript from."
+        },
+        "language": {
+          "type": "string",
+          "description": "Preferred language for the transcript (e.g., 'en' for English). If not available, will use video's default language.",
+          "default": "en"
+        }
+      },
+      "required": ["url"],
+      "visible": ["url", "language"],
       "additionalProperties": false
     }
   }

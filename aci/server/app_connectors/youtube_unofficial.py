@@ -197,25 +197,30 @@ class YoutubeUnofficial(AppConnectorBase):
             logger.error(f"YouTube video details error: {e}")
             raise Exception(f"Failed to get video details: {e}")
 
-    def get_transcript(
+    def get_video_transcript(
         self,
-        video_id: str,
-        languages: Optional[List[str]] = None
+        url: str,
+        language: str = "en"
     ) -> Dict[str, Any]:
         """
-        Get transcript for a YouTube video.
+        Get transcript for a YouTube video using youtube-transcript-api.
 
         Args:
-            video_id: YouTube video ID
-            languages: List of language codes to try
+            url: YouTube video URL
+            language: Preferred language for the transcript
 
         Returns:
             Dict containing transcript text and metadata
         """
-        logger.info(f"Getting transcript for video: {video_id}")
+        logger.info(f"Getting transcript for video: {url}")
 
-        if languages is None:
-            languages = ['en']
+        # Extract video ID from URL
+        if 'youtube.com/watch?v=' in url:
+            video_id = url.split('v=')[1].split('&')[0]
+        elif 'youtu.be/' in url:
+            video_id = url.split('youtu.be/')[1].split('?')[0]
+        else:
+            video_id = url
 
         try:
             # Create proxy config for YouTubeTranscriptApi
@@ -230,19 +235,22 @@ class YoutubeUnofficial(AppConnectorBase):
             transcript_api = YouTubeTranscriptApi(proxy_config=proxy_config, http_client=self.session)
             transcript_list = transcript_api.list(video_id)
             
-            # Try to get transcript in preferred languages
+            # Try to get transcript in preferred language
             transcript = None
-            for lang in languages:
-                try:
-                    transcript = transcript_list.find_transcript([lang])
-                    break
-                except:
-                    continue
+            try:
+                transcript = transcript_list.find_transcript([language])
+            except:
+                # If preferred language not available, try English
+                if language != 'en':
+                    try:
+                        transcript = transcript_list.find_transcript(['en'])
+                    except:
+                        pass
             
             # If no manual transcript, try auto-generated
             if transcript is None:
                 try:
-                    transcript = transcript_list.find_generated_transcript(languages)
+                    transcript = transcript_list.find_generated_transcript([language, 'en'])
                 except:
                     raise Exception("No transcript available for this video")
 
@@ -255,7 +263,6 @@ class YoutubeUnofficial(AppConnectorBase):
             
             # Also return timed transcript
             timed_transcript = []
-            # transcript_data is a FetchedTranscript object that can be iterated
             for entry in transcript_data:
                 try:
                     # Handle both dict and object types
@@ -276,10 +283,12 @@ class YoutubeUnofficial(AppConnectorBase):
 
             return {
                 'video_id': video_id,
-                'language': str(transcript.language) if hasattr(transcript, 'language') else 'unknown',
+                'video_url': url,
+                'language': str(transcript.language) if hasattr(transcript, 'language') else language,
                 'is_generated': bool(transcript.is_generated) if hasattr(transcript, 'is_generated') else False,
                 'text': text,
-                'timed_transcript': timed_transcript
+                'timed_transcript': timed_transcript,
+                'transcript_length': len(timed_transcript)
             }
         except Exception as e:
             logger.error(f"Failed to get transcript for video {video_id}: {e}")

@@ -591,21 +591,143 @@
       "is_deep": true
     },
     {
-      "name": "Multi-Team Match Tracker",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/multi_team_tracker.jpeg?raw=true",
-      "description": "Track multiple favorite teams and get consolidated updates about all their matches and news.",
+      "name": "Daily YouTube Video Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_digest.jpeg?raw=true",
+      "description": "Creates a personalized daily digest of trending YouTube videos based on your interests with video details and summaries.",
       "tags": [
-        "Sports"
+        "YouTube",
+        "Video",
+        "Entertainment"
       ],
-      "goal": "Monitor matches and news for multiple teams: '{{ variables['Team 1'] }}', '{{ variables['Team 2'] }}', and '{{ variables['Team 3'] }}'. Use CRICBUZZ__GET_LIVE_MATCHES and CRICBUZZ__GET_UPCOMING_SCHEDULE to find all matches involving these teams. Use SEARXNG to search for news about each team with queries like '{{ variables['Team 1'] }} {{ variables['Team 2'] }} {{ variables['Team 3'] }} cricket news'. Create consolidated multi-team update with sections for each team including live scores, upcoming matches, and recent news. Send comprehensive tracker via NOTIFYME__SEND_ME_EMAIL with subject 'My Cricket Teams Update' organizing all information by team for easy tracking of multiple favorites.",
+      "goal": "Create a personalized YouTube video digest for '{{ variables['Topic'] }}'. STEP 1 - Search Videos: Use YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS to find the latest and most relevant videos about {{ variables['Topic'] }} with max_results set to 10. STEP 2 - Get Details: For each video, use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to fetch comprehensive information including title, author, views, duration, and upload date. STEP 3 - Content Analysis: Analyze video metadata to identify trending content, popular channels, and emerging topics. STEP 4 - Digest Creation: Structure findings into a professional HTML email briefing with sections for: Top Videos, Trending Channels, Content Highlights, and Viewing Recommendations. STEP 5 - Delivery: Send the YouTube Video Digest via NOTIFYME__SEND_ME_EMAIL with subject 'Daily YouTube Digest - {{ variables['Topic'] }} - [Current Date]' including video thumbnails, direct links, and engagement metrics in a well-formatted HTML email.",
       "variable_names": [
-        "Team 1",
-        "Team 2", 
-        "Team 3"
+        "Topic"
       ],
       "required_app_names": [
-        "CRICBUZZ",
-        "SEARXNG",
+        "YOUTUBE_UNOFFICIAL",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "YouTube Channel Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_channel_monitor.jpeg?raw=true",
+      "description": "Monitors a YouTube channel for new videos and sends instant notifications when new content is uploaded.",
+      "tags": [
+        "YouTube",
+        "Channel",
+        "Monitoring"
+      ],
+      "goal": "Monitor the YouTube channel '{{ variables['Channel URL'] }}' for new video uploads. STEP 1 - Get Channel Info: Use YOUTUBE_UNOFFICIAL__GET_CHANNEL_INFO to retrieve current channel statistics including video count and latest activity. STEP 2 - Video Analysis: Compare current video count with previously stored count to detect new uploads. STEP 3 - New Video Details: When new videos are detected, use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to get comprehensive information about the latest uploads. STEP 4 - Instant Alert: Send immediate notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'New Video from {{ variables['Channel Name'] }} 📹' including video title, duration, and direct link for instant viewing. STEP 5 - Weekly Summary: Send weekly digest via NOTIFYME__SEND_ME_EMAIL with subject 'Weekly {{ variables['Channel Name'] }} Update' summarizing all new videos and channel growth metrics.",
+      "variable_names": [
+        "Channel URL",
+        "Channel Name"
+      ],
+      "required_app_names": [
+        "YOUTUBE_UNOFFICIAL",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "YouTube Video Comments Analysis",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_comments_analysis.jpeg?raw=true",
+      "description": "Analyzes comments from a YouTube video to understand audience sentiment, engagement, and key discussion points.",
+      "tags": [
+        "YouTube",
+        "Comments",
+        "Analysis"
+      ],
+      "goal": "Perform comprehensive analysis of comments on the YouTube video '{{ variables['Video URL'] }}'. STEP 1 - Fetch Comments: Use YOUTUBE_UNOFFICIAL__GET_VIDEO_COMMENTS to retrieve up to 50 comments from the video with detailed metadata. STEP 2 - Sentiment Analysis: Analyze comment sentiment to categorize as positive, negative, or neutral feedback. STEP 3 - Engagement Metrics: Calculate engagement statistics including total comments, average comment length, and response patterns. STEP 4 - Key Insights: Identify trending discussion topics, frequently mentioned keywords, and community reactions. STEP 5 - Professional Report: Create detailed analysis document using DOCX_TOOLS with sections for: Sentiment Overview, Top Comments, Discussion Themes, and Audience Insights. STEP 6 - Distribution: Send comprehensive analysis via NOTIFYME__SEND_ME_EMAIL with subject 'YouTube Comments Analysis - {{ variables['Video Title'] }}' including sentiment charts, key insights, and actionable recommendations.",
+      "variable_names": [
+        "Video URL",
+        "Video Title"
+      ],
+      "required_app_names": [
+        "YOUTUBE_UNOFFICIAL",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "YouTube Video Recommendations",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_recommendations.jpeg?raw=true",
+      "description": "Gets personalized YouTube video recommendations based on topics, channels, or viewing patterns.",
+      "tags": [
+        "YouTube",
+        "Recommendations",
+        "Discovery"
+      ],
+      "goal": "Generate personalized YouTube video recommendations based on '{{ variables['Interest Topic'] }}'. STEP 1 - Search Content: Use YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS to find high-quality videos related to {{ variables['Interest Topic'] }} with diverse perspectives and content types. STEP 2 - Content Curation: Filter and curate videos based on engagement metrics, channel credibility, and content relevance. STEP 3 - Channel Discovery: Identify promising channels and creators in the topic area using channel information from video results. STEP 4 - Recommendation Engine: Create personalized recommendations considering factors like view count, upload date, and content diversity. STEP 5 - Curated List: Compile top 15-20 video recommendations with detailed descriptions, why they're recommended, and estimated watch time. STEP 6 - Delivery: Send personalized recommendations via NOTIFYME__SEND_ME_EMAIL with subject 'YouTube Recommendations - {{ variables['Interest Topic'] }}' including video thumbnails, channel info, and viewing suggestions organized by content type and difficulty level.",
+      "variable_names": [
+        "Interest Topic"
+      ],
+      "required_app_names": [
+        "YOUTUBE_UNOFFICIAL",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "YouTube Trending Topics Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_trending.jpeg?raw=true",
+      "description": "Monitors trending YouTube topics and sends instant alerts about viral content and emerging trends.",
+      "tags": [
+        "YouTube",
+        "Trending",
+        "Viral"
+      ],
+      "goal": "Monitor trending YouTube topics and content for real-time viral alerts. STEP 1 - Trend Discovery: Use YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS with trending parameters to identify currently popular videos and topics. STEP 2 - Viral Detection: Analyze view velocity, comment engagement, and sharing patterns to identify truly viral content. STEP 3 - Category Analysis: Categorize trending content by topic areas (entertainment, technology, news, gaming, etc.) to understand trend patterns. STEP 4 - Instant Alerts: Send immediate notifications via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION for videos reaching viral thresholds with title 'Viral YouTube Alert 🔥' including view count, trend category, and direct link. STEP 5 - Daily Summary: Send comprehensive trending report via NOTIFYME__SEND_ME_EMAIL with subject 'Daily YouTube Trends Report' including top trending videos, emerging topics, and trend analysis insights.",
+      "variable_names": [],
+      "required_app_names": [
+        "YOUTUBE_UNOFFICIAL",
+        "NOTIFYME",
+        "GOOGLE_TRENDS"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "YouTube Video Summarizer",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_video_summarizer.jpeg?raw=true",
+      "description": "Automatically generates comprehensive summaries of YouTube videos using their transcripts, including key points, timestamps, and insights.",
+      "tags": [
+        "YouTube",
+        "Video",
+        "Summary",
+        "Transcript",
+        "AI"
+      ],
+      "goal": "Create a comprehensive summary of the YouTube video '{{ variables['Video URL'] }}'. STEP 1 - Extract Transcript: Use YOUTUBE_UNOFFICIAL__GET_VIDEO_TRANSCRIPT to fetch the video's transcript/captions in the specified language. STEP 2 - Get Video Details: Use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to retrieve video metadata including title, author, duration, and view count. STEP 3 - Content Analysis: Analyze the transcript to identify key topics, main arguments, and important insights discussed in the video. STEP 4 - Generate Summary: Create a structured summary including: Executive Summary (2-3 sentences), Key Points (bullet points), Important Timestamps (with time markers), Main Takeaways, and Related Topics. STEP 5 - Professional Report: Format the analysis into a comprehensive document using DOCX_TOOLS with sections for video overview, detailed summary, key insights, and actionable takeaways. STEP 6 - Distribution: Send the video summary via NOTIFYME__SEND_ME_EMAIL with subject 'YouTube Video Summary - {{ variables['Video Title'] }}' including the complete analysis, transcript highlights, and key timestamps for easy reference.",
+      "variable_names": [
+        "Video URL",
+        "Video Title"
+      ],
+      "required_app_names": [
+        "YOUTUBE_UNOFFICIAL",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "YouTube Channel Content Analyzer",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_channel_analyzer.jpeg?raw=true",
+      "description": "Analyzes a YouTube channel's content strategy by examining recent videos, topics, and engagement patterns.",
+      "tags": [
+        "YouTube",
+        "Channel",
+        "Analysis",
+        "Content Strategy"
+      ],
+      "goal": "Perform comprehensive analysis of YouTube channel '{{ variables['Channel URL'] }}' content strategy. STEP 1 - Channel Overview: Use YOUTUBE_UNOFFICIAL__GET_CHANNEL_INFO to get basic channel statistics and information. STEP 2 - Recent Videos: Use YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS with channel-specific parameters to retrieve the latest 20-30 videos from the channel. STEP 3 - Content Analysis: For each video, use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to gather metadata including titles, descriptions, view counts, and upload dates. STEP 4 - Pattern Recognition: Analyze content patterns including: posting frequency, video length trends, title optimization, thumbnail strategies, and topic clusters. STEP 5 - Engagement Metrics: Calculate average views, engagement rates, and growth trends over time. STEP 6 - Strategic Insights: Identify successful content types, optimal posting times, trending topics, and audience preferences. STEP 7 - Professional Report: Create detailed analysis document using DOCX_TOOLS with sections for: Channel Overview, Content Strategy Analysis, Performance Metrics, Competitive Insights, and Strategic Recommendations. STEP 8 - Distribution: Send comprehensive channel analysis via NOTIFYME__SEND_ME_EMAIL with subject 'YouTube Channel Analysis - {{ variables['Channel Name'] }}' including charts, insights, and actionable recommendations for content optimization.",
+      "variable_names": [
+        "Channel URL",
+        "Channel Name"
+      ],
+      "required_app_names": [
+        "YOUTUBE_UNOFFICIAL",
+        "DOCX_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": true
