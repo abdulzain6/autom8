@@ -64,6 +64,7 @@ def list_user_automations(
     stmt = (
         select(Automation)
         .where(Automation.user_id == user_id)
+        .order_by(Automation.created_at.desc())
         .offset(offset)
         .limit(limit)
     )
