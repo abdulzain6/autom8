@@ -32,7 +32,7 @@ def list_apps(
     app_names: Annotated[list[str] | None, Query()] = None,
 ) -> list[AppDetails]:
     """
-    Get a list of Apps and their details. Sorted by App name.
+    Get a list of Apps and their details. Sorted by primary category, then by app name.
     """
     results = crud.apps.list_apps_with_user_context(
         db=context.db_session,

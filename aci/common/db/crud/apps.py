@@ -171,7 +171,7 @@ def list_apps_with_user_context(
             selectinload(App.configuration),
             selectinload(App.default_credentials),
         )
-        .order_by(App.name)
+        .order_by(App.categories[0], App.name)
     )
     if active_only:
         stmt = stmt.where(App.active == True)
