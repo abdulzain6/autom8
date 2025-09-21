@@ -12,7 +12,8 @@ from aci.common.schemas.security_scheme import OAuth2SchemeCredentials
 UNICODE_ASCII_CHARACTER_SET = string.ascii_letters + string.digits
 OAUTH_APPS_REQUIRE_CREDENTIALS_IN_BODY = [
     "TYPEFORM",
-    "WORDPRESS"
+    "WORDPRESS",
+    "TODOIST"
 ]
 
 logger = get_logger(__name__)

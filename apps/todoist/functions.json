@@ -1,0 +1,393 @@
+[
+    {
+        "name": "TODOIST__LIST_PROJECTS",
+        "description": "Get a list of all user projects.",
+        "tags": [ "project", "list", "read" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/projects",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "visible": [],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__CREATE_PROJECT",
+        "description": "Create a new project.",
+        "tags": [ "project", "create" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/projects",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object", "properties": {
+                        "name": { "type": "string", "description": "Name of the new project" }
+                    },
+                    "required": ["name"], "visible": ["name"], "additionalProperties": false
+                }
+            },
+            "required": ["body"], "visible": ["body"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__UPDATE_PROJECT",
+        "description": "Update an existing project's name or color.",
+        "tags": [ "project", "update" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/projects/{project_id}",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object", "properties": {
+                        "project_id": { "type": "string", "description": "ID of the project to update" }
+                    },
+                    "required": ["project_id"], "visible": ["project_id"], "additionalProperties": false
+                },
+                "body": {
+                    "type": "object", "properties": {
+                        "name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "description": "New name for the project" },
+                        "color": { "anyOf": [{ "type": "string" }, { "type": "null" }], "description": "New color name (e.g., 'sky_blue') for the project" }
+                    },
+                    "required": [], "visible": ["name", "color"], "additionalProperties": false
+                }
+            },
+            "required": ["path", "body"], "visible": ["path", "body"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__DELETE_PROJECT",
+        "description": "Permanently delete a project and all its tasks.",
+        "tags": [ "project", "delete", "remove" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "DELETE",
+            "path": "/projects/{project_id}",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object", "properties": {
+                        "project_id": { "type": "string", "description": "ID of the project to delete" }
+                    },
+                    "required": ["project_id"], "visible": ["project_id"], "additionalProperties": false
+                }
+            },
+            "required": ["path"], "visible": ["path"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__LIST_TASKS",
+        "description": "Get a list of active tasks. Can be filtered by project or other criteria.",
+        "tags": [ "task", "list", "read", "filter" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/tasks",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "anyOf": [ {
+                            "type": "object", "description": "Query parameters for filtering tasks",
+                            "properties": {
+                                "project_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "description": "Filter tasks by project ID" },
+                                "filter": { "anyOf": [{ "type": "string" }, { "type": "null" }], "description": "A custom filter string (e.g., 'today & @work')" }
+                            },
+                            "required": [], "visible": ["project_id", "filter"], "additionalProperties": false
+                        }, { "type": "null" }
+                    ]
+                }
+            },
+            "required": [], "visible": ["query"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__CREATE_TASK",
+        "description": "Create a new task.",
+        "tags": [ "task", "create", "add" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/tasks",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object", "description": "Task creation parameters",
+                    "properties": {
+                        "content": { "type": "string", "description": "The main content of the task" },
+                        "project_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "description": "ID of the project to add the task to. If null, uses Inbox." },
+                        "due_string": { "anyOf": [{ "type": "string" }, { "type": "null" }], "description": "A human-readable due date (e.g., 'tomorrow at 4pm')" },
+                        "priority": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "description": "Task priority from 1 (normal) to 4 (urgent)" }
+                    },
+                    "required": ["content"], "visible": ["content", "project_id", "due_string", "priority"], "additionalProperties": false
+                }
+            },
+            "required": ["body"], "visible": ["body"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__UPDATE_TASK",
+        "description": "Update an existing task's content, due date, or priority.",
+        "tags": [ "task", "update", "modify" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/tasks/{task_id}",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object", "properties": {
+                        "task_id": { "type": "string", "description": "ID of the task to update" }
+                    },
+                    "required": ["task_id"], "visible": ["task_id"], "additionalProperties": false
+                },
+                "body": {
+                    "type": "object", "description": "Fields to update in the task",
+                    "properties": {
+                        "content": { "anyOf": [{ "type": "string" }, { "type": "null" }], "description": "New content for the task" },
+                        "due_string": { "anyOf": [{ "type": "string" }, { "type": "null" }], "description": "New due date string" }
+                    },
+                    "required": [], "visible": ["content", "due_string"], "additionalProperties": false
+                }
+            },
+            "required": ["path", "body"], "visible": ["path", "body"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__CLOSE_TASK",
+        "description": "Mark a task as complete. This is the primary way to finish a task.",
+        "tags": [ "task", "complete", "close", "done" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/tasks/{task_id}/close",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object", "properties": {
+                        "task_id": { "type": "string", "description": "ID of the task to close" }
+                    },
+                    "required": ["task_id"], "visible": ["task_id"], "additionalProperties": false
+                }
+            },
+            "required": ["path"], "visible": ["path"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__REOPEN_TASK",
+        "description": "Reopen a completed task, making it active again.",
+        "tags": [ "task", "reopen", "undo" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/tasks/{task_id}/reopen",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object", "properties": {
+                        "task_id": { "type": "string", "description": "ID of the task to reopen" }
+                    },
+                    "required": ["task_id"], "visible": ["task_id"], "additionalProperties": false
+                }
+            },
+            "required": ["path"], "visible": ["path"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__DELETE_TASK",
+        "description": "Permanently delete a task.",
+        "tags": [ "task", "delete", "remove" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "DELETE",
+            "path": "/tasks/{task_id}",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "object", "properties": {
+                        "task_id": { "type": "string", "description": "ID of the task to delete" }
+                    },
+                    "required": ["task_id"], "visible": ["task_id"], "additionalProperties": false
+                }
+            },
+            "required": ["path"], "visible": ["path"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__LIST_SECTIONS",
+        "description": "Get a list of all sections within a specific project.",
+        "tags": [ "section", "list", "read" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/sections",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "object", "properties": {
+                        "project_id": { "type": "string", "description": "ID of the project to get sections from" }
+                    },
+                    "required": ["project_id"], "visible": ["project_id"], "additionalProperties": false
+                }
+            },
+            "required": ["query"], "visible": ["query"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__CREATE_SECTION",
+        "description": "Create a new section within a project.",
+        "tags": [ "section", "create" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/sections",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object", "properties": {
+                        "name": { "type": "string", "description": "The name of the new section" },
+                        "project_id": { "type": "string", "description": "ID of the project to add this section to" }
+                    },
+                    "required": ["name", "project_id"], "visible": ["name", "project_id"], "additionalProperties": false
+                }
+            },
+            "required": ["body"], "visible": ["body"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__LIST_LABELS",
+        "description": "Get a list of all personal labels.",
+        "tags": [ "label", "tag", "list" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "GET",
+            "path": "/labels",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "visible": [],
+            "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__CREATE_LABEL",
+        "description": "Create a new personal label.",
+        "tags": [ "label", "tag", "create" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/labels",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object", "properties": {
+                        "name": { "type": "string", "description": "The name of the new label" }
+                    },
+                    "required": ["name"], "visible": ["name"], "additionalProperties": false
+                }
+            },
+            "required": ["body"], "visible": ["body"], "additionalProperties": false
+        }
+    },
+    {
+        "name": "TODOIST__CREATE_COMMENT",
+        "description": "Create a new comment on a task.",
+        "tags": [ "comment", "note", "create" ],
+        "visibility": "public",
+        "active": true,
+        "protocol": "rest",
+        "protocol_data": {
+            "method": "POST",
+            "path": "/comments",
+            "server_url": "https://api.todoist.com/rest/v2"
+        },
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "object", "properties": {
+                        "task_id": { "type": "string", "description": "ID of the task to comment on" },
+                        "content": { "type": "string", "description": "The text content of the comment" }
+                    },
+                    "required": ["task_id", "content"], "visible": ["task_id", "content"], "additionalProperties": false
+                }
+            },
+            "required": ["body"], "visible": ["body"], "additionalProperties": false
+        }
+    }
+]

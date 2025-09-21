@@ -1,0 +1,28 @@
+{
+  "name": "TODOIST",
+  "display_name": "Todoist",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/todoist.png",
+  "provider": "Todoist",
+  "version": "1.0.0",
+  "description": "Todoist is a popular productivity application that helps users manage tasks and projects. It allows for creating, organizing, and prioritizing tasks, setting deadlines, and collaborating with others.",
+  "security_schemes": {
+    "oauth2": {
+      "location": "header",
+      "name": "Authorization",
+      "prefix": "Bearer",
+      "client_id": "{{ AIPOLABS_TODOIST_CLIENT_ID }}",
+      "client_secret": "{{ AIPOLABS_TODOIST_CLIENT_SECRET }}",
+      "scope": "data:read_write,data:delete",
+      "authorize_url": "https://todoist.com/oauth/authorize",
+      "access_token_url": "https://todoist.com/oauth/access_token",
+      "refresh_token_url": "https://todoist.com/oauth/access_token"
+    }
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Productivity",
+    "Task Management"
+  ],
+  "visibility": "public",
+  "active": true
+}
