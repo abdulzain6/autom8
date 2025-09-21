@@ -58,7 +58,8 @@ def list_templates(
     stmt = select(AutomationTemplate)
 
     if category:
-        stmt = stmt.where(AutomationTemplate.tags.contains([category]))
+        # Check if the category exists in the tags array using array_position
+        stmt = stmt.where(func.array_position(AutomationTemplate.tags, category).isnot(None))
 
     if search_query:
         stmt = stmt.where(
@@ -67,7 +68,14 @@ def list_templates(
             )
         )
 
-    stmt = stmt.order_by(AutomationTemplate.name).offset(offset).limit(limit)
+    # Order by category (first tag) when no specific category is selected, otherwise by name
+    if category:
+        stmt = stmt.order_by(AutomationTemplate.name)
+    else:
+        # When no category is specified, order by the first tag to group by category
+        stmt = stmt.order_by(AutomationTemplate.tags[0], AutomationTemplate.name)
+
+    stmt = stmt.offset(offset).limit(limit)
     return list(db.execute(stmt).scalars().all())
 
 

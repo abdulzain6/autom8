@@ -40,8 +40,11 @@ def list_all_templates(
     """
     Retrieve a list of all available automation templates, with user-specific
     information on which required apps are linked.
+
+    When category is specified, pagination is applied within that category only.
+    When no category is specified, pagination is applied globally across all templates.
     """
-    # 1. Fetch the base templates
+    # 1. Fetch the base templates with category-aware pagination
     templates = crud.automation_templates.list_templates(
         db=context.db_session,
         limit=params.limit,
@@ -66,6 +69,11 @@ def list_all_templates(
     # 4. Build the final response DTOs
     response: List[AutomationTemplatePublic] = []
     for template in templates:
+        # Double-check category filtering at the API level
+        # This ensures no templates from other categories leak through
+        if params.category and params.category not in template.tags:
+            continue
+
         required_apps_with_status = []
         template_app_ids = set()
 

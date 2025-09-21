@@ -299,3 +299,4 @@ yt-dlp==2024.12.23
 pytube==15.0.0
 youtube-comment-downloader==0.1.78
 zstandard==0.24.0
+youtube_transcript_api
