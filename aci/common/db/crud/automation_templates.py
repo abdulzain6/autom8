@@ -43,7 +43,6 @@ def get_template(db: Session, template_id: str) -> Optional[AutomationTemplate]:
     """Retrieves a single automation template by its ID."""
     return db.get(AutomationTemplate, template_id)
 
-
 def list_templates(
     db: Session,
     limit: int,
@@ -72,8 +71,9 @@ def list_templates(
     if category:
         stmt = stmt.order_by(AutomationTemplate.name)
     else:
-        # When no category is specified, order by the first tag to group by category
-        stmt = stmt.order_by(AutomationTemplate.tags[0], AutomationTemplate.name)
+        # When no category is specified, order by the first tag (index 1 for SQL)
+        # to group by category, then by name for consistent ordering within the category.
+        stmt = stmt.order_by(AutomationTemplate.tags[1], AutomationTemplate.name)
 
     stmt = stmt.offset(offset).limit(limit)
     return list(db.execute(stmt).scalars().all())

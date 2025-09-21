@@ -610,45 +610,6 @@
       "is_deep": true
     },
     {
-      "name": "YouTube Channel Monitor",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_channel_monitor.jpeg?raw=true",
-      "description": "Monitors a YouTube channel for new videos and sends instant notifications when new content is uploaded.",
-      "tags": [
-        "YouTube"
-      ],
-      "goal": "Monitor the YouTube channel '{{ variables['Channel URL'] }}' for new video uploads. STEP 1 - Get Channel Info: Use YOUTUBE_UNOFFICIAL__GET_CHANNEL_INFO to retrieve current channel statistics including video count and latest activity. STEP 2 - Video Analysis: Compare current video count with previously stored count to detect new uploads. STEP 3 - New Video Details: When new videos are detected, use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to get comprehensive information about the latest uploads. STEP 4 - Instant Alert: Send immediate notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'New Video from {{ variables['Channel Name'] }} 📹' including video title, duration, and direct link for instant viewing. STEP 5 - Weekly Summary: Send weekly digest via NOTIFYME__SEND_ME_EMAIL with subject 'Weekly {{ variables['Channel Name'] }} Update' summarizing all new videos and channel growth metrics.",
-      "variable_names": [
-        "Channel URL",
-        "Channel Name"
-      ],
-      "required_app_names": [
-        "YOUTUBE_UNOFFICIAL",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
-      "name": "YouTube Video Comments Analysis",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_comments_analysis.jpeg?raw=true",
-      "description": "Analyzes comments from a YouTube video to understand audience sentiment, engagement, and key discussion points.",
-      "tags": [
-        "YouTube",
-        "Comments",
-        "Analysis"
-      ],
-      "goal": "Perform comprehensive analysis of comments on the YouTube video '{{ variables['Video URL'] }}'. STEP 1 - Fetch Comments: Use YOUTUBE_UNOFFICIAL__GET_VIDEO_COMMENTS to retrieve up to 50 comments from the video with detailed metadata. STEP 2 - Sentiment Analysis: Analyze comment sentiment to categorize as positive, negative, or neutral feedback. STEP 3 - Engagement Metrics: Calculate engagement statistics including total comments, average comment length, and response patterns. STEP 4 - Key Insights: Identify trending discussion topics, frequently mentioned keywords, and community reactions. STEP 5 - Professional Report: Create detailed analysis document using DOCX_TOOLS with sections for: Sentiment Overview, Top Comments, Discussion Themes, and Audience Insights. STEP 6 - Distribution: Send comprehensive analysis via NOTIFYME__SEND_ME_EMAIL with subject 'YouTube Comments Analysis - {{ variables['Video Title'] }}' including sentiment charts, key insights, and actionable recommendations.",
-      "variable_names": [
-        "Video URL",
-        "Video Title"
-      ],
-      "required_app_names": [
-        "YOUTUBE_UNOFFICIAL",
-        "DOCX_TOOLS",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
       "name": "YouTube Video Recommendations",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_recommendations.jpeg?raw=true",
       "description": "Gets personalized YouTube video recommendations based on topics, channels, or viewing patterns.",
@@ -692,25 +653,6 @@
       "variable_names": [
         "Video URL",
         "Video Title"
-      ],
-      "required_app_names": [
-        "YOUTUBE_UNOFFICIAL",
-        "DOCX_TOOLS",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
-      "name": "YouTube Channel Content Analyzer",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_channel_analyzer.jpeg?raw=true",
-      "description": "Analyzes a YouTube channel's content strategy by examining recent videos, topics, and engagement patterns.",
-      "tags": [
-        "YouTube"
-      ],
-      "goal": "Perform comprehensive analysis of YouTube channel '{{ variables['Channel URL'] }}' content strategy. STEP 1 - Channel Overview: Use YOUTUBE_UNOFFICIAL__GET_CHANNEL_INFO to get basic channel statistics and information. STEP 2 - Recent Videos: Use YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS with channel-specific parameters to retrieve the latest 20-30 videos from the channel. STEP 3 - Content Analysis: For each video, use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to gather metadata including titles, descriptions, view counts, and upload dates. STEP 4 - Pattern Recognition: Analyze content patterns including: posting frequency, video length trends, title optimization, thumbnail strategies, and topic clusters. STEP 5 - Engagement Metrics: Calculate average views, engagement rates, and growth trends over time. STEP 6 - Strategic Insights: Identify successful content types, optimal posting times, trending topics, and audience preferences. STEP 7 - Professional Report: Create detailed analysis document using DOCX_TOOLS with sections for: Channel Overview, Content Strategy Analysis, Performance Metrics, Competitive Insights, and Strategic Recommendations. STEP 8 - Distribution: Send comprehensive channel analysis via NOTIFYME__SEND_ME_EMAIL with subject 'YouTube Channel Analysis - {{ variables['Channel Name'] }}' including charts, insights, and actionable recommendations for content optimization.",
-      "variable_names": [
-        "Channel URL",
-        "Channel Name"
       ],
       "required_app_names": [
         "YOUTUBE_UNOFFICIAL",
