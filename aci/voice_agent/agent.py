@@ -260,12 +260,16 @@ Seventh, execute the newly loaded functions to complete the user's request.
         correctly capturing the function object in a closure.
         """
 
-        async def tool_callable(raw_arguments: dict[str, object]):
+        async def tool_callable(raw_arguments: dict[str, object]) -> dict:
             result = await asyncio.to_thread(
                 self._execute_tool_logic, func_obj, **raw_arguments
             )
             logger.info(f"Tool {func_obj.name} returned result: {result}")
-            return f"{result[:10000]}... (truncated)" if len(result) > 10000 else result
+            message = f"{result[:10000]}... (truncated)" if len(result) > 10000 else result
+            return {
+                "status": "success",
+                "message": message,
+            }
 
         return tool_callable
 
@@ -394,6 +398,7 @@ Seventh, execute the newly loaded functions to complete the user's request.
                 OpenAIFunctionDefinition,
                 format_function_definition(function, FunctionDefinitionFormat.OPENAI),
             ).function
+
             raw_schema = {
                 "type": "function",
                 "name": function.name,
