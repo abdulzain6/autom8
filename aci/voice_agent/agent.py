@@ -273,7 +273,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
         "type": "function",
         "name": "display_mini_app",
         "description": "Renders a self-contained mini-application (HTML, CSS, JS) on the user's frontend.",
-        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {
@@ -399,7 +398,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
                 "type": "function",
                 "name": function.name,
                 "description": function.description,
-                "strict": True,
                 "parameters": formatted_function.parameters,
             }
             tool_logic = self._create_tool_callable(function)
@@ -459,7 +457,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
         "type": "function",
         "name": "create_automation",
         "description": "Creates a new automation that can perform tasks using available apps. Only create automations for tasks that can be accomplished with the available tools.",
-        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {
@@ -624,7 +621,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
         "type": "function", 
         "name": "get_automation_runs",
         "description": "Retrieves the execution history for a specific automation to see how it has performed.",
-        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {
@@ -753,7 +749,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
         "type": "function", 
         "name": "list_user_automations", 
         "description": "Lists all automations created by the user with their current status.",
-        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {
@@ -842,7 +837,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
         "type": "function",
         "name": "run_automation",
         "description": "Manually triggers an automation to run immediately, regardless of its schedule.",
-        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {
@@ -923,7 +917,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
         "type": "function",
         "name": "update_automation",
         "description": "Updates an existing automation's settings, including name, description, goal, schedule, or required apps.",
-        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {
@@ -1119,7 +1112,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
         "type": "function",
         "name": "get_current_session_usage",
         "description": "Shows the current voice session usage metrics including time spent and processing costs.",
-        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {},
@@ -1170,7 +1162,6 @@ Seventh, execute the newly loaded functions to complete the user's request.
         "type": "function",
         "name": "get_user_timezone",
         "description": "Retrieves the user's local time and timezone information from their device/browser.",
-        "strict": True,
         "parameters": {
             "type": "object",
             "properties": {},
