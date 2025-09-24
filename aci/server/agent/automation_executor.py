@@ -222,17 +222,6 @@ class AutomationExecutor:
             timeout=300,
             max_retries=3,
             temperature=0.1,
-        ).with_fallbacks(
-            fallbacks=[
-                ChatOpenAI(
-                    base_url=DEEPINFRA_BASE_URL,
-                    api_key=SecretStr(DEEPINFRA_API_KEY),
-                    model="Qwen/Qwen3-235B-A22B-Instruct-2507",
-                    timeout=300,
-                    max_retries=3,
-                    temperature=0.1,
-                )
-            ]
         )
         agent = create_react_agent(
             model=model,
