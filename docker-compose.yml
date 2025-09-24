@@ -120,6 +120,14 @@ services:
     networks:
       - services_network
 
+  steel-browser-api:
+    image: ghcr.io/steel-dev/steel-browser-api:latest
+    environment:
+      - DOMAIN=${DOMAIN:-localhost:3000}
+      - CDP_DOMAIN=${CDP_DOMAIN:-localhost:9223}
+    networks:
+      - services_network
+
   seaweedfs-master:
     image: chrislusf/seaweedfs
     command: "master -ip=seaweedfs-master"

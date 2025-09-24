@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, SecretStr
 from aci.common.db.sql_models import Automation, Function
 from langchain_core.tools import StructuredTool
 from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
-from aci.server.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL
+from aci.server.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL, TOGETHER_API_KEY, TOGETHER_BASE_URL
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     format_function_definition,
@@ -25,9 +25,17 @@ logging.basicConfig(level=logging.INFO)
 class AutomationResult(BaseModel):
     """The required schema for the final output of the automation run."""
 
-    status: Literal["success", "failure"] = Field(..., description="The final status of the automation execution.")
-    automation_output: str = Field(..., description="A plain text, human-readable summary of the final result. This field must NOT contain JSON or any other machine-readable format. It should clearly explain the outcome of the automation to a person.")
-    artifact_ids: list[str] = Field(default_factory=list, description="A list of final artifact IDs to be returned to the user. ONLY include IDs that were explicitly returned by a tool in a previous step.")
+    status: Literal["success", "failure"] = Field(
+        ..., description="The final status of the automation execution."
+    )
+    automation_output: str = Field(
+        ...,
+        description="A plain text, human-readable summary of the final result. This field must NOT contain JSON or any other machine-readable format. It should clearly explain the outcome of the automation to a person.",
+    )
+    artifact_ids: list[str] = Field(
+        default_factory=list,
+        description="A list of final artifact IDs to be returned to the user. ONLY include IDs that were explicitly returned by a tool in a previous step.",
+    )
 
 
 class AutomationExecutor:
@@ -66,9 +74,9 @@ class AutomationExecutor:
                 "2.  Use the `image_resizing_tool`, providing the `artifact_id` 'artifact-123' from the previous step. This will return a new artifact with ID 'artifact-456'.\n"
                 "3.  The goal is now complete. I will format my final answer using the `AutomationResult` schema.\n\n"
                 "**Good `automation_output` Example:**\n"
-                '"I successfully generated an image of a lion and resized it to be suitable for a profile picture. The final image is available with artifact ID \'artifact-456\'."\n\n'
+                "\"I successfully generated an image of a lion and resized it to be suitable for a profile picture. The final image is available with artifact ID 'artifact-456'.\"\n\n"
                 "**Bad `automation_output` Example (Do NOT do this):**\n"
-                '"`{\"status\": \"complete\", \"final_artifact\": \"artifact-456\"}`" (This is incorrect because it is a JSON string, not a human-readable summary.)'
+                '"`{"status": "complete", "final_artifact": "artifact-456"}`" (This is incorrect because it is a JSON string, not a human-readable summary.)'
             ),
             (
                 "### Performance Guidelines\n"
@@ -79,7 +87,6 @@ class AutomationExecutor:
             ),
         ]
         self.system_prompt = "\n\n---\n\n".join(prompt_components)
-
 
     def get_functions(self) -> list[Function]:
         """Retrieve the list of functions associated with the automation."""
@@ -107,21 +114,23 @@ class AutomationExecutor:
         Trim tool responses to keep only essential information and reduce token usage.
         """
         # Handle FunctionExecutionResult objects
-        if hasattr(response, 'model_dump'):
+        if hasattr(response, "model_dump"):
             response_dict = response.model_dump()
-        elif hasattr(response, '__dict__'):
+        elif hasattr(response, "__dict__"):
             response_dict = response.__dict__
         elif isinstance(response, dict):
             response_dict = response
         else:
             return response
-        
+
         trimmed = {}
         for key, value in response_dict.items():
             if isinstance(value, str):
                 if len(value) > max_length:
                     # Keep first part, add truncation notice, keep last part if it contains important info
-                    trimmed[key] = f"{value[:max_length//2]}...[TRUNCATED {len(value)-max_length} chars]...{value[-max_length//4:]}"
+                    trimmed[key] = (
+                        f"{value[:max_length//2]}...[TRUNCATED {len(value)-max_length} chars]...{value[-max_length//4:]}"
+                    )
                 else:
                     trimmed[key] = value
             elif isinstance(value, (list, tuple)):
@@ -149,7 +158,7 @@ class AutomationExecutor:
                 trimmed[key] = self._trim_tool_response(value, max_length)
             else:
                 trimmed[key] = value
-        
+
         return trimmed
 
     def _execute_tool_logic(self, function: Function, **kwargs):
@@ -162,15 +171,24 @@ class AutomationExecutor:
             try:
                 logger.info(f"Executing tool: {function.name} with args: {kwargs}")
                 result = execute_function(
-                    tool_db_session, function.name, self.automation.user_id, kwargs, run_id=self.run_id
+                    tool_db_session,
+                    function.name,
+                    self.automation.user_id,
+                    kwargs,
+                    run_id=self.run_id,
                 )
                 # Trim the response to reduce token usage while preserving essential information
                 trimmed_result = self._trim_tool_response(result, 3000)
-                logger.info(f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(str(trimmed_result))} chars")
+                logger.info(
+                    f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(str(trimmed_result))} chars"
+                )
                 return trimmed_result
             except Exception as e:
-                logger.error(f"Error executing tool: {function.name} with args: {kwargs}, error: {e}")
+                logger.error(
+                    f"Error executing tool: {function.name} with args: {kwargs}, error: {e}"
+                )
                 import traceback
+
                 traceback.print_exc()
                 return {"error": str(e)}
 
@@ -190,23 +208,34 @@ class AutomationExecutor:
                 description=function.description,
                 infer_schema=False,
                 args_schema=formatted_function.parameters,
-                func=lambda f=function, **kwargs: self._execute_tool_logic(f, **kwargs)
+                func=lambda f=function, **kwargs: self._execute_tool_logic(f, **kwargs),
             )
             tools.append(tool)
 
         return tools
 
     def create_agent(self):
+        model = ChatOpenAI(
+            base_url=TOGETHER_BASE_URL,
+            api_key=SecretStr(TOGETHER_API_KEY),
+            model="Qwen/Qwen3-235B-A22B-Instruct-2507-tput",
+            timeout=300,
+            max_retries=3,
+            temperature=0.1,
+        ).with_fallbacks(
+            fallbacks=[
+                ChatOpenAI(
+                    base_url=DEEPINFRA_BASE_URL,
+                    api_key=SecretStr(DEEPINFRA_API_KEY),
+                    model="Qwen/Qwen3-235B-A22B-Instruct-2507",
+                    timeout=300,
+                    max_retries=3,
+                    temperature=0.1,
+                )
+            ]
+        )
         agent = create_react_agent(
-            model=ChatOpenAI(
-                base_url=DEEPINFRA_BASE_URL,
-                api_key=SecretStr(DEEPINFRA_API_KEY),
-                model="Qwen/Qwen3-235B-A22B-Instruct-2507",
-                timeout=300,
-                max_retries=3,
-                # Add temperature control for more focused responses
-                temperature=0.1,
-            ),
+            model=model,
             tools=self.get_tools(),
             response_format=AutomationResult,
             prompt=self.system_prompt,

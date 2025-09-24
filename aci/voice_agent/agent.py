@@ -22,6 +22,7 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from aci.common.db.sql_models import Function
 from aci.common.enums import FunctionDefinitionFormat
 from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
+from aci.server.config import TOGETHER_API_KEY
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     execute_function,
@@ -167,9 +168,9 @@ Seventh, execute the newly loaded functions to complete the user's request.
 {', '.join(user_app_names) if user_app_names else 'No apps are currently linked.'}
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
-            llm=openai.LLM.with_cerebras(
-                model="qwen-3-235b-a22b-instruct-2507",
-                api_key=CEREBRAS_API_KEY,
+            llm=openai.LLM.with_together(
+                model="Qwen/Qwen3-235B-A22B-Instruct-2507-tput",
+                api_key=TOGETHER_API_KEY,
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
