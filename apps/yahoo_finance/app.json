@@ -10,9 +10,7 @@
   },
   "default_security_credentials_by_scheme": {},
   "categories": [
-    "Finance",
-    "Data",
-    "Stocks"
+    "Finance"
   ],
   "visibility": "public",
   "active": true

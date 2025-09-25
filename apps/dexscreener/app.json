@@ -10,8 +10,7 @@
   },
   "default_security_credentials_by_scheme": {},
   "categories": [
-    "Finance",
-    "Blockchain"
+    "Finance"
   ],
   "visibility": "public",
   "active": true

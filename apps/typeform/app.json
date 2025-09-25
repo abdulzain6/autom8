@@ -20,9 +20,7 @@
   },
   "default_security_credentials_by_scheme": {},
   "categories": [
-    "Productivity",
-    "Forms & Surveys",
-    "Data Collection"
+    "Productivity"
   ],
   "visibility": "public",
   "active": true

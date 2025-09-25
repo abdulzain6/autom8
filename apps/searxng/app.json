@@ -10,10 +10,7 @@
   },
   "default_security_credentials_by_scheme": {},
   "categories": [
-    "Search",
-    "Web",
-    "Information",
-    "Privacy"
+    "Search"
   ],
   "visibility": "public",
   "active": true

@@ -171,7 +171,6 @@ def list_apps_with_user_context(
             selectinload(App.configuration),
             selectinload(App.default_credentials),
         )
-        .order_by(App.categories[0], App.name)
     )
     if active_only:
         stmt = stmt.where(App.active == True)
@@ -179,7 +178,8 @@ def list_apps_with_user_context(
         stmt = stmt.where(App.configuration.has())
     if app_names:
         stmt = stmt.where(App.name.in_(app_names))
-    stmt = stmt.limit(limit).offset(offset)
+
+    stmt = stmt.order_by(App.categories[1], App.display_name).limit(limit).offset(offset)
 
     app_results = db.execute(stmt).all()
 
@@ -239,9 +239,9 @@ def search_apps(
         statement = statement.order_by("similarity_score")
     else:
         statement = statement.add_columns(null().label("similarity_score"))
-        statement = statement.order_by(App.name)
+        statement = statement.order_by(App.categories[1], App.display_name)
 
-    statement = statement.offset(offset).limit(limit)
+    statement = statement.limit(limit).offset(offset)
     search_results = db_session.execute(statement).all()
 
     apps = [app for app, _, __ in search_results]
