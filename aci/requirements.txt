@@ -300,3 +300,4 @@ pytube==15.0.0
 youtube-comment-downloader==0.1.78
 zstandard==0.24.0
 youtube_transcript_api
+fastapi-cache2==0.2.2
