@@ -1,14 +1,17 @@
 from contextlib import contextmanager
-import jwt
 from pydantic import BaseModel, ConfigDict
 from collections.abc import Generator
-from typing import Annotated, Optional
+from typing import Annotated, Awaitable, Optional, TypeVar, overload
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from aci.common import utils
 from aci.common.logging_setup import get_logger
 from aci.server import config
+from typing import Callable, Any
+from fastapi_cache.decorator import cache
+import jwt
+
 
 
 logger = get_logger(__name__)
@@ -63,6 +66,7 @@ def get_db_session() -> Generator[Session, None, None]:
     finally:
         db_session.close()
 
+
 # --- Authentication and Authorization ---
 def get_current_user(
     token: Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)],
@@ -113,3 +117,10 @@ def get_request_context(
         db_session=db_session,
         user=current_user,
     )
+
+def typed_cache(*, expire: int | None = None) -> Callable[..., Any]:
+    """
+    A type-safe wrapper around fastapi_cache.decorator.cache that supports
+    both sync and async functions without causing type errors.
+    """
+    return cache(expire=expire)

@@ -25,7 +25,11 @@ from aci.server.routes import (
     usage
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from redis import asyncio as aioredis
 import logging
+
 
 
 setup_logging(
@@ -43,6 +47,31 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Handles startup and shutdown events for the application.
+    Initializes the Redis cache backend on startup.
+    """
+    try:
+        scheduler.add_job(run_cleanup_job, "interval", hours=1)
+        scheduler.start()
+        logger.info("Scheduler started and cleanup job scheduled.")
+        redis = await aioredis.from_url(config.REDIS_URL)
+        await redis.ping()
+        logger.info("Successfully connected to Redis for caching.")
+        FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    except Exception as e:
+        logger.info(f"Could not connect to Redis: {e}")
+        logger.info("Caching will be disabled.")
+    
+    yield  # The application runs while in this context
+    
+    logger.info("Application shutdown...")
+    scheduler.shutdown()
+    await FastAPICache.clear()
+
+
 app = FastAPI(
     title=config.APP_TITLE,
     version=config.APP_VERSION,
@@ -50,6 +79,7 @@ app = FastAPI(
     redoc_url=config.APP_REDOC_URL,
     openapi_url=config.APP_OPENAPI_URL,
     generate_unique_id_function=custom_generate_unique_id,
+    lifespan=lifespan
 )
 scheduler = AsyncIOScheduler()
 logger = logging.getLogger(__name__)
@@ -70,21 +100,6 @@ async def global_exception_handler(request: Request, exc: ACIException) -> JSONR
         status_code=exc.error_code,
         content={"error": f"{exc.title}, {exc.message}" if exc.message else exc.title},
     )
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    scheduler.add_job(run_cleanup_job, "interval", hours=1)
-    scheduler.start()
-    logger.info("Scheduler started and cleanup job scheduled.")
-
-    yield  # Application runs while inside this context
-
-    # Shutdown
-    scheduler.shutdown()
-    logger.info("Scheduler shut down.")
-
 
 async def run_cleanup_job():
     """
