@@ -19,7 +19,7 @@ router = APIRouter()
     "/categories",
     response_model=List[str],
 )
-@deps.typed_cache(expire=300)
+@deps.typed_cache(expire=3600 * 12) 
 def get_all_template_categories(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
 ):
@@ -34,7 +34,7 @@ def get_all_template_categories(
     "/",
     response_model=List[AutomationTemplatePublic],
 )
-@deps.typed_cache(expire=300)
+@deps.typed_cache(expire=3600 * 12) 
 def list_all_templates(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     params: Annotated[AutomationTemplateListParams, Depends()],
@@ -125,7 +125,7 @@ def list_all_templates(
     "/{template_id}",
     response_model=AutomationTemplatePublic,
 )
-@deps.typed_cache(expire=300)
+@deps.typed_cache(expire=3600 * 12) 
 def get_template_by_id(
     template_id: str,
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
