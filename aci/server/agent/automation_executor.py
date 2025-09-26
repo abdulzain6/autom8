@@ -48,6 +48,7 @@ class AutomationExecutor:
     ):
         self.automation = automation
         self.run_id = run_id
+        self.browser_used = False
         prompt_components = [
             (
                 "You are an expert automation agent named Autom8. Your primary objective is to "
@@ -63,7 +64,8 @@ class AutomationExecutor:
                 "4.  **Artifact Chaining**: If a task requires multiple steps (e.g., create a file, then edit it), you MUST use the `artifact_id` from the first step as an input to the second.\n"
                 "5.  **Crucial Rule on Artifacts**: You MUST NOT invent, guess, or hallucinate `artifact_id`s. An `artifact_id` can ONLY be used if it was explicitly present in the output of a previous tool call.\n"
                 "6.  **Consolidate Operations**: When possible, combine multiple operations into single tool calls rather than making separate calls.\n"
-                "7.  **Final Answer Formatting**: Your final answer MUST use the `AutomationResult` schema. The `automation_output` field is critical: it must be a **plain, human-readable string** that summarizes the outcome for a non-technical user. It should **NOT** be a JSON string or a raw data dump. Think of it as the final report you'd give to a person."
+                "7.  **Browser Tool Restriction**: The BROWSER__RUN_BROWSER_AUTOMATION tool can only be used once per automation run. Plan your browser interactions accordingly.\n"
+                "8.  **Final Answer Formatting**: Your final answer MUST use the `AutomationResult` schema. The `automation_output` field is critical: it must be a **plain, human-readable string** that summarizes the outcome for a non-technical user. It should **NOT** be a JSON string or a raw data dump. Think of it as the final report you'd give to a person."
             ),
             (
                 # --- UPDATED EXEMPLAR ---
@@ -166,6 +168,12 @@ class AutomationExecutor:
         A helper method containing the actual logic for executing a tool.
         It creates a new, isolated database session for each execution.
         """
+        # Restrict browser tool to one use per automation run
+        if function.name == "BROWSER__RUN_BROWSER_AUTOMATION":
+            if self.browser_used:
+                return {"error": "Browser tool can only be used once per automation run"}
+            self.browser_used = True
+
         # Create a new session within the async context to ensure thread safety.
         with get_db_session() as tool_db_session:
             try:

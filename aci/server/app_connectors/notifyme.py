@@ -63,7 +63,8 @@ class Notifyme(AppConnectorBase):
                     'markdown.extensions.tables',
                     'markdown.extensions.fenced_code',
                     'markdown.extensions.nl2br',
-                    'markdown.extensions.codehilite'
+                    'markdown.extensions.codehilite',
+                    'markdown.extensions.sane_lists'  # Better list handling
                 ],
                 extension_configs={
                     'codehilite': {
@@ -74,70 +75,183 @@ class Notifyme(AppConnectorBase):
             )
             html_content = md.convert(text)
             
-            # Add basic email-friendly CSS styling
+            # Dark theme CSS with cyan accents for modern email appearance
             email_css = """
             <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                h1, h2, h3, h4, h5, h6 { color: #2c3e50; margin-top: 1.5em; margin-bottom: 0.5em; }
-                h1 { font-size: 24px; }
-                h2 { font-size: 20px; }
-                h3 { font-size: 18px; }
-                p { margin-bottom: 1em; }
-                ul, ol { margin-bottom: 1em; padding-left: 20px; }
-                li { margin-bottom: 0.5em; }
+                body { 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    line-height: 1.6; 
+                    color: #FFFFFF; 
+                    background-color: #121212; 
+                    margin: 0; 
+                    padding: 20px; 
+                }
+                .email-container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background-color: #1e1e1e;
+                    border-radius: 8px;
+                    padding: 20px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                }
+                h1, h2, h3, h4, h5, h6 { 
+                    color: #00FFFF; 
+                    margin-top: 1.5em; 
+                    margin-bottom: 0.5em; 
+                    font-weight: 600;
+                }
+                h1 { font-size: 28px; }
+                h2 { font-size: 24px; }
+                h3 { font-size: 20px; }
+                h4 { font-size: 18px; }
+                p { 
+                    margin-bottom: 1em; 
+                    color: #FFFFFF;
+                }
+                /* Improved list styling with proper numbering for nested lists */
+                ol, ul { 
+                    margin-bottom: 1em; 
+                    padding-left: 25px; 
+                    color: #FFFFFF;
+                }
+                ol {
+                    list-style-type: decimal;
+                    padding-left: 30px;
+                }
+                ul {
+                    list-style-type: disc;
+                    padding-left: 25px;
+                }
+                li { 
+                    margin-bottom: 0.5em; 
+                    color: #FFFFFF;
+                    line-height: 1.5;
+                }
+                /* Nested list styling */
+                ol ol, ol ul, ul ol, ul ul {
+                    margin-top: 0.5em;
+                    margin-bottom: 0.5em;
+                    padding-left: 20px;
+                }
+                ol ol {
+                    list-style-type: lower-alpha;
+                }
+                ol ol ol {
+                    list-style-type: lower-roman;
+                }
+                ul ul {
+                    list-style-type: circle;
+                }
                 blockquote { 
-                    border-left: 4px solid #3498db; 
+                    border-left: 4px solid #00FFFF; 
                     margin: 1em 0; 
                     padding-left: 1em; 
-                    color: #555; 
+                    color: #CCCCCC; 
                     font-style: italic; 
+                    background-color: #232323;
+                    border-radius: 0 4px 4px 0;
                 }
                 code { 
-                    background-color: #f8f9fa; 
-                    padding: 2px 4px; 
-                    border-radius: 3px; 
+                    background-color: #232323; 
+                    color: #00FFFF;
+                    padding: 2px 6px; 
+                    border-radius: 4px; 
                     font-family: 'Courier New', monospace; 
                     font-size: 0.9em; 
+                    border: 1px solid #00FFFF;
                 }
                 pre { 
-                    background-color: #f8f9fa; 
-                    padding: 1em; 
-                    border-radius: 5px; 
-                    border: 1px solid #e9ecef; 
+                    background-color: #232323; 
+                    color: #FFFFFF;
+                    padding: 15px; 
+                    border-radius: 6px; 
+                    border: 1px solid #00FFFF;
                     overflow-x: auto; 
                     font-family: 'Courier New', monospace; 
+                    margin: 1em 0;
                 }
                 table { 
                     border-collapse: collapse; 
                     width: 100%; 
                     margin-bottom: 1em; 
+                    background-color: #232323;
+                    border-radius: 6px;
+                    overflow: hidden;
                 }
                 th, td { 
-                    border: 1px solid #ddd; 
-                    padding: 8px; 
+                    border: 1px solid #00FFFF; 
+                    padding: 12px; 
                     text-align: left; 
+                    color: #FFFFFF;
                 }
                 th { 
-                    background-color: #f2f2f2; 
+                    background-color: #1e1e1e; 
+                    color: #00FFFF;
                     font-weight: bold; 
                 }
-                a { color: #3498db; text-decoration: none; }
-                a:hover { text-decoration: underline; }
-                hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+                tr:nth-child(even) {
+                    background-color: #232323;
+                }
+                tr:hover {
+                    background-color: #1e1e1e;
+                }
+                a { 
+                    color: #00FFFF; 
+                    text-decoration: none; 
+                    border-bottom: 1px solid transparent;
+                    transition: border-bottom 0.2s;
+                }
+                a:hover { 
+                    text-decoration: underline; 
+                    border-bottom: 1px solid #00FFFF;
+                }
+                hr { 
+                    border: none; 
+                    border-top: 1px solid #00FFFF; 
+                    margin: 2em 0; 
+                    opacity: 0.5;
+                }
+                /* Button-like styling for links that look like buttons */
+                .btn {
+                    display: inline-block;
+                    background-color: #00FFFF;
+                    color: #121212 !important;
+                    padding: 10px 20px;
+                    text-decoration: none;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    margin: 10px 0;
+                    transition: background-color 0.2s;
+                }
+                .btn:hover {
+                    background-color: #00CCCC;
+                    text-decoration: none;
+                }
+                /* Card-like styling for sections */
+                .card {
+                    background-color: #232323;
+                    border: 1px solid #00FFFF;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin: 15px 0;
+                }
             </style>
             """
             
-            # Wrap in a complete HTML document
+            # Wrap in a complete HTML document with dark theme container
             full_html = f"""
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Email Notification</title>
                 {email_css}
             </head>
             <body>
-                {html_content}
+                <div class="email-container">
+                    {html_content}
+                </div>
             </body>
             </html>
             """

@@ -42,11 +42,14 @@ logger = logging.getLogger("voice-agent")
 
 class Assistant(Agent):
     _core_tool_names = {"load_tools", "display_mini_app", "get_user_timezone", "get_app_info", "create_automation", "get_automation_runs", "list_user_automations", "run_automation", "update_automation", "get_current_session_usage"}
+    _restricted_apps = {"browser"}
 
     def __init__(self, user_id: str) -> None:
         self.db_session = create_db_session(DB_FULL_URL)
         self.user_id = user_id
         user_app_names = crud.apps.get_user_linked_app_names(self.db_session, user_id)
+        # Filter out restricted apps for voice agent
+        user_app_names = [name for name in user_app_names if name.lower() not in self._restricted_apps]
         self.tools_names: Dict[str, Any] = {}
 
         super().__init__(
@@ -357,6 +360,9 @@ Seventh, execute the newly loaded functions to complete the user's request.
             # Build the detailed response
             response_data = []
             for app in apps:
+                # Filter out restricted apps for voice agent
+                if app.name.lower() in self._restricted_apps:
+                    continue
                 response_data.append(
                     {
                         "name": app.name,
@@ -392,6 +398,9 @@ Seventh, execute the newly loaded functions to complete the user's request.
                 "status": "success",
                 "message": f"No enabled tools found for apps: {app_names}.",
             }
+
+        # Filter out restricted app functions for voice agent
+        functions = [f for f in functions if f.app.name.lower() not in self._restricted_apps]
 
         new_tools: Dict[str, Any] = {}
         for function in functions:
