@@ -337,7 +337,7 @@ class Notifyme(AppConnectorBase):
 
         msg = MIMEMultipart("alternative")
         # Set sender name for better display in email clients
-        sender_name = "Autom8 AI"
+        sender_name = "Autom8"
         msg["From"] = f"{sender_name} <{config.FROM_EMAIL_AGENT}>"
         msg["To"] = self.user_email
         msg["Subject"] = subject
@@ -350,17 +350,20 @@ class Notifyme(AppConnectorBase):
         logo_path = config.LOGO_PATH
         logo_attached = False
         if logo_path and os.path.exists(logo_path):
+            logger.info("Logo file found, preparing to attach")
             try:
                 with open(logo_path, 'rb') as logo_file:
                     logo_data = logo_file.read()
-                
-                logo_part = MIMEImage(logo_data, name='logo.png')
+
+                logo_part = MIMEImage(logo_data, name='logo.jpeg')
                 logo_part.add_header('Content-ID', '<logo>')
                 msg.attach(logo_part)
                 logo_attached = True
                 logger.info("Logo attached and embedded in email")
             except Exception as logo_error:
                 logger.warning(f"Failed to attach logo: {logo_error}")
+        else:
+            logger.info("No logo file found or path is invalid")
         
         include_logo = logo_attached
         
