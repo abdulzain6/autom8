@@ -3,7 +3,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from email.mime.image import MIMEImage
 from typing import Optional, List
+import os
 from aci.common.fcm import FCMManager
 from aci.common.utils import create_db_session
 from aci.server import config
@@ -46,23 +48,28 @@ class Notifyme(AppConnectorBase):
 
         logger.info(f"NotifyMe connector initialized for user: {self.user_email}")
 
-    def _convert_markdown_to_html(self, text: str) -> str:
+    def _convert_markdown_to_html(self, text: str, include_logo: bool = False) -> str:
         """
         Converts markdown text to HTML format for email compatibility.
         
         Args:
             text: The markdown text to convert.
+            include_logo: Whether to include the logo image tag.
             
         Returns:
             HTML formatted text.
         """
         try:
-            # Configure markdown with extensions for better email compatibility
+            # Ensure text has proper newlines for markdown processing
+            if not text.endswith('\n'):
+                text += '\n'
+            
+            # Configure markdown with extensions for better email compatibility and line breaks
             md = markdown.Markdown(
                 extensions=[
                     'markdown.extensions.tables',
                     'markdown.extensions.fenced_code',
-                    'markdown.extensions.nl2br',
+                    'markdown.extensions.nl2br',  # Convert newlines to <br>
                     'markdown.extensions.codehilite',
                     'markdown.extensions.sane_lists'  # Better list handling
                 ],
@@ -70,21 +77,32 @@ class Notifyme(AppConnectorBase):
                     'codehilite': {
                         'use_pygments': False,  # Disable syntax highlighting for better email compatibility
                         'noclasses': True
+                    },
+                    'nl2br': {
+                        'br': True  # Ensure <br> tags are added
                     }
-                }
+                },
+                output_format='html'  # Better HTML output
             )
             html_content = md.convert(text)
             
-            # Dark theme CSS with cyan accents for modern email appearance
+            # Logo HTML if requested
+            logo_html = ""
+            if include_logo:
+                logo_html = '<img src="cid:logo" alt="Autom8 Logo" style="max-width: 150px; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">'
+            
+            # Enhanced dark theme CSS with improved line break and text wrapping
             email_css = """
             <style>
                 body { 
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                    line-height: 1.6; 
+                    line-height: 1.7; /* Increased for better readability */
                     color: #FFFFFF; 
                     background-color: #121212; 
                     margin: 0; 
                     padding: 20px; 
+                    word-wrap: break-word; /* Ensure long words break */
+                    white-space: pre-wrap; /* Preserve whitespace and wrap */
                 }
                 .email-container {
                     max-width: 600px;
@@ -93,63 +111,76 @@ class Notifyme(AppConnectorBase):
                     border-radius: 8px;
                     padding: 20px;
                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                    word-wrap: break-word;
                 }
                 h1, h2, h3, h4, h5, h6 { 
                     color: #00FFFF; 
                     margin-top: 1.5em; 
-                    margin-bottom: 0.5em; 
+                    margin-bottom: 0.8em; 
                     font-weight: 600;
+                    line-height: 1.3;
                 }
                 h1 { font-size: 28px; }
                 h2 { font-size: 24px; }
                 h3 { font-size: 20px; }
                 h4 { font-size: 18px; }
                 p { 
-                    margin-bottom: 1em; 
+                    margin-bottom: 1.2em; 
                     color: #FFFFFF;
+                    white-space: pre-line; /* Preserve newlines in paragraphs */
+                    word-wrap: break-word;
                 }
-                /* Improved list styling with proper numbering for nested lists */
+                /* Improved list styling with proper numbering for nested lists and better spacing */
                 ol, ul { 
-                    margin-bottom: 1em; 
-                    padding-left: 25px; 
+                    margin-bottom: 1.2em; 
+                    padding-left: 30px; 
                     color: #FFFFFF;
+                    line-height: 1.6;
                 }
                 ol {
                     list-style-type: decimal;
-                    padding-left: 30px;
+                    padding-left: 35px;
                 }
                 ul {
                     list-style-type: disc;
-                    padding-left: 25px;
+                    padding-left: 30px;
                 }
                 li { 
-                    margin-bottom: 0.5em; 
+                    margin-bottom: 0.6em; 
                     color: #FFFFFF;
-                    line-height: 1.5;
+                    line-height: 1.6;
+                    word-wrap: break-word;
                 }
-                /* Nested list styling */
+                li p {
+                    margin: 0.3em 0; /* Ensure paragraphs in list items have spacing */
+                }
+                /* Nested list styling with proper indentation */
                 ol ol, ol ul, ul ol, ul ul {
                     margin-top: 0.5em;
                     margin-bottom: 0.5em;
-                    padding-left: 20px;
+                    padding-left: 25px;
                 }
                 ol ol {
                     list-style-type: lower-alpha;
+                    padding-left: 30px;
                 }
                 ol ol ol {
                     list-style-type: lower-roman;
+                    padding-left: 35px;
                 }
                 ul ul {
                     list-style-type: circle;
+                    padding-left: 30px;
                 }
                 blockquote { 
                     border-left: 4px solid #00FFFF; 
-                    margin: 1em 0; 
-                    padding-left: 1em; 
+                    margin: 1.2em 0; 
+                    padding-left: 1.2em; 
                     color: #CCCCCC; 
                     font-style: italic; 
                     background-color: #232323;
                     border-radius: 0 4px 4px 0;
+                    line-height: 1.5;
                 }
                 code { 
                     background-color: #232323; 
@@ -159,6 +190,8 @@ class Notifyme(AppConnectorBase):
                     font-family: 'Courier New', monospace; 
                     font-size: 0.9em; 
                     border: 1px solid #00FFFF;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
                 }
                 pre { 
                     background-color: #232323; 
@@ -168,21 +201,27 @@ class Notifyme(AppConnectorBase):
                     border: 1px solid #00FFFF;
                     overflow-x: auto; 
                     font-family: 'Courier New', monospace; 
-                    margin: 1em 0;
+                    margin: 1.2em 0;
+                    white-space: pre-wrap;
+                    word-wrap: normal;
+                    line-height: 1.4;
                 }
                 table { 
                     border-collapse: collapse; 
                     width: 100%; 
-                    margin-bottom: 1em; 
+                    margin-bottom: 1.2em; 
                     background-color: #232323;
                     border-radius: 6px;
                     overflow: hidden;
+                    word-wrap: break-word;
                 }
                 th, td { 
                     border: 1px solid #00FFFF; 
                     padding: 12px; 
                     text-align: left; 
                     color: #FFFFFF;
+                    word-wrap: break-word;
+                    vertical-align: top;
                 }
                 th { 
                     background-color: #1e1e1e; 
@@ -200,6 +239,7 @@ class Notifyme(AppConnectorBase):
                     text-decoration: none; 
                     border-bottom: 1px solid transparent;
                     transition: border-bottom 0.2s;
+                    word-wrap: break-word;
                 }
                 a:hover { 
                     text-decoration: underline; 
@@ -222,6 +262,7 @@ class Notifyme(AppConnectorBase):
                     font-weight: bold;
                     margin: 10px 0;
                     transition: background-color 0.2s;
+                    word-wrap: break-word;
                 }
                 .btn:hover {
                     background-color: #00CCCC;
@@ -234,11 +275,12 @@ class Notifyme(AppConnectorBase):
                     border-radius: 8px;
                     padding: 15px;
                     margin: 15px 0;
+                    word-wrap: break-word;
                 }
             </style>
             """
             
-            # Wrap in a complete HTML document with dark theme container
+            # Wrap in a complete HTML document with dark theme container and optional logo
             full_html = f"""
             <!DOCTYPE html>
             <html>
@@ -250,6 +292,7 @@ class Notifyme(AppConnectorBase):
             </head>
             <body>
                 <div class="email-container">
+                    {logo_html}
                     {html_content}
                 </div>
             </body>
@@ -260,8 +303,10 @@ class Notifyme(AppConnectorBase):
             
         except Exception as e:
             logger.warning(f"Failed to convert markdown to HTML: {e}. Using plain text fallback.")
-            # Fallback to plain text if markdown conversion fails
-            return text
+            # Enhanced plain text fallback with manual line breaks
+            lines = text.split('\n')
+            formatted_text = '<br>'.join(line.strip() for line in lines if line.strip())
+            return f'<div style="white-space: pre-line; line-height: 1.6; color: #FFFFFF; background-color: #1e1e1e; padding: 20px; border-radius: 8px;">{formatted_text}</div>'
 
     def _before_execute(self) -> None:
         """
@@ -291,7 +336,9 @@ class Notifyme(AppConnectorBase):
         )
 
         msg = MIMEMultipart("alternative")
-        msg["From"] = config.FROM_EMAIL_AGENT
+        # Set sender name for better display in email clients
+        sender_name = "Autom8 AI"
+        msg["From"] = f"{sender_name} <{config.FROM_EMAIL_AGENT}>"
         msg["To"] = self.user_email
         msg["Subject"] = subject
         
@@ -299,9 +346,27 @@ class Notifyme(AppConnectorBase):
         markdown_indicators = ['#', '*', '_', '```', '[', ']', '|', '>', '-', '+']
         likely_markdown = any(indicator in body for indicator in markdown_indicators)
         
+        # Check for logo availability
+        logo_path = config.LOGO_PATH
+        logo_attached = False
+        if logo_path and os.path.exists(logo_path):
+            try:
+                with open(logo_path, 'rb') as logo_file:
+                    logo_data = logo_file.read()
+                
+                logo_part = MIMEImage(logo_data, name='logo.png')
+                logo_part.add_header('Content-ID', '<logo>')
+                msg.attach(logo_part)
+                logo_attached = True
+                logger.info("Logo attached and embedded in email")
+            except Exception as logo_error:
+                logger.warning(f"Failed to attach logo: {logo_error}")
+        
+        include_logo = logo_attached
+        
         if likely_markdown:
-            # Convert markdown to HTML
-            html_body = self._convert_markdown_to_html(body)
+            # Convert markdown to HTML with optional logo
+            html_body = self._convert_markdown_to_html(body, include_logo=include_logo)
             
             # Create both plain text and HTML versions
             text_part = MIMEText(body, "plain", "utf-8")
@@ -313,11 +378,21 @@ class Notifyme(AppConnectorBase):
             
             logger.info("Email body converted from markdown to HTML format")
         else:
-            # Use plain text only
+            # Enhanced plain text handling
             text_part = MIMEText(body, "plain", "utf-8")
-            msg.attach(text_part)
+            # For plain text, create a simple HTML wrapper
+            payload_bytes = text_part.get_payload(decode=True)
+            payload_text = payload_bytes.decode('utf-8', errors='ignore') if isinstance(payload_bytes, bytes) else str(payload_bytes)
+            html_wrapper = f"""
+            <div style="font-family: 'Segoe UI', sans-serif; line-height: 1.7; color: #FFFFFF; background-color: #1e1e1e; padding: 20px; border-radius: 8px; white-space: pre-line; word-wrap: break-word;">
+                {payload_text}
+            </div>
+            """
+            html_part = MIMEText(html_wrapper, "html", "utf-8")
+            msg.attach(text_part)  # Keep original plain text
+            msg.attach(html_part)
             
-            logger.info("Email body sent as plain text")
+            logger.info("Email body enhanced as HTML from plain text")
 
         if artifact_ids:
             total_size = 0
