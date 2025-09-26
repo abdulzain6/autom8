@@ -56,7 +56,7 @@ class Browser(AppConnectorBase):
         logger.info(f"Running browser automation: {task[:100]}...")
 
         # Configuration from config
-        instructions = "Be super quick and use as few actions as possible. Complete the task efficiently with minimal steps."
+        instructions = "Be super quick and use as few actions as possible. Complete the task efficiently with minimal steps. At the end, return a detailed report of what has been done, including any requested information."
         api_key = config.OPENROUTER_API_KEY
         max_steps = 10
         flash_mode = True

@@ -12,7 +12,7 @@
       "properties": {
         "task": {
           "type": "string",
-          "description": "The task description for the AI agent to execute in the browser (e.g., 'go to google.com and search for AI tools')."
+          "description": "Detailed task description for the AI agent including specific steps, expected outcomes, and any data to extract or actions to perform. Be specific about websites to visit, forms to fill, buttons to click, data to collect, and success criteria. Example: 'Navigate to https://example.com, search for 'AI tools', click on the first result, extract the pricing information from the page, and summarize the key features.'"
         }
       },
       "required": ["task"],
