@@ -4,7 +4,7 @@
   "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/browser.png",
   "provider": "Steel",
   "version": "1.0.0",
-  "description": "AI-powered browser automation using browser-use library with Steel browsers. Enables intelligent web interaction, data extraction, and automated browsing tasks.",
+  "description": "AI-powered browser automation. Enables intelligent web interaction, data extraction, and automated browsing tasks.",
   "security_schemes": {
     "no_auth": {}
   },
