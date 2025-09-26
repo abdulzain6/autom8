@@ -345,27 +345,7 @@ class Notifyme(AppConnectorBase):
         # Check if the body contains markdown-like syntax
         markdown_indicators = ['#', '*', '_', '```', '[', ']', '|', '>', '-', '+']
         likely_markdown = any(indicator in body for indicator in markdown_indicators)
-        
-        # Check for logo availability
-        logo_path = config.LOGO_PATH
-        logo_attached = False
-        if logo_path and os.path.exists(logo_path):
-            logger.info("Logo file found, preparing to attach")
-            try:
-                with open(logo_path, 'rb') as logo_file:
-                    logo_data = logo_file.read()
-
-                logo_part = MIMEImage(logo_data, name='logo.jpeg')
-                logo_part.add_header('Content-ID', '<logo>')
-                msg.attach(logo_part)
-                logo_attached = True
-                logger.info("Logo attached and embedded in email")
-            except Exception as logo_error:
-                logger.warning(f"Failed to attach logo: {logo_error}")
-        else:
-            logger.info("No logo file found or path is invalid")
-        
-        include_logo = logo_attached
+        include_logo = False
         
         if likely_markdown:
             # Convert markdown to HTML with optional logo
