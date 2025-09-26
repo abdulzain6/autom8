@@ -1,0 +1,23 @@
+[
+  {
+    "name": "BROWSER__RUN_BROWSER_AUTOMATION",
+    "description": "Runs AI-powered browser automation using browser-use with Steel browser session. Can perform complex web tasks, extract data, fill forms, navigate sites, and interact with web elements intelligently.",
+    "tags": ["browser", "automation", "web", "ai", "scraping", "interaction"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "The task description for the AI agent to execute in the browser (e.g., 'go to google.com and search for AI tools')."
+        }
+      },
+      "required": ["task"],
+      "visible": ["task"],
+      "additionalProperties": false
+    }
+  }
+]
