@@ -102,4 +102,4 @@ SMTP_USERNAME = check_and_get_env_variable("SERVER_SMTP_USERNAME")
 SMTP_PASSWORD = SecretStr(check_and_get_env_variable("SERVER_SMTP_PASSWORD"))
 FROM_EMAIL_AGENT = check_and_get_env_variable("SERVER_FROM_EMAIL_AGENT")
 FIREBASE_SERVICE_ACCOUNT_KEY_PATH = check_and_get_env_variable("SERVER_FIREBASE_SERVICE_ACCOUNT_KEY_PATH")
-LOGO_PATH = "files/logo.jpeg"
+LOGO_PATH = "aci/files/logo.jpeg"
