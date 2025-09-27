@@ -60,7 +60,7 @@ services:
       replicas: 1
       placement:
         constraints: [node.role == manager]
-      user: "0"
+    user: "0"
 
   promtail:
     image: grafana/promtail:latest
