@@ -54,15 +54,10 @@ services:
     image: livekit/livekit-server:latest
     command: --config /etc/livekit.yaml
     ports:
-      - target: 7881
-        published: 7881
-        protocol: tcp
-      - target: 3478
-        published: 3478
-        protocol: udp
-      - target: 20000-21000 # Your firewall script used 50k-60k, adjust if needed
-        published: 20000-21000
-        protocol: udp
+      - "7881:7881/tcp"
+      - "3478:3478/udp"
+      # Use the short syntax for the port range
+      - "20000-21000:20000-21000/udp"
     configs:
       - source: livekit_yaml
         target: /etc/livekit.yaml
@@ -72,7 +67,7 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-
+        
   # --- 4. Voice Agent ---
   voice_agent:
     image: localhost:5000/aci-app:latest
