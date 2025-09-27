@@ -60,31 +60,54 @@ for name in "${!images[@]}"; do
     echo ""
 done
 
-# --- 2. Upsert Docker Configs ---
+# --- 2. Gracefully Update Docker Configs (Zero-Downtime) ---
 echo -e "${GREEN}--- Updating Docker Configs ---${NC}"
-for name in "${!configs[@]}"; do
-    path="${configs[$name]}"
+for config_base_name in "${!configs[@]}"; do
+    service_and_path="${configs[$config_base_name]}"
+    service_name="${service_and_path%%:*}"
+    file_path="${service_and_path#*:}"
+    
+    echo -e "${YELLOW}Processing config '${config_base_name}' for service '${service_name}'${NC}"
 
-    echo -e "${YELLOW}Processing config: ${name}${NC}"
+    # Create a new, versioned config with a timestamp
+    new_config_name="${config_base_name}_$(date +%s)"
+    echo " > Creating new version: ${new_config_name}"
+    sudo docker config create "${new_config_name}" "${file_path}"
 
-    # Upsert logic: Remove the config if it already exists
-    if sudo docker config inspect "$name" &>/dev/null; then
-        echo " > Config exists. Removing old version."
-        sudo docker config rm "$name"
+    # Get the target path from the running service
+    target_path=$(sudo docker service inspect --format '{{ range .Spec.TaskTemplate.ContainerSpec.Configs }}{{ if eq .ConfigName "'${config_base_name}'" }}{{ .File.Name }}{{ end }}{{ end }}' "${service_name}")
+
+    if [ -z "$target_path" ]; then
+        echo "   ! Warning: Could not find config '${config_base_name}' on service '${service_name}'. Skipping update."
+        sudo docker config rm "${new_config_name}" # Clean up the new config
+        continue
     fi
 
-    # Create the new config from the file
-    echo " > Creating new version from: ./${path}"
-    sudo docker config create "$name" "./${path}"
+    # Perform the rolling update by adding the new config
+    echo " > Applying new config to ${service_name}..."
+    sudo docker service update --config-add source="${new_config_name}",target="${target_path}" "${service_name}"
+
+    # Wait for the service to update before removing the old config
+    echo " > Waiting for service to update..."
+    sleep 10 
+
+    # Detach the old config from the service
+    echo " > Detaching old config from ${service_name}..."
+    sudo docker service update --config-rm "${config_base_name}" "${service_name}"
+    
+    # Finally, delete the old, now-unused config
+    echo " > Deleting old config: ${config_base_name}"
+    sudo docker config rm "${config_base_name}"
+
+    # Rename the new config to the original name for the next run
+    echo " > Renaming new config to original name for consistency."
+    sudo docker config create "${config_base_name}" "${file_path}"
+    sudo docker config rm "${new_config_name}"
+    
     echo "   Done."
     echo ""
 done
 
-
 echo -e "${GREEN}===================================================${NC}"
 echo -e "${GREEN}✅ Prep complete! Images and configs are updated.${NC}"
-echo "You can now safely deploy or update your stack:"
-echo ""
-echo "   docker stack deploy -c docker-stack.yml myapp"
-echo ""
 echo -e "${GREEN}===================================================${NC}"
