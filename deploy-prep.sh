@@ -18,6 +18,7 @@ set -e
 
 # --- Configuration ---
 LOCAL_REGISTRY="localhost:5000"
+STACK_NAME="autom8"
 
 # Associative array for images. Format: ["image_name"]="path/to/build/context"
 declare -A images
@@ -31,11 +32,11 @@ images=(
 # Associative array for configs. Format: ["config_name"]="path/to/file"
 declare -A configs
 configs=(
-    ["caddy_file"]="caddy/Caddyfile"
-    ["livekit_yaml"]="livekit/livekit.yaml"
-    ["searxng_settings"]="searxng/settings.yml"
-    ["loki_config"]="monitoring/loki-config.yml"      # <-- Added Loki config
-    ["promtail_config"]="monitoring/promtail-config.yml" # <-- Added Promtail config
+    ["caddy_file"]="${STACK_NAME}_caddy:caddy/Caddyfile"
+    ["livekit_yaml"]="${STACK_NAME}_livekit:livekit/livekit.yaml"
+    ["searxng_settings"]="${STACK_NAME}_searxng:searxng/settings.yml" # <-- This was the line with the error
+    ["loki_config"]="monitor_loki:monitoring/loki-config.yml"
+    ["promtail_config"]="monitor_promtail:monitoring/promtail-config.yml"
 )
 
 # --- Helper for colored output ---
