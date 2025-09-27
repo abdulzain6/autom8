@@ -34,6 +34,8 @@ configs=(
     ["caddy_file"]="caddy/Caddyfile"
     ["livekit_yaml"]="livekit/livekit.yaml"
     ["searxng_settings"]="searxng/settings.yml"
+    ["loki_config"]="monitoring/loki-config.yml"      # <-- Added Loki config
+    ["promtail_config"]="monitoring/promtail-config.yml" # <-- Added Promtail config
 )
 
 # --- Helper for colored output ---

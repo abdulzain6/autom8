@@ -1,6 +1,10 @@
+# In monitoring/loki-config.yml
+
 auth_enabled: false
+
 server:
   http_listen_port: 3100
+
 ingester:
   lifecycler:
     address: 127.0.0.1
@@ -9,8 +13,10 @@ ingester:
         store: inmemory
       replication_factor: 1
     final_sleep: 0s
-  chunk_idle_period: 1m
+  chunk_idle_period: 5m
   chunk_retain_period: 30s
+  max_chunk_age: 1h
+
 schema_config:
   configs:
     - from: 2020-10-24
@@ -20,14 +26,21 @@ schema_config:
       index:
         prefix: index_
         period: 24h
+
 storage_config:
   boltdb_shipper:
     active_index_directory: /loki/boltdb-shipper-active
     cache_location: /loki/boltdb-shipper-cache
-    shared_store: filesystem
+    # The 'shared_store' key was removed as it's not needed for a filesystem setup.
   filesystem:
     directory: /loki/chunks
+
+# The 'limits_config' section has been simplified to remove outdated keys.
+# Loki will use sensible defaults.
 limits_config:
-  enforce_metric_name: false
   reject_old_samples: true
   reject_old_samples_max_age: 168h
+  max_entries_limit_per_query: 5000
+
+ruler:
+  alertmanager_url: http://localhost:9093
