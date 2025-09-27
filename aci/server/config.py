@@ -69,8 +69,10 @@ LIVEKIT_API_SECRET = check_and_get_env_variable("SERVER_LIVEKIT_API_SECRET")
 # SearXNG
 SEARXNG_INSTANCE_URL = check_and_get_env_variable("SERVER_SEARXNG_INSTANCE_URL")
 
-# SeaweedFS
-SEAWEEDFS_URL = check_and_get_env_variable("SERVER_SEAWEEDFS_URL")
+# Supabase
+SUPABASE_SERVICE_KEY = check_and_get_env_variable("SERVER_SUPABASE_SERVICE_KEY")
+SUPABASE_URL = check_and_get_env_variable("SERVER_SUPABASE_URL")
+
 
 REDIS_URL = check_and_get_env_variable("SERVER_REDIS_URL")
 

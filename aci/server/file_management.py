@@ -2,38 +2,68 @@ import uuid
 import magic
 import requests
 import logging
+import tempfile
+import shutil
+import os
 from datetime import datetime, timedelta, timezone
 from typing import BinaryIO, Generator, Tuple
 from sqlalchemy.orm import Session
+from supabase import create_client, Client
+from storage3.utils import StorageException
 from aci.common.db.sql_models import Artifact, UserProfile
-from aci.server.config import SEAWEEDFS_URL
+from aci.server.config import SUPABASE_URL, SUPABASE_SERVICE_KEY
 
 logger = logging.getLogger(__name__)
 
 
 class FileManager:
-    """Manages both temporary and permanent file storage with SeaweedFS."""
+    """Manages file storage using Supabase Storage."""
+
+    # Define bucket names as class attributes for consistency
+    AVATAR_BUCKET = "avatars"
+    ARTIFACT_BUCKET = "artifacts"
 
     def __init__(self, db: Session):
-        self.db = db
-        self.filer_url = SEAWEEDFS_URL.rstrip("/")
+        self.db: Session = db
+        # Initialize the Supabase client
+        self.client: Client = create_client(
+            SUPABASE_URL,
+            SUPABASE_SERVICE_KEY,
+        )
+        # requests.Session is still useful for streaming from signed URLs
         self.session = requests.Session()
 
-    def _upload_permanent_file(
+    def _get_file_size(self, file_object: BinaryIO) -> int:
+        """Calculates the size of a file object without consuming it."""
+        file_object.seek(0, 2)  # Move to the end of the file
+        size = file_object.tell()  # Get the current position (which is the size)
+        file_object.seek(0)  # Move back to the start for subsequent reads
+        return size
+
+    def _upload_to_supabase(
         self,
-        user_id: str,
+        bucket: str,
+        path_in_bucket: str,
         file_object: BinaryIO,
-        filename: str,
-        subfolder: str,
         allowed_mime_prefix: str | None = None,
-    ) -> str:
-        """Private helper to upload a permanent file and return its path."""
-        filer_path = f"/{subfolder}/{user_id}/{uuid.uuid4()}/{filename}"
-        target_url = f"{self.filer_url}{filer_path}"
+    ) -> Tuple[str, str]:
+        """Private helper to upload a file to a Supabase bucket and return its path and MIME type.
+        
+        Uses a temporary file to stream the upload without loading the entire content into memory.
+        """
+        temp_file = None
         try:
-            initial_bytes = file_object.read(2048)
-            file_object.seek(0)
-            detected_mime_type = magic.from_buffer(initial_bytes, mime=True)
+            # Create a temporary file
+            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            temp_path = temp_file.name
+
+            # Stream the file_object to the temp file without loading into memory
+            shutil.copyfileobj(file_object, temp_file)
+            temp_file.close()  # Close the temp file to allow MIME detection and upload
+
+            # Detect MIME type from the temp file
+            detected_mime_type = magic.from_file(temp_path, mime=True)
+
             if allowed_mime_prefix and not detected_mime_type.startswith(
                 allowed_mime_prefix
             ):
@@ -41,52 +71,73 @@ class FileManager:
                     f"Invalid file type. Expected '{allowed_mime_prefix}*', "
                     f"but got '{detected_mime_type}'."
                 )
-            files = {"file": (filename, file_object, detected_mime_type)}
-            response = self.session.post(target_url, files=files)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            error_details = e.response.text if e.response else str(e)
-            raise RuntimeError(f"Could not upload file to SeaweedFS: {error_details}")
-        return filer_path
+
+            # Upload from the temp file path (str is compatible with upload)
+            self.client.storage.from_(bucket).upload(
+                path=path_in_bucket,
+                file=temp_path,
+                file_options={"content-type": detected_mime_type},
+            )
+        except StorageException as e:
+            raise RuntimeError(f"Could not upload file to Supabase Storage: {str(e)}")
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during Supabase upload: {e}")
+            raise
+        finally:
+            # Clean up the temp file
+            if temp_file and os.path.exists(temp_path):
+                os.unlink(temp_path)
+
+        return path_in_bucket, detected_mime_type
 
     def upload_avatar(self, user_id: str, file_object: BinaryIO, filename: str) -> str:
         """
-        Uploads an avatar, saves it to storage, and upserts the URL
+        Uploads an avatar to Supabase Storage and upserts the path
         in the user's profile.
 
         Returns:
-            The filer_path of the uploaded avatar.
+            The path of the uploaded avatar within the bucket.
         """
-        # 1. Store the file in SeaweedFS
-        avatar_filer_path = self._upload_permanent_file(
-            user_id=user_id,
+        path_in_bucket = f"{user_id}/{uuid.uuid4()}-{filename}"
+
+        # 1. Store the file in Supabase Storage
+        path_in_bucket, _ = self._upload_to_supabase(
+            bucket=self.AVATAR_BUCKET,
+            path_in_bucket=path_in_bucket,
             file_object=file_object,
-            filename=filename,
-            subfolder="avatars",
             allowed_mime_prefix="image/",
         )
 
-        # 2. Upsert the avatar URL in the profiles table
+        # 2. Upsert the avatar path in the profiles table
         user_profile = (
             self.db.query(UserProfile).filter(UserProfile.id == user_id).first()
         )
         if not user_profile:
             logger.info(f"No profile found for user {user_id}. Creating a new one.")
-            user_profile = UserProfile(id=user_id, name=None, avatar_url=None)
+            user_profile = UserProfile(id=user_id)
             self.db.add(user_profile)
-
-        user_profile.avatar_url = avatar_filer_path
+        
+        # The stored URL is now just the path within the bucket
+        user_profile.avatar_url = path_in_bucket
         self.db.commit()
-        logger.info(f"Updated avatar for user {user_id} to path: {avatar_filer_path}")
+        logger.info(f"Updated avatar for user {user_id} to path: {path_in_bucket}")
 
-        return avatar_filer_path
+        return path_in_bucket
+
+    def _create_stream_generator(self, signed_url: str) -> Generator[bytes, None, None]:
+        """Creates a memory-efficient generator to stream file content."""
+        try:
+            with self.session.get(signed_url, stream=True) as r:
+                r.raise_for_status()
+                yield from r.iter_content(chunk_size=65536)
+        except requests.RequestException as e:
+            logger.error(f"ERROR: Failed to stream from signed URL {signed_url}: {e}")
+            # Optionally, re-raise or handle the error appropriately
+            raise RuntimeError("Failed to stream file content.")
 
     def read_avatar(self, user_id: str) -> Tuple[Generator[bytes, None, None], str]:
         """
-        Reads a user's avatar from storage based on their profile URL.
-
-        Args:
-            user_id: The ID of the user whose avatar is being requested.
+        Reads a user's avatar from storage using a temporary signed URL.
 
         Returns:
             A tuple containing a generator for the file's bytes and the MIME type.
@@ -94,32 +145,29 @@ class FileManager:
         user_profile = (
             self.db.query(UserProfile).filter(UserProfile.id == user_id).first()
         )
-
         if not user_profile or not user_profile.avatar_url:
             raise ValueError(f"Avatar not found for user with ID {user_id}.")
 
-        file_url = f"{self.filer_url}{user_profile.avatar_url}"
-
+        path_in_bucket = user_profile.avatar_url
+        
         try:
-            # Perform a HEAD request first to get content type without downloading the body
-            head_response = self.session.head(file_url)
-            head_response.raise_for_status()
-            mime_type = head_response.headers.get(
-                "Content-Type", "application/octet-stream"
+            # Create a short-lived signed URL to access the private file
+            signed_response = self.client.storage.from_(self.AVATAR_BUCKET).create_signed_url(
+                path=path_in_bucket, expires_in=60  # URL is valid for 60 seconds
             )
+            signed_url = signed_response["signedURL"]
+            
+            # Perform a HEAD request to get the content type without downloading
+            head_response = self.session.head(signed_url)
+            head_response.raise_for_status()
+            mime_type = head_response.headers.get("Content-Type", "application/octet-stream")
+        except StorageException as e:
+            raise ValueError(f"Could not create signed URL for avatar: {str(e)}")
         except requests.RequestException as e:
-            logger.error(f"ERROR: Failed to get headers for avatar {file_url}: {e}")
-            raise ValueError(f"Avatar file could not be accessed at {file_url}.")
-
-        def stream_generator():
-            try:
-                with self.session.get(file_url, stream=True) as r:
-                    r.raise_for_status()
-                    yield from r.iter_content(chunk_size=65536)
-            except requests.RequestException as e:
-                logger.error(f"ERROR: Failed to stream avatar from {file_url}: {e}")
-
-        return stream_generator(), mime_type
+            logger.error(f"ERROR: Failed to get headers for avatar {path_in_bucket}: {e}")
+            raise ValueError("Avatar file could not be accessed.")
+        
+        return self._create_stream_generator(signed_url), mime_type
 
     def upload_artifact(
         self,
@@ -127,114 +175,99 @@ class FileManager:
         run_id: str | None,
         file_object: BinaryIO,
         filename: str,
-        content_type: str,
         ttl_seconds: int,
     ) -> str:
-        """Uploads a temporary file to a unique path and returns its Artifact ID."""
-        # ... (implementation is unchanged)
-        filer_path = f"/temp_files/{uuid.uuid4()}/{filename}"
-        target_url = f"{self.filer_url}{filer_path}"
-        try:
-            initial_bytes = file_object.read(2048)
-            file_object.seek(0)
-            detected_mime_type = magic.from_buffer(initial_bytes, mime=True)
-            final_content_type = detected_mime_type or content_type
-            files = {"file": (filename, file_object, final_content_type)}
-            response = self.session.post(target_url, files=files)
-            response.raise_for_status()
-            upload_data = response.json()
-        except requests.RequestException as e:
-            error_details = e.response.text if e.response else str(e)
-            raise RuntimeError(
-                f"Could not upload file to SeaweedFS Filer: {error_details}"
-            )
+        """Uploads a temporary artifact to Supabase and returns its Artifact ID."""
+        path_in_bucket = f"{user_id}/{uuid.uuid4()}-{filename}"
+        file_size = self._get_file_size(file_object)
 
+        # Upload and get MIME type (note: _get_file_size seeks back to 0, so file_object is ready)
+        path_in_bucket, detected_mime_type = self._upload_to_supabase(
+            bucket=self.ARTIFACT_BUCKET,
+            path_in_bucket=path_in_bucket,
+            file_object=file_object,
+        )
+        
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
-        temp_file = Artifact(
-            filer_path=filer_path,
+        
+        artifact_record = Artifact(
+            file_path=path_in_bucket,  # Storing the path within the bucket
             filename=filename,
             user_id=user_id,
-            mime_type=final_content_type,
-            size_bytes=upload_data["size"],
+            mime_type=detected_mime_type,
+            size_bytes=file_size,
             expires_at=expires_at,
             run_id=run_id,
         )
-        self.db.add(temp_file)
+        self.db.add(artifact_record)
         self.db.commit()
-        self.db.refresh(temp_file)
-        return str(temp_file.id)
+        self.db.refresh(artifact_record)
+        return str(artifact_record.id)
 
     def read_artifact(self, file_id: str) -> Tuple[Generator[bytes, None, None], str]:
-        """Retrieves a temporary file's content as a memory-efficient stream generator."""
-        file_record = (
-            self.db.query(Artifact)
-            .filter(Artifact.id == file_id)
-            .first()
-        )
-        if file_record is None:
-            raise ValueError(f"File with ID {file_id} not found or has expired.")
-        
-        file_url = f"{self.filer_url}{file_record.filer_path}"
+        """Retrieves a temporary artifact's content via a signed URL."""
+        file_record = self.db.query(Artifact).filter(Artifact.id == file_id).first()
+        if not file_record:
+            raise ValueError(f"Artifact with ID {file_id} not found or has expired.")
 
-        def stream_generator():
-            try:
-                with self.session.get(file_url, stream=True) as r:
-                    r.raise_for_status()
-                    yield from r.iter_content(chunk_size=65536)
-            except requests.RequestException as e:
-                logger.error(f"ERROR: Failed to stream file from {file_url}: {e}")
+        try:
+            signed_response = self.client.storage.from_(self.ARTIFACT_BUCKET).create_signed_url(
+                path=file_record.file_path, expires_in=60
+            )
+            signed_url = signed_response["signedURL"]
+        except StorageException as e:
+            raise ValueError(f"Could not create signed URL for artifact: {str(e)}")
 
-        return stream_generator(), str(file_record.mime_type)
+        return self._create_stream_generator(signed_url), str(file_record.mime_type)
 
     def cleanup_expired_artifacts(self) -> Tuple[int, int]:
-        """Finds and deletes all expired files and their database records."""
-        deleted_count = 0
-        failed_count = 0
+        """Finds and deletes all expired artifacts from storage and the database."""
+        current_time = datetime.now(timezone.utc)
+        expired_records = (
+            self.db.query(Artifact)
+            .filter(Artifact.expires_at <= current_time)
+            .all()
+        )
+
+        if not expired_records:
+            return 0, 0
+        
+        logger.info(f"Found {len(expired_records)} expired artifacts to clean up.")
+        
+        paths_to_delete = [record.file_path for record in expired_records]
+        
         try:
-            current_time = datetime.now(timezone.utc)
-            expired_files = (
-                self.db.query(Artifact)
-                .filter(Artifact.expires_at <= current_time)
-                .all()
-            )
-            if not expired_files:
-                return 0, 0
-            logger.info(f"Found {len(expired_files)} expired files to clean up.")
-            for file_record in expired_files:
-                try:
-                    file_delete_url = f"{self.filer_url}{file_record.filer_path}"
-                    response = self.session.delete(file_delete_url)
-                    if response.status_code not in [202, 204, 404]:
-                        response.raise_for_status()
-                    self.db.delete(file_record)
-                    deleted_count += 1
-                except requests.RequestException as e:
-                    logger.error(f"Failed to delete file from Filer: {e}")
-                    failed_count += 1
-                    continue
-            if deleted_count > 0:
-                self.db.commit()
+            # Batch delete files from Supabase Storage
+            self.client.storage.from_(self.ARTIFACT_BUCKET).remove(paths=paths_to_delete)
+            
+            # Batch delete records from the database
+            record_ids_to_delete = [record.id for record in expired_records]
+            self.db.query(Artifact).filter(Artifact.id.in_(record_ids_to_delete)).delete(synchronize_session=False)
+            self.db.commit()
+            
+            logger.info(f"Successfully deleted {len(paths_to_delete)} artifacts.")
+            return len(paths_to_delete), 0
+
+        except StorageException as e:
+            logger.error(f"Failed to delete files from Supabase Storage: {str(e)}")
+            # In case of partial failure, you might need more granular error handling
+            # For simplicity, we rollback and report all as failed.
+            self.db.rollback()
+            return 0, len(paths_to_delete)
         except Exception as e:
-            logger.error(f"An unexpected error occurred during file cleanup: {e}")
+            logger.error(f"An unexpected error occurred during artifact cleanup: {e}")
             self.db.rollback()
             raise
-        return deleted_count, failed_count
 
-    def delete_file(self, filer_path: str):
+    def delete_from_storage(self, bucket: str, path_in_bucket: str):
         """
-        Deletes a file from SeaweedFS storage.
+        Deletes a specific file from a given Supabase Storage bucket.
         """
-        if not filer_path.startswith("/"):
-            raise ValueError("filer_path must be an absolute path starting with '/'")
-
-        file_delete_url = f"{self.filer_url}{filer_path}"
+        if bucket not in [self.AVATAR_BUCKET, self.ARTIFACT_BUCKET]:
+            raise ValueError(f"Invalid bucket name: {bucket}")
         try:
-            response = self.session.delete(file_delete_url)
-            # Treat 404 (Not Found) as a success, as the file is already gone.
-            if response.status_code not in [202, 204, 404]:
-                response.raise_for_status()
-            logger.info(f"Successfully deleted file at path: {filer_path}")
-        except requests.RequestException as e:
-            # Log the error but re-raise to let the caller handle it.
-            logger.error(f"Failed to delete file from Filer at {file_delete_url}: {e}")
-            raise RuntimeError(f"Could not delete file from storage: {e}")
+            self.client.storage.from_(bucket).remove(paths=[path_in_bucket])
+            logger.info(f"Successfully deleted '{path_in_bucket}' from bucket '{bucket}'.")
+        except StorageException as e:
+            logger.error(f"Failed to delete file '{path_in_bucket}' from Supabase: {str(e)}")
+            raise RuntimeError(f"Could not delete file from storage: {str(e)}")

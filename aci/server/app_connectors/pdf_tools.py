@@ -73,7 +73,6 @@ class PdfTools(AppConnectorBase):
         new_artifact_id = file_manager.upload_artifact(
             file_object=file_buffer,
             filename=output_filename,
-            content_type=content_type,
             ttl_seconds=24 * 3600 * 7,  # 7 days
             user_id=self.user_id,
             run_id=self.run_id,

@@ -33,7 +33,6 @@ services:
       start_period: 30s
       timeout: 10s
     networks:
-      - storage_network
       - services_network
       - web_proxy
 
@@ -45,7 +44,6 @@ services:
     command: huey_consumer.py aci.server.tasks.tasks.huey -w 20 -k thread
     networks:
       - executor_network
-      - storage_network
       - services_network
 
   # --- 3. LiveKit Server ---
@@ -69,7 +67,6 @@ services:
       dockerfile: Dockerfile
     restart: always
     networks:
-      - storage_network
       - services_network
       - web_proxy
       - executor_network
@@ -121,36 +118,13 @@ services:
       - services_network
 
   steel-browser-api:
+    restart: always
     image: ghcr.io/steel-dev/steel-browser-api:latest
     environment:
       - DOMAIN=${DOMAIN:-localhost:3000}
       - CDP_DOMAIN=${CDP_DOMAIN:-localhost:9223}
     networks:
       - services_network
-
-  seaweedfs-master:
-    image: chrislusf/seaweedfs
-    command: "master -ip=seaweedfs-master"
-    networks:
-      - storage_network
-    restart: always
-
-
-  seaweedfs-volume:
-    image: chrislusf/seaweedfs
-    command: 'volume -mserver="seaweedfs-master:9333" -ip="seaweedfs-volume"'
-    volumes:
-      - seaweedfs_data:/data
-    networks:
-      - storage_network
-    restart: always
-
-  seaweedfs-filer:
-    image: chrislusf/seaweedfs
-    command: 'filer -master="seaweedfs-master:9333"'
-    restart: always
-    networks:
-      - storage_network
 
   redis:
     image: redis:7-alpine
@@ -167,9 +141,6 @@ networks:
   executor_network:
     driver: bridge
     internal: true
-  storage_network:
-    driver: bridge
-    internal: true
   services_network:
     driver: bridge
 
@@ -177,5 +148,4 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
-  seaweedfs_data:
   redis-data:

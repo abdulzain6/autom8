@@ -425,7 +425,7 @@ class Secret(Base):
 class Artifact(Base):
     __tablename__ = "artifacts"
 
-    filer_path: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    file_path: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     filename: Mapped[str] = mapped_column(String, nullable=False)
     mime_type: Mapped[str] = mapped_column(String, nullable=False)
     size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)

@@ -803,33 +803,15 @@
       "is_deep": true
     },
     {
-      "name": "BestBuy Deal of the Day",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/bestbuy_deal_of_day.jpeg?raw=true",
-      "description": "Get a daily digest of BestBuy's top deals, filtered by your chosen keyword or category.",
+      "name": "Air Quality Tracker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/air_quality_tracker.jpeg?raw=true",
+      "description": "Track your city’s air quality index (AQI) daily and get a digest of the latest status (Good, Moderate, Unhealthy, etc.).",
       "tags": [
-        "Shopping"
+        "Environment"
       ],
-      "goal": "You are fetching BestBuy's Deal of the Day page. Use the country input ('{{ variables['Country'] }}') to decide which site to visit: US = 'https://www.bestbuy.com/site/electronics/daily-deals/pcmcat248000050016.c?id=pcmcat248000050016', Canada = 'https://www.bestbuy.ca/en-ca/collection/deal-of-the-day/20000168'. Search for deals that match the user's input keyword or category ('{{ variables['Product Keyword'] }}'). From the matches, select the top 3–5 best deals based on highest discount and relevance. Collect the deal title, current price, original price, discount %, and link. Format them into a short digest-style summary and send email with the NOTIFYME app. If no relevant deals are found, send a brief email saying no new deals today.",
+      "goal": "Go to https://aqicn.org/search/#q={{ variables['City Name'] }} and search for the city '{{ variables['City Name'] }}'. From the resulting page, extract the current AQI value and status label (e.g., 'Good', 'Moderate', 'Unhealthy'). Create a nicely formatted email with subject 'Daily Air Quality Report for {{ variables['City Name'] }}' and body including: a header with the city name, the AQI value prominently displayed, the status with appropriate color coding (green for Good, yellow for Moderate, red for Unhealthy), and a brief explanation of what the status means. If data cannot be retrieved, send an email with subject 'Air Quality Data Unavailable' and a polite message explaining the issue. Use the NOTIFYME app to send the daily email to the user.",
       "variable_names": [
-        "Country",
-        "Product Keyword"
-      ],
-      "required_app_names": [
-        "BROWSER",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
-      "name": "Walmart Flash Deals",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/walmart_flash_deals.jpeg?raw=true",
-      "description": "Get a daily digest of Walmart's flash deals tailored to your chosen keyword or category.",
-      "tags": [
-        "Shopping"
-      ],
-      "goal": "Use the Walmart Flash Deals page to find discounts. Construct the URL as 'https://www.walmart.com/shop/deals/flash-deals-new?inlineQuery={{ variables['Product Keyword'] }}'. Open it with the BROWSER app, extract the listed deals, and select the top 3–5 best offers based on discount % and relevance. Gather deal title, current price, original price, discount %, and product link. Summarize them into a clean digest email and send it with the NOTIFYME app. If no relevant deals are found, send a brief email saying no new deals today.",
-      "variable_names": [
-        "Product Keyword"
+        "City Name"
       ],
       "required_app_names": [
         "BROWSER",
