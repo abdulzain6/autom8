@@ -72,7 +72,7 @@ class Browser(AppConnectorBase):
             cdp_url = f"ws://{steel_base_url.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
 
             llm = ChatOpenAI(
-                model="qwen/qwen2.5-vl-32b-instruct:free", 
+                model="x-ai/grok-4-fast:free", 
                 temperature=0.3, 
                 api_key=api_key, 
                 base_url=config.OPENROUTER_BASE_URL
