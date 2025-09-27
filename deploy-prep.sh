@@ -34,7 +34,7 @@ declare -A configs
 configs=(
     ["caddy_file"]="${STACK_NAME}_caddy:caddy/Caddyfile"
     ["livekit_yaml"]="${STACK_NAME}_livekit:livekit/livekit.yaml"
-    ["searxng_settings"]="${STACK_NAME}_searxng:searxng/settings.yml" # <-- This was the line with the error
+    ["searxng_settings"]="${STACK_NAME}_searxng:searxng/settings.yml"
     ["loki_config"]="monitor_loki:monitoring/loki-config.yml"
     ["promtail_config"]="monitor_promtail:monitoring/promtail-config.yml"
 )
