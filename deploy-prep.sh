@@ -50,10 +50,10 @@ for name in "${!images[@]}"; do
     echo -e "${YELLOW}Processing image: ${name}${NC}"
 
     echo " > Building from context: ./${context}"
-    docker build -t "${full_image_name}" "./${context}"
+    sudo docker build -t "${full_image_name}" "./${context}"
 
     echo " > Pushing to ${LOCAL_REGISTRY}..."
-    docker push "${full_image_name}"
+    sudo docker push "${full_image_name}"
     echo "   Done."
     echo ""
 done
@@ -66,14 +66,14 @@ for name in "${!configs[@]}"; do
     echo -e "${YELLOW}Processing config: ${name}${NC}"
 
     # Upsert logic: Remove the config if it already exists
-    if docker config inspect "$name" &>/dev/null; then
+    if sudo docker config inspect "$name" &>/dev/null; then
         echo " > Config exists. Removing old version."
-        docker config rm "$name"
+        sudo docker config rm "$name"
     fi
 
     # Create the new config from the file
     echo " > Creating new version from: ./${path}"
-    docker config create "$name" "./${path}"
+    sudo docker config create "$name" "./${path}"
     echo "   Done."
     echo ""
 done
