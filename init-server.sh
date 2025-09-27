@@ -45,6 +45,7 @@ sudo docker swarm init
 # We run the registry as a Swarm service so it's resilient and managed by Swarm.
 echo "Deploying local Docker registry on port 5000..."
 sudo docker service create --name registry --publish published=5000,target=5000 registry:2
+sudo docker service update --env-add REGISTRY_STORAGE_DELETE_ENABLED=true registry
 
 # --- Step 6: Configure Firewall (firewalld) ---
 echo "Configuring firewall rules..."
@@ -59,8 +60,7 @@ sudo firewall-cmd --permanent --add-port=5000/tcp
 # Allow ports for your LiveKit application
 sudo firewall-cmd --permanent --add-port=7881/tcp
 sudo firewall-cmd --permanent --add-port=3478/udp
-# Note: The original script used 50000-60000/udp, which is a common range.
-sudo firewall-cmd --permanent --add-port=50000-60000/udp
+sudo firewall-cmd --permanent --add-port=20000-21000/udp
 
 # Allow ports required for Docker Swarm inter-node communication
 # (Good practice even for a single-node cluster)

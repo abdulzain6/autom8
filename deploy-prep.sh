@@ -22,10 +22,10 @@ LOCAL_REGISTRY="localhost:5000"
 # Associative array for images. Format: ["image_name"]="path/to/build/context"
 declare -A images
 images=(
-    ["my-caddy"]="caddy"
-    ["my-aci-app"]="aci"
-    ["my-code-executor"]="code_executor"
-    ["my-cycletls-server"]="cycletls-server"
+    ["caddy"]="caddy"
+    ["aci-app"]="aci"
+    ["code-executor"]="code_executor"
+    ["cycletls-server"]="cycletls-server"
 )
 
 # Associative array for configs. Format: ["config_name"]="path/to/file"

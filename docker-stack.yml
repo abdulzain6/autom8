@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # --- 1. Edge Router / Reverse Proxy (Caddy) ---
   caddy:
-    image: localhost:5000/my-caddy:latest 
+    image: localhost:5000/caddy:latest 
     ports:
       - "80:80"
       - "443:443"
@@ -22,7 +22,7 @@ services:
 
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
-    image: localhost:5000/my-aci-app:latest
+    image: localhost:5000/aci-app:latest
     command: /bin/sh start.sh
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/health || exit 1"]
@@ -39,7 +39,7 @@ services:
         condition: on-failure
 
   huey_worker:
-    image: localhost:5000/my-aci-app:latest
+    image: localhost:5000/aci-app:latest
     command: huey_consumer.py aci.server.tasks.tasks.huey -w 20 -k thread
     networks:
       - executor_network
@@ -75,7 +75,7 @@ services:
 
   # --- 4. Voice Agent ---
   voice_agent:
-    image: localhost:5000/my-aci-app:latest
+    image: localhost:5000/aci-app:latest
     command: python -m aci.voice_agent.agent start
     networks:
       - services_network
@@ -103,7 +103,7 @@ services:
         condition: on-failure
 
   code-executor:
-    image: localhost:5000/my-code-executor:latest
+    image: localhost:5000/code-executor:latest
     dns: [ "8.8.8.8" ]
     networks:
       - executor_network
@@ -126,7 +126,7 @@ services:
         condition: on-failure
 
   cycletls-server:
-    image: localhost:5000/my-cycletls-server:latest
+    image: localhost:5000/cycletls-server:latest
     dns: [ "8.8.8.8" ]
     networks:
       - services_network
