@@ -1,0 +1,180 @@
+version: "3.8"
+
+services:
+  # --- 1. Edge Router / Reverse Proxy (Caddy) ---
+  caddy:
+    image: localhost:5000/my-caddy:latest 
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    configs:
+      - source: caddy_file
+        target: /etc/caddy/Caddyfile
+    networks:
+      - web_proxy
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  # --- 2. Main Application Server (The Secure Bridge) ---
+  server:
+    image: localhost:5000/my-aci-app:latest
+    command: /bin/sh start.sh
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/health || exit 1"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - services_network
+      - web_proxy
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  huey_worker:
+    image: localhost:5000/my-aci-app:latest
+    command: huey_consumer.py aci.server.tasks.tasks.huey -w 20 -k thread
+    networks:
+      - executor_network
+      - services_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  # --- 3. LiveKit Server ---
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    ports:
+      - target: 7881
+        published: 7881
+        protocol: tcp
+      - target: 3478
+        published: 3478
+        protocol: udp
+      - target: 20000-21000 # Your firewall script used 50k-60k, adjust if needed
+        published: 20000-21000
+        protocol: udp
+    configs:
+      - source: livekit_yaml
+        target: /etc/livekit.yaml
+    networks:
+      - web_proxy
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  # --- 4. Voice Agent ---
+  voice_agent:
+    image: localhost:5000/my-aci-app:latest
+    command: python -m aci.voice_agent.agent start
+    networks:
+      - services_network
+      - web_proxy
+      - executor_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  # --- 5. Internal Services ---
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 15s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - services_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  code-executor:
+    image: localhost:5000/my-code-executor:latest
+    dns: [ "8.8.8.8" ]
+    networks:
+      - executor_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  searxng:
+    image: searxng/searxng:latest
+    configs:
+      - source: searxng_settings
+        target: /etc/searxng/settings.yml
+    dns: [ "8.8.8.8" ]
+    networks:
+      - services_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  cycletls-server:
+    image: localhost:5000/my-cycletls-server:latest
+    dns: [ "8.8.8.8" ]
+    networks:
+      - services_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  steel-browser-api:
+    image: ghcr.io/steel-dev/steel-browser-api:latest
+    environment:
+      - DOMAIN=${DOMAIN:-localhost:3000}
+      - CDP_DOMAIN=${CDP_DOMAIN:-localhost:9223}
+    networks:
+      - services_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - services_network
+    volumes:
+      - redis-data:/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+# --- Swarm will create these as overlay networks, allowing services to connect ---
+networks:
+  web_proxy:
+  executor_network:
+  services_network:
+
+# --- Swarm will manage these volumes on the host node ---
+volumes:
+  caddy_data:
+  caddy_config:
+  redis-data:
+
+# --- Define the configs that were created with 'docker config create' ---
+configs:
+  caddy_file:
+    external: true
+  livekit_yaml:
+    external: true
+  searxng_settings:
+    external: true
