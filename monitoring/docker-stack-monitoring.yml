@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # Prometheus, Grafana, Node-Exporter services remain the same...
   prometheus:
     image: prom/prometheus:latest
     volumes:
@@ -49,7 +50,7 @@ services:
     volumes:
       - loki_data:/loki
     configs:
-      - source: loki_config
+      - source: loki_config # This part is correct
         target: /etc/loki/local-config.yaml
     command: -config.file=/etc/loki/local-config.yaml
     networks:
@@ -66,7 +67,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/containers:/var/lib/docker/containers
     configs:
-      - source: promtail_config
+      - source: promtail_config # This part is correct
         target: /etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     networks:
@@ -82,62 +83,10 @@ volumes:
 networks:
   monitor-net:
 
+# --- CORRECTED SECTION ---
+# This tells Swarm to use the configs you created with 'docker config create'
 configs:
   loki_config:
-    content: |
-      auth_enabled: false
-      server:
-        http_listen_port: 3100
-      ingester:
-        lifecycler:
-          address: 127.0.0.1
-          ring:
-            kvstore:
-              store: inmemory
-            replication_factor: 1
-          final_sleep: 0s
-        chunk_idle_period: 1m
-        chunk_retain_period: 30s
-      schema_config:
-        configs:
-          - from: 2020-10-24
-            store: boltdb-shipper
-            object_store: filesystem
-            schema: v11
-            index:
-              prefix: index_
-              period: 24h
-      storage_config:
-        boltdb_shipper:
-          active_index_directory: /loki/boltdb-shipper-active
-          cache_location: /loki/boltdb-shipper-cache
-          shared_store: filesystem
-        filesystem:
-          directory: /loki/chunks
-      limits_config:
-        enforce_metric_name: false
-        reject_old_samples: true
-        reject_old_samples_max_age: 168h
-
+    external: true
   promtail_config:
-    content: |
-      server:
-        http_listen_port: 9080
-        grpc_listen_port: 0
-      positions:
-        filename: /tmp/positions.yaml
-      clients:
-        - url: http://loki:3100/loki/api/v1/push
-      scrape_configs:
-        - job_name: docker
-          docker_sd_configs:
-            - host: unix:///var/run/docker.sock
-              refresh_interval: 5s
-          relabel_configs:
-            - source_labels: ['__meta_docker_container_name']
-              regex: '/(.*)'
-              target_label: 'container'
-            - source_labels: ['__meta_docker_container_log_stream']
-              target_label: 'stream'
-            - source_labels: ['__meta_docker_container_label_com_docker_swarm_service_name']
-              target_label: 'service_name'
+    external: true
