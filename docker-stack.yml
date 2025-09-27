@@ -159,6 +159,7 @@ networks:
   executor_network:
   services_network:
   monitor_monitor-net:
+    external: true 
   
 # --- Swarm will manage these volumes on the host node ---
 volumes:
