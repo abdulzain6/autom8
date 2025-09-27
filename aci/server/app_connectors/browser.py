@@ -68,7 +68,9 @@ class Browser(AppConnectorBase):
         client = Steel(base_url=steel_base_url)
 
         try:
-            session = client.sessions.create(solve_captcha=True, block_ads=True)
+            assert config.HTTP_PROXY is not None, "HTTP_PROXY must be set in config"
+            
+            session = client.sessions.create(solve_captcha=True, block_ads=True, proxy_url=config.HTTP_PROXY, use_proxy=True)
             cdp_url = f"ws://{steel_base_url.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
 
             llm = ChatOpenAI(
