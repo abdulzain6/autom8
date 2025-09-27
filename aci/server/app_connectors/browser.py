@@ -72,9 +72,16 @@ class Browser(AppConnectorBase):
             cdp_url = f"ws://{steel_base_url.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
 
             llm = ChatOpenAI(
-                model="x-ai/grok-4-fast:free", 
+                model="qwen/qwen2.5-vl-32b-instruct:free", 
                 temperature=0.3, 
                 api_key=api_key, 
+                base_url=config.OPENROUTER_BASE_URL
+            )
+
+            page_extraction_llm = ChatOpenAI(
+                model="openai/gpt-oss-20b:free",
+                temperature=0.3,
+                api_key=api_key,
                 base_url=config.OPENROUTER_BASE_URL
             )
 
@@ -89,6 +96,7 @@ class Browser(AppConnectorBase):
                 use_vision_for_planner=use_vision_for_planner,
                 display_files_in_done_text=True,
                 images_per_step=images_per_step,
+                page_extraction_llm=page_extraction_llm,
             )
 
             async def _run_agent():
