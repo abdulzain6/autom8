@@ -311,7 +311,7 @@
       "tags": [
         "Entertainment"
       ],
-      "goal": "Fetch a random joke from JOKES_API and deliver it via mobile push notification to brighten the user's day. Use JOKES_API to get a clean, family-friendly joke (avoiding offensive categories). Format the notification with the joke setup and punchline in an engaging way. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Daily Joke 😄' and the joke content formatted with emojis and clear setup/punchline structure for maximum entertainment value.",
+      "goal": "Fetch a random joke from JOKES_API and deliver it via mobile push notification. Use JOKES_API to get a clean, family-friendly joke. Keep the notification short. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Daily Joke 😄' and the joke content formatted concisely with emojis.",
       "variable_names": [],
       "required_app_names": [
         "JOKE_API",
@@ -742,7 +742,7 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/tanki-news.png?raw=true",
       "description": "Creates a daily digest of the latest Tanki Online game news and updates, summarizing the top stories for players.",
       "tags": [
-        "Tanki Online"
+        "Gaming"
       ],
       "goal": "Visit https://tankionline.com/en/news/ and extract the top 3 latest news articles. For each news item, gather the title, publication date, and a brief summary of the content. Create a comprehensive digest that includes: 1) Overview of current game updates and events, 2) Detailed summaries of each of the top 3 news items with key highlights, 3) Any upcoming events or important announcements. Format this as an engaging email digest and send it to the user via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Tanki Online News Digest - [Current Date]' including game update highlights and player-relevant information.",
       "variable_names": [],
@@ -757,7 +757,7 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/tanki-patch.png?raw=true",
       "description": "Checks the Tanki Online forums for the latest patch updates from this week and sends a comprehensive summary of new features, changes, and fixes.",
       "tags": [
-        "Tanki Online"
+        "Gaming"
       ],
       "goal": "Visit https://en.tankiforum.com/search/?&q=patch%20update&type=forums_topic&quick=1&nodes=118&start_after=week&sortby=relevancy to find the latest patch update threads from this week. Extract the most recent patch update post including: 1) Patch version number and release date, 2) Major new features and additions, 3) Balance changes and gameplay modifications, 4) Bug fixes and technical improvements, 5) Known issues and upcoming fixes. Create a comprehensive summary highlighting the most important changes for players. Send the patch update summary via NOTIFYME__SEND_ME_EMAIL with subject 'Tanki Online Weekly Patch Update - [Current Date]' including detailed breakdown of all changes and player impact assessment.",
       "variable_names": [],
@@ -766,7 +766,76 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Amazon Price Drop Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/amazon_price_alert.png?raw=true",
+      "description": "Monitor an Amazon product price and get notified when it drops below your target price",
+      "tags": [
+        "Shopping"
+      ],
+      "goal": "You are monitoring an Amazon product for price drops. The product URL is '{{ variables['Product URL'] }}' and the target price is '{{ variables['Target Price'] }}'. Use the BROWSER app to visit the Amazon product page, extract the current price (look for the main price element, usually in the product details section), and compare it to the target price. If the current price is below the target, use the NOTIFYME app to send an immediate email notification and mobile notification, with the product name, current price, URL, and savings amount. If the price is not below target, do nothing. Log the current price for tracking. Run this check daily.",
+      "variable_names": [
+        "Product URL",
+        "Target Price"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Amazon Deals Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/amazon_deals_digest.png?raw=true",
+      "description": "Get a daily digest of Amazon deals tailored to your chosen keywords or category.",
+      "tags": [
+        "Shopping"
+      ],
+      "goal": "You are fetching Amazon's deal page from 'https://www.amazon.com/gp/goldbox'. Search for deals that match the user's input keyword or category ('{{ variables['Deal Keyword'] }}'). From the matches, select the top 3–5 best deals based on highest discount and relevance. Collect the deal title, current price, original price, discount %, and link. Format them into a short digest-style summary and send email with the NOTIFYME app. If no relevant deals are found, send a brief email saying no new deals today.",
+      "variable_names": [
+        "Deal Keyword"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "BestBuy Deal of the Day",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/bestbuy_deal_of_day.jpeg?raw=true",
+      "description": "Get a daily digest of BestBuy's top deals, filtered by your chosen keyword or category.",
+      "tags": [
+        "Shopping"
+      ],
+      "goal": "You are fetching BestBuy's Deal of the Day page. Use the country input ('{{ variables['Country'] }}') to decide which site to visit: US = 'https://www.bestbuy.com/site/electronics/daily-deals/pcmcat248000050016.c?id=pcmcat248000050016', Canada = 'https://www.bestbuy.ca/en-ca/collection/deal-of-the-day/20000168'. Search for deals that match the user's input keyword or category ('{{ variables['Product Keyword'] }}'). From the matches, select the top 3–5 best deals based on highest discount and relevance. Collect the deal title, current price, original price, discount %, and link. Format them into a short digest-style summary and send email with the NOTIFYME app. If no relevant deals are found, send a brief email saying no new deals today.",
+      "variable_names": [
+        "Country",
+        "Product Keyword"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Walmart Flash Deals",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/walmart_flash_deals.jpeg?raw=true",
+      "description": "Get a daily digest of Walmart's flash deals tailored to your chosen keyword or category.",
+      "tags": [
+        "Shopping"
+      ],
+      "goal": "Use the Walmart Flash Deals page to find discounts. Construct the URL as 'https://www.walmart.com/shop/deals/flash-deals-new?inlineQuery={{ variables['Product Keyword'] }}'. Open it with the BROWSER app, extract the listed deals, and select the top 3–5 best offers based on discount % and relevance. Gather deal title, current price, original price, discount %, and product link. Summarize them into a clean digest email and send it with the NOTIFYME app. If no relevant deals are found, send a brief email saying no new deals today.",
+      "variable_names": [
+        "Product Keyword"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
-    
   ]
 }

@@ -56,7 +56,7 @@ class Browser(AppConnectorBase):
         logger.info(f"Running browser automation: {task[:100]}...")
 
         # Configuration from config
-        instructions = "Be super quick and use as few actions as possible. Complete the task efficiently with minimal steps. At the end, return a detailed report of what has been done, including any requested information."
+        instructions = "Be super quick and use as few actions as possible. Complete the task efficiently with minimal steps. If you encounter a captcha, immediately end the automation and report 'captcha encountered'. At the end, return a detailed report of what has been done, including any requested information."
         api_key = config.OPENROUTER_API_KEY
         max_steps = 10
         flash_mode = True
@@ -68,7 +68,7 @@ class Browser(AppConnectorBase):
         client = Steel(base_url=steel_base_url)
 
         try:
-            session = client.sessions.create()
+            session = client.sessions.create(solve_captcha=True, block_ads=True)
             cdp_url = f"ws://{steel_base_url.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
 
             llm = ChatOpenAI(
