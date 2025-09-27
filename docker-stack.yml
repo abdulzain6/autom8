@@ -15,6 +15,7 @@ services:
         target: /etc/caddy/Caddyfile
     networks:
       - web_proxy
+      - monitor_monitor-net
     deploy:
       replicas: 1
       restart_policy:
@@ -56,7 +57,6 @@ services:
     ports:
       - "7881:7881/tcp"
       - "3478:3478/udp"
-      # Use the short syntax for the port range
       - "20000-21000:20000-21000/udp"
     configs:
       - source: livekit_yaml
@@ -67,7 +67,7 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-        
+
   # --- 4. Voice Agent ---
   voice_agent:
     image: localhost:5000/aci-app:latest
@@ -158,7 +158,8 @@ networks:
   web_proxy:
   executor_network:
   services_network:
-
+  monitor_monitor-net:
+  
 # --- Swarm will manage these volumes on the host node ---
 volumes:
   caddy_data:

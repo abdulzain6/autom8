@@ -37,3 +37,7 @@ getautom8.app, api.getautom8.app {
         header_up X-Forwarded-Proto {scheme}
     }
 }
+
+grafana.getautom8.app {
+    reverse_proxy grafana:3000
+}
