@@ -141,6 +141,12 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+      # Add this section to protect your service
+      resources:
+        limits:
+          memory: 4G  # Hard cap: The container cannot use more than 4GB
+        reservations:
+          memory: 2G  # Soft cap: Guarantees the container at least 2GB
 
   redis:
     image: redis:7-alpine
