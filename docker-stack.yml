@@ -144,10 +144,11 @@ services:
       # Add this section to protect your service
       resources:
         limits:
-          memory: 4G  # Hard cap: The container cannot use more than 4GB
+          cpus: '2.0'      # <-- Add this: Allow the container to use up to 2 CPU cores
+          memory: 6G     # <-- Maybe increase memory as well, to 6G
         reservations:
-          memory: 2G  # Soft cap: Guarantees the container at least 2GB
-
+          cpus: '1.0'      # <-- Add this: Guarantee at least 1 full CPU core
+          memory: 3G     # <-- Increase this to 3G
   redis:
     image: redis:7-alpine
     networks:

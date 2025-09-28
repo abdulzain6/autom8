@@ -95,7 +95,7 @@ GOTENBERG_URL = check_and_get_env_variable("SERVER_GOTENBERG_URL")
 
 # Browser Automation
 STEEL_BASE_URL = check_and_get_env_variable("SERVER_STEEL_BASE_URL")
-BROWSER_MAX_WORKERS = int(os.getenv("SERVER_BROWSER_MAX_WORKERS", "20"))
+BROWSER_MAX_WORKERS = int(os.getenv("SERVER_BROWSER_MAX_WORKERS", "5"))
 
 # SMTP
 SMTP_SERVER = check_and_get_env_variable("SERVER_SMTP_SERVER")
