@@ -44,5 +44,8 @@ grafana.getautom8.app {
 
 
 netdata.getautom8.app {
+    basicauth {
+        abdulzain6 $2a$14$fB76yjUabN4orjI.B1WAeOAIM5c1iyuH2p3ypXicbCu3FOV76G/EG
+    }
     reverse_proxy netdata:19999
 }

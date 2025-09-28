@@ -10,6 +10,8 @@ services:
     privileged: true # Required to access host metrics
     networks:
       - monitor-net
+    environment:
+      - NETDATA_WEB_CLOUD_SPLASH_SCREEN=no
     deploy:
       mode: global # Ensures an agent runs on every server
 
