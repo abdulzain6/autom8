@@ -44,7 +44,7 @@ _browser_executor = concurrent.futures.ThreadPoolExecutor(
 
 _browser_semaphore = Semaphore(
     client=redis.from_url(config.REDIS_URL),
-    count=3,
+    count=config.BROWSER_MAX_WORKERS,
     namespace="browser_semaphore",
     stale_client_timeout=600, # 10 minutes
 )
