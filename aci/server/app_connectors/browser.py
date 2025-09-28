@@ -49,6 +49,12 @@ _browser_semaphore = Semaphore(
     stale_client_timeout=600, # 10 minutes
 )
 
+DISABLE_FINGERPRINT_SITES = [
+    "tankiforum.com",
+    "forum.tankiforum.com",
+    "www.tankiforum.com",
+]
+
 class Browser(AppConnectorBase):
     """
     A connector for browser automation using browser-use library with Steel browsers.
@@ -93,7 +99,16 @@ class Browser(AppConnectorBase):
                 with _browser_semaphore:
                     # 1. Create a new remote browser session for this task only.
                     assert config.HTTP_PROXY is not None, "HTTP_PROXY must be set in config"
-                    session = client.sessions.create(block_ads=True, use_proxy=True, proxy_url=config.HTTP_PROXY, stealth_config={"humanize_interactions": True, "skip_fingerprint_injection": False})
+                    disable_fingerprint = any(site in task for site in DISABLE_FINGERPRINT_SITES)
+
+                    stealth_settings = {
+                        "humanize_interactions": True,
+                        "skip_fingerprint_injection": disable_fingerprint
+                    }
+                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Stealth settings configured: {stealth_settings}")
+
+
+                    session = client.sessions.create(block_ads=True, use_proxy=True, proxy_url=config.HTTP_PROXY, stealth_config=stealth_settings) # type: ignore
                     cdp_url = f"ws://{config.STEEL_BASE_URL.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
                     
                     logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Steel Session ID: {session.id}")
