@@ -84,7 +84,7 @@ class Browser(AppConnectorBase):
             try:
                 # 1. Create a new remote browser session for this task only.
                 assert config.HTTP_PROXY is not None, "HTTP_PROXY must be set in config"
-                session = client.sessions.create(solve_captcha=True, block_ads=True, proxy_url=config.HTTP_PROXY, use_proxy=True)
+                session = client.sessions.create(solve_captcha=True, block_ads=True, use_proxy=False)
                 cdp_url = f"ws://{config.STEEL_BASE_URL.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
                 
                 logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Steel Session ID: {session.id}")
