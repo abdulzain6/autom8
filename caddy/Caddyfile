@@ -41,3 +41,8 @@ getautom8.app, api.getautom8.app {
 grafana.getautom8.app {
     reverse_proxy grafana:3000
 }
+
+
+netdata.getautom8.app {
+    reverse_proxy netdata:19999
+}

@@ -1,21 +1,17 @@
 version: '3.8'
 
 services:
-  # Prometheus, Grafana, Node-Exporter services remain the same...
-  prometheus:
-    image: prom/prometheus:latest
+  netdata:
+    image: netdata/netdata:latest
     volumes:
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    privileged: true # Required to access host metrics
     networks:
       - monitor-net
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints: [node.role == manager]
+      mode: global # Ensures an agent runs on every server
 
   grafana:
     image: grafana/grafana:latest
@@ -28,22 +24,6 @@ services:
       replicas: 1
       placement:
         constraints: [node.role == manager]
-
-  node-exporter:
-    image: prom/node-exporter:latest
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    networks:
-      - monitor-net
-    deploy:
-      mode: global
 
   loki:
     image: grafana/loki:latest
@@ -77,15 +57,13 @@ services:
       mode: global
 
 volumes:
-  prometheus_data:
   grafana_data:
   loki_data:
 
 networks:
   monitor-net:
 
-# --- CORRECTED SECTION ---
-# This tells Swarm to use the configs you created with 'docker config create'
+
 configs:
   loki_config:
     external: true
