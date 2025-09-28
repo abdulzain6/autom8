@@ -3,7 +3,7 @@ from typing import Optional, List
 from croniter import croniter
 from jinja2.sandbox import SandboxedEnvironment
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select
+from sqlalchemy import select, func
 from aci.common.db.sql_models import (
     App,
     Automation,
@@ -59,12 +59,23 @@ def list_user_automations(
     db: Session, user_id: str, limit: int, offset: int
 ) -> List[Automation]:
     """
-    Lists all automations for a given user with pagination.
+    Lists all automations for a given user with pagination, ordered by latest run time.
     """
+    # Subquery to get the latest run time per automation
+    latest_run_subq = (
+        select(
+            AutomationRun.automation_id,
+            func.max(AutomationRun.started_at).label('latest_run_at')
+        )
+        .group_by(AutomationRun.automation_id)
+        .subquery()
+    )
+
     stmt = (
         select(Automation)
+        .outerjoin(latest_run_subq, Automation.id == latest_run_subq.c.automation_id)
         .where(Automation.user_id == user_id)
-        .order_by(Automation.created_at.desc())
+        .order_by(latest_run_subq.c.latest_run_at.desc().nulls_last())
         .offset(offset)
         .limit(limit)
     )
