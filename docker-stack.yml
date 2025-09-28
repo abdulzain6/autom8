@@ -141,13 +141,13 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-      resources:
+        resources:
         limits:
-          cpus: '2.0'      # A generous limit for one demanding browser
-          memory: 4G       # A safe memory limit for one session
+          cpus: '2.5'      # Still recommended to handle CPU spikes for one heavy browser
+          memory: 2G       # Reduced based on your observation (max 1GiB usage)
         reservations:
-          cpus: '1.0'      # Guarantees 1 full core is available
-          memory: 2G       # Guarantees 2GB of memory
+          cpus: '1.5'      # Guarantees 1 full core for the task
+          memory: 1G       # Guarantees the observed 1GiB of memory
   redis:
     image: redis:7-alpine
     networks:
