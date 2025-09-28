@@ -142,12 +142,12 @@ services:
       restart_policy:
         condition: on-failure
         resources:
-        limits:
-          cpus: '2.5'      # Still recommended to handle CPU spikes for one heavy browser
-          memory: 2G       # Reduced based on your observation (max 1GiB usage)
-        reservations:
-          cpus: '1.5'      # Guarantees 1 full core for the task
-          memory: 1G       # Guarantees the observed 1GiB of memory
+          limits:
+            cpus: '2.5'      # Still recommended to handle CPU spikes for one heavy browser
+            memory: 2G       # Reduced based on your observation (max 1GiB usage)
+          reservations:
+            cpus: '1.5'      # Guarantees 1 full core for the task
+            memory: 1G       # Guarantees the observed 1GiB of memory
   redis:
     image: redis:7-alpine
     networks:
