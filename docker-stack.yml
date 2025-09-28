@@ -143,11 +143,11 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '3.0'      # Max 3 of your 4 host cores
-          memory: 5G       # Kept from the previous adjustment
+          cpus: '2.0'      # A generous limit for one demanding browser
+          memory: 4G       # A safe memory limit for one session
         reservations:
-          cpus: '1.5'      # Guarantees 1.5 cores, can burst up to 3.0
-          memory: 2.5G     # Kept from the previous adjustment
+          cpus: '1.0'      # Guarantees 1 full core is available
+          memory: 2G       # Guarantees 2GB of memory
   redis:
     image: redis:7-alpine
     networks:
