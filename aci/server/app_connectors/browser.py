@@ -3,8 +3,9 @@ import asyncio
 import concurrent.futures
 import os
 import threading
+import redis
+from redis_semaphore import Semaphore
 from typing import Optional
-
 from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
@@ -40,6 +41,13 @@ _event_loop_manager = EventLoopManager()
 _browser_executor = concurrent.futures.ThreadPoolExecutor(
     max_workers=config.BROWSER_MAX_WORKERS, thread_name_prefix="browser-automation"
 )    
+
+_browser_semaphore = Semaphore(
+    client=redis.from_url(config.REDIS_URL),
+    count=3,
+    namespace="browser_semaphore",
+    stale_client_timeout=600, # 10 minutes
+)
 
 class Browser(AppConnectorBase):
     """
@@ -82,49 +90,50 @@ class Browser(AppConnectorBase):
             client = Steel(base_url=config.STEEL_BASE_URL)
             session = None
             try:
-                # 1. Create a new remote browser session for this task only.
-                assert config.HTTP_PROXY is not None, "HTTP_PROXY must be set in config"
-                session = client.sessions.create(solve_captcha=True, block_ads=True, use_proxy=False)
-                cdp_url = f"ws://{config.STEEL_BASE_URL.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
-                
-                logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Steel Session ID: {session.id}")
+                with _browser_semaphore:
+                    # 1. Create a new remote browser session for this task only.
+                    assert config.HTTP_PROXY is not None, "HTTP_PROXY must be set in config"
+                    session = client.sessions.create(solve_captcha=True, block_ads=True, use_proxy=False)
+                    cdp_url = f"ws://{config.STEEL_BASE_URL.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
+                    
+                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Steel Session ID: {session.id}")
 
-                # LLM and Agent configuration
-                api_key = config.OPENROUTER_API_KEY
-                llm = ChatOpenAI(model="x-ai/grok-4-fast:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
-                page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-20b:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
+                    # LLM and Agent configuration
+                    api_key = config.OPENROUTER_API_KEY
+                    llm = ChatOpenAI(model="x-ai/grok-4-fast:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
+                    page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-20b:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
 
-                # 2. Create a new BrowserSession instance for this task only.
-                browser_session_for_this_agent = BrowserSession(cdp_url=cdp_url)
-                logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique BrowserSession object ID: {id(browser_session_for_this_agent)}")
+                    # 2. Create a new BrowserSession instance for this task only.
+                    browser_session_for_this_agent = BrowserSession(cdp_url=cdp_url)
+                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique BrowserSession object ID: {id(browser_session_for_this_agent)}")
 
-                # 3. Create a new Agent instance tied to the unique session.
-                # NOTE: Set use_vision=False as the Groq model doesn't support it.
-                agent = Agent(
-                    task=task,
-                    llm=llm,
-                    browser_session=browser_session_for_this_agent,
-                    flash_mode=True,
-                    extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
-                    use_thinking=False,
-                    use_vision=False, # Corrected based on logs
-                    display_files_in_done_text=True,
-                    images_per_step=1,
-                    page_extraction_llm=page_extraction_llm,
-                )
-                logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Agent object ID: {id(agent)}")
-                
-                # The async part of the task
-                async def _run_agent_async():
-                    result = await agent.run(max_steps=7) 
-                    return result.final_result() if result else None
+                    # 3. Create a new Agent instance tied to the unique session.
+                    # NOTE: Set use_vision=False as the Groq model doesn't support it.
+                    agent = Agent(
+                        task=task,
+                        llm=llm,
+                        browser_session=browser_session_for_this_agent,
+                        flash_mode=True,
+                        extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
+                        use_thinking=False,
+                        use_vision=False, # Corrected based on logs
+                        display_files_in_done_text=True,
+                        images_per_step=1,
+                        page_extraction_llm=page_extraction_llm,
+                    )
+                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Agent object ID: {id(agent)}")
+                    
+                    # The async part of the task
+                    async def _run_agent_async():
+                        result = await agent.run(max_steps=7) 
+                        return result.final_result() if result else None
 
-                # 4. Safely submit the async task to the shared event loop.
-                future = asyncio.run_coroutine_threadsafe(_run_agent_async(), _event_loop_manager.loop)
-                result = future.result(timeout=300) # 5 minute timeout
-                
-                logger.info(f"[PID: {process_id} | Thread: {thread_id}] Task finished successfully.")
-                return {"result": result, "success": True}
+                    # 4. Safely submit the async task to the shared event loop.
+                    future = asyncio.run_coroutine_threadsafe(_run_agent_async(), _event_loop_manager.loop)
+                    result = future.result(timeout=300) # 5 minute timeout
+                    
+                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Task finished successfully.")
+                    return {"result": result, "success": True}
 
             except Exception as e:
                 logger.error(f"[PID: {process_id} | Thread: {thread_id}] Browser automation failed: {e}", exc_info=True)
