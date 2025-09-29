@@ -49,17 +49,3 @@ netdata.getautom8.app {
     }
     reverse_proxy netdata:19999
 }
-
-skyvern.getautom8.app {
-    basic_auth {
-        abdulzain6 $2a$14$fB76yjUabN4orjI.B1WAeOAIM5c1iyuH2p3ypXicbCu3FOV76G/EG
-    }
-
-    # Reverse proxy to the skyvern-ui service container on port 8080
-    reverse_proxy skyvern-ui:8080 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
-}
