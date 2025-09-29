@@ -136,6 +136,8 @@ class Browser(AppConnectorBase):
                         images_per_step=1,
                         page_extraction_llm=page_extraction_llm,
                     )
+                    agent.settings.use_vision = True
+                    
                     logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Agent object ID: {id(agent)}")
                     
                     # The async part of the task

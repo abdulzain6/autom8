@@ -786,6 +786,42 @@
       "is_deep": true
     },
     {
+      "name": "Daraz Price Drop Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/daraz_price_alert.jpg?raw=true",
+      "description": "Monitor a Daraz.pk product price and get notified when it drops below your target price",
+      "tags": [
+        "Shopping"
+      ],
+      "goal": "You are monitoring a Daraz.pk product for price drops. The product URL is '{{ variables['Product URL'] }}' and the target price is '{{ variables['Target Price'] }}'. Use the BROWSER app to visit the Daraz product page, extract the current price (look for the main price element, often displayed prominently near the title and marked with 'Rs.'), and compare it to the target price. If the current price is below the target, use the NOTIFYME app to send an immediate email notification and mobile notification, with the product name, current price, URL, and savings amount. If the price is not below target, do nothing. Log the current price for tracking. Run this check daily.",
+      "variable_names": [
+        "Product URL",
+        "Target Price"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Noon Price Drop Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/noon_price_alert.jpg?raw=true",
+      "description": "Monitor a Noon.com product price and get notified when it drops below your target price",
+      "tags": [
+        "Shopping"
+      ],
+      "goal": "You are monitoring a Noon.com product for price drops. The product URL is '{{ variables['Product URL'] }}' and the target price is '{{ variables['Target Price'] }}'. Use the BROWSER app to visit the Noon product page, extract the current price (look for the main price element, typically displayed in a large font and marked with the local currency like 'AED', 'SAR', or 'EGP'), and compare it to the target price. If the current price is below the target, use the NOTIFYME app to send an immediate email notification and mobile notification, with the product name, current price, URL, and savings amount. If the price is not below target, do nothing. Log the current price for tracking. Run this check daily.",
+      "variable_names": [
+        "Product URL",
+        "Target Price"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
       "name": "Amazon Deals Digest",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/amazon_deals_digest.png?raw=true",
       "description": "Get a daily digest of Amazon deals tailored to your chosen keywords or category.",
@@ -815,6 +851,74 @@
       ],
       "required_app_names": [
         "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Daily Weather Snapshot",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/weather_snapshot.png?raw=true",
+      "description": "Get daily weather updates (temperature, condition, humidity) for your chosen city.",
+      "tags": [
+        "Environment"
+      ],
+      "goal": "Go to https://openweathermap.org/find?q={{ variables['City Name'] }}. From the resulting page, extract the city’s current temperature, weather condition (e.g., 'Sunny', 'Cloudy'), and humidity. Summarize the info'. Use the NOTIFYME app to send a daily email with this info and also send a short notification like 'Weather in X: Y°C, Z'. If data cannot be retrieved, notify the user that no weather data is available today.",
+      "variable_names": [
+        "City Name"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Earthquake Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/earthquake_alert.png?raw=true",
+      "description": "Get daily earthquake updates for your chosen city and country.",
+      "tags": [
+        "Environment"
+      ],
+      "goal": "Go to https://earthquaketrack.com/search?q={{ variables['Country'] }},{{ variables['City'] }}. From the resulting page, extract the earthquakes reported in the last 24 hours, including magnitude, location, and time. Summarize in plain text: 'X earthquakes near City, Country in last 24h: [list]'. Use the NOTIFYME app to send a daily email with the summary and also a short notification like 'Latest quake near City: Mx.x at Time'. If data cannot be retrieved, notify the user that no earthquake data is available for today.",
+      "variable_names": [
+        "Country",
+        "City"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Package Tracking Scraper",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/package_tracking.png?raw=true",
+      "description": "Track your packages from USPS, FedEx, DHL, or DHL eCommerce using the tracking number without needing to log in.",
+      "tags": [
+        "Shopping"
+      ],
+      "goal": "Go to the public tracking page of the selected carrier using the tracking number {{ variables['Tracking Number'] }}. Supported carriers and their links: USPS - https://tools.usps.com/go/TrackConfirmAction_input?origTrackNum={{ variables['Tracking Number'] }}, FedEx - https://www.fedex.com/apps/fedextrack/?tracknumbers={{ variables['Tracking Number'] }}, DHL - https://www.dhl.com/global-en/home/tracking.html?tracking-id={{ variables['Tracking Number'] }}, DHL eCommerce - https://webtrack.dhlglobalmail.com/?trackingnumber={{ variables['Tracking Number'] }}. Extract the latest status, location, and expected delivery. Use the NOTIFYME app to send a notification with the latest update. If data cannot be retrieved, notify the user that tracking information is unavailable.",
+      "variable_names": [
+        "Tracking Number",
+        "Carrier"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Is GTA 6 Out Yet?",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/gta6_release_checker.jpg?raw=true",
+      "description": "Stop refreshing news sites. This automation constantly checks official sources to see if Grand Theft Auto VI has been released, and notifies you the moment it's out.",
+      "tags": [
+        "Gaming"
+      ],
+      "goal": "You are a highly anticipated game release monitor. Your sole mission is to determine if Grand Theft Auto VI has been officially released. Use the SEARXNG app for a two-step process. First, perform daily searches for queries like 'GTA 6 official release date' and 'Grand Theft Auto VI news Rockstar Games'. Prioritize and identify the URLs of top results ONLY from high-authority sources: the official Rockstar Games website, IGN, Kotaku, and GameSpot. Second, use the SEARXNG app again to directly read the HTML content of these trusted URLs. Analyze the content for keywords confirming an immediate release, such as 'out now', 'released today', or 'available worldwide'. If, and only if, a trusted source confirms the game is currently available for purchase or play, use the NOTIFYME app to send a single, high-priority email and mobile notification with the subject 'IT'S HAPPENING! GTA 6 IS OUT!'. Include the source URL in the notification body. If no definitive release confirmation is found, do nothing. This is the only notification this automation should ever send.",
+      "variable_names": [],
+      "required_app_names": [
+        "SEARXNG",
         "NOTIFYME"
       ],
       "is_deep": true
