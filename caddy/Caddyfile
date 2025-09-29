@@ -50,7 +50,7 @@ netdata.getautom8.app {
     reverse_proxy netdata:19999
 }
 
-skyvern.autom8.app {
+skyvern.getautom8.app {
     basic_auth {
         abdulzain6 $2a$14$fB76yjUabN4orjI.B1WAeOAIM5c1iyuH2p3ypXicbCu3FOV76G/EG
     }
