@@ -223,6 +223,7 @@ volumes:
   caddy_data:
   caddy_config:
   redis-data:
+  postgres_data:
 
 # --- Define the configs that were created with 'docker config create' ---
 configs:
