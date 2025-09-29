@@ -160,16 +160,6 @@ services:
       - ./har:/data/har
       - ./log:/data/log
       - ./.streamlit:/app/.streamlit
-    environment:
-      - DATABASE_STRING=${DATABASE_STRING}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - BROWSER_TYPE=${BROWSER_TYPE}
-      - ENABLE_CODE_BLOCK=${ENABLE_CODE_BLOCK}
-      - ENABLE_OPENROUTER=${ENABLE_OPENROUTER}
-      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
-      - OPENROUTER_API_BASE=${OPENROUTER_API_BASE}
-      - LLM_KEY=${LLM_KEY}
-      - SKYVERN_APP_URL=http://skyvern:8080
     networks:
       - services_network  # Connect to your existing network
     healthcheck:
@@ -190,10 +180,6 @@ services:
       - ./.streamlit:/app/.streamlit
     networks:
       - services_network  # Connect to your existing network
-    environment:
-      - VITE_API_BASE_URL=http://skyvern:8000/api/v1
-      - VITE_ARTIFACT_API_BASE_URL=http://skyvern:9090
-      - VITE_WSS_BASE_URL=ws://skyvern:8000/api/v1
     depends_on:
       - skyvern
 
