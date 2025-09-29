@@ -151,6 +151,8 @@ services:
 
   skyvern:
     image: public.ecr.aws/skyvern/skyvern:latest
+    env_file:
+      - .env.skyvern
     restart: on-failure
     volumes:
       - ./artifacts:/data/artifacts
@@ -179,6 +181,8 @@ services:
   skyvern-ui:
     image: public.ecr.aws/skyvern/skyvern-ui:latest
     restart: on-failure
+    env_file:
+      - .env.skyvern
     volumes:
       - ./artifacts:/data/artifacts
       - ./videos:/data/videos
@@ -192,7 +196,6 @@ services:
       - VITE_WSS_BASE_URL=ws://skyvern:8000/api/v1
     depends_on:
       - skyvern
-
 
   redis:
     image: redis:7-alpine

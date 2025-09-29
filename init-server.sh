@@ -77,6 +77,8 @@ sudo firewall-cmd --reload
 echo "Adding current user to the 'docker' group..."
 sudo usermod -aG docker ${USER}
 
+mkdir -p artifacts videos har log .streamlit postgres-data
+
 # --- Final Instructions ---
 echo ""
 echo "======================================================================"
