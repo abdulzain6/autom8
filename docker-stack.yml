@@ -191,8 +191,7 @@ services:
       - VITE_ARTIFACT_API_BASE_URL=http://skyvern:9090
       - VITE_WSS_BASE_URL=ws://skyvern:8000/api/v1
     depends_on:
-      skyvern:
-        condition: service_healthy
+      - skyvern
 
 
   redis:
