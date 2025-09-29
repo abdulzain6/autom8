@@ -922,6 +922,23 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "Restock Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/generic_shopping_alert.png?raw=true",
+      "description": "Monitor any product on almost any e-commerce site. Get an instant notification the moment an out-of-stock item is available to buy.",
+      "tags": [
+        "Shopping"
+      ],
+      "goal": "You are an expert e-commerce analyst. Your task is to determine the real-time stock status of a product on any given retail website using its URL. Use the BROWSER app to visit the provided 'Product URL' and analyze its content. Your primary focus is the main 'buy box' area, which is typically located near the product title, images, and price. First, search this main product area for explicit 'out of stock' indicators, such as the text 'Out of Stock', 'Sold Out', or 'Currently Unavailable'. Concurrently, search for an active, clickable button with text like 'Add to Cart' or 'Buy Now'. A button that is visible but disabled or greyed out must be treated as 'Out of Stock'. CRUCIALLY, you must IGNORE any mention of stock status found within user review sections, Q&A areas, or 'related products' carousels to avoid false positives. Maintain a memory of the item's last known status ('In Stock' or 'Out of Stock'). If the previous status was 'Out of Stock' and the current status is now definitively 'In Stock', you must use the NOTIFYME app to send a single, high-priority notification. The notification should say 'Restock Alert! The item is back in stock!' and include the Product URL. If the status has not changed, do nothing.",
+      "variable_names": [
+        "Product URL"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }

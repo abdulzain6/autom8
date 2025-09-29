@@ -4,7 +4,6 @@ aiohttp==3.12.15
 aiosignal==1.4.0
 alembic==1.16.4
 annotated-types==0.7.0
-anthropic==0.60.0
 anyio==4.10.0
 APScheduler==3.11.0
 arxiv==2.2.0
@@ -169,15 +168,6 @@ onnxruntime==1.22.1
 openai==1.99.9
 openapi-schema-validator==0.6.3
 openapi-spec-validator==0.7.2
-opentelemetry-api==1.36.0
-opentelemetry-exporter-otlp==1.36.0
-opentelemetry-exporter-otlp-proto-common==1.36.0
-opentelemetry-exporter-otlp-proto-grpc==1.36.0
-opentelemetry-exporter-otlp-proto-http==1.36.0
-opentelemetry-instrumentation==0.57b0
-opentelemetry-proto==1.36.0
-opentelemetry-sdk==1.36.0
-opentelemetry-semantic-conventions==0.57b0
 orderly-set==5.5.0
 orjson==3.11.2
 ormsgpack==1.10.0
@@ -304,3 +294,8 @@ fastapi-cache2==0.2.2
 steel-sdk==0.9.2
 browser-use==0.5.7
 redis-semaphore==0.2.2
+skyvern==0.2.6
+
+
+# Force anthropic for browser-use
+anthropic==0.60.0
