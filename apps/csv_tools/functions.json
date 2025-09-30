@@ -1,0 +1,119 @@
+[
+  {
+    "name": "CSV_TOOLS__CREATE_CSV",
+    "description": "Creates a new CSV file with the given headers and saves it as an artifact.",
+    "tags": ["csv", "create", "file", "data", "spreadsheet"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of strings to be used as the header row."
+        },
+        "output_filename": {
+          "type": "string",
+          "description": "The desired filename for the output .csv artifact (e.g., 'data.csv')."
+        }
+      },
+      "required": ["headers", "output_filename"],
+      "visible": ["headers", "output_filename"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "CSV_TOOLS__ADD_ROWS_TO_CSV",
+    "description": "Adds new rows to an existing CSV file artifact.",
+    "tags": ["csv", "add", "rows", "data", "update"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "description": "The ID of the CSV artifact to modify."
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": "A list of lists, where each inner list represents a row to add."
+        }
+      },
+      "required": ["artifact_id", "rows"],
+      "visible": ["artifact_id", "rows"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "CSV_TOOLS__READ_CSV",
+    "description": "Reads a specified range of lines from a CSV artifact, including line numbers.",
+    "tags": ["csv", "read", "data", "lines", "range"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "description": "The ID of the CSV artifact to read."
+        },
+        "start_line": {
+          "type": "integer",
+          "description": "The starting line number (0-indexed).",
+          "default": 0
+        },
+        "end_line": {
+          "type": "integer",
+          "description": "The ending line number (exclusive). Reads to the end if not specified."
+        }
+      },
+      "required": ["artifact_id"],
+      "visible": ["artifact_id", "start_line", "end_line"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "CSV_TOOLS__DELETE_ROWS_FROM_CSV",
+    "description": "Deletes specified rows from a CSV file artifact.",
+    "tags": ["csv", "delete", "rows", "data", "remove"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "description": "The ID of the CSV artifact to modify."
+        },
+        "row_indices_to_delete": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "A list of 0-based row indices to delete."
+        }
+      },
+      "required": ["artifact_id", "row_indices_to_delete"],
+      "visible": ["artifact_id", "row_indices_to_delete"],
+      "additionalProperties": false
+    }
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "name": "CSV_TOOLS",
+  "display_name": "CSV Tools",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/csv-tools.png",
+  "provider": "Internal",
+  "version": "1.0.0",
+  "description": "A utility for creating and manipulating CSV files, including adding rows, reading data, and deleting rows.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Productivity"
+  ],
+  "visibility": "public",
+  "active": true
+}

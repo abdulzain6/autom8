@@ -76,7 +76,7 @@ class FileManager:
             self.client.storage.from_(bucket).upload(
                 path=path_in_bucket,
                 file=temp_path,
-                file_options={"content-type": detected_mime_type},
+                file_options={"content-type": detected_mime_type, "upsert": "true"},
             )
         except StorageException as e:
             raise RuntimeError(f"Could not upload file to Supabase Storage: {str(e)}")
@@ -203,6 +203,36 @@ class FileManager:
         self.db.commit()
         self.db.refresh(artifact_record)
         return str(artifact_record.id)
+
+    def update_artifact(
+        self,
+        artifact_id: str,
+        file_object: BinaryIO,
+        user_id: str
+    ) -> None:
+        """
+        Updates an existing artifact's content in Supabase Storage and its metadata in the database.
+        This operation reuses the existing artifact ID and file path.
+        """
+        # 1. Fetch the existing artifact record
+        artifact_record = self.db.query(Artifact).filter(Artifact.id == artifact_id, Artifact.user_id == user_id).first()
+        if not artifact_record:
+            raise ValueError(f"Artifact with ID {artifact_id} not found for user {user_id}.")
+
+        # 2. Get new file size and upload the new content, overwriting the old file
+        new_file_size = self._get_file_size(file_object)
+        _, new_mime_type = self._upload_to_supabase(
+            bucket=self.ARTIFACT_BUCKET,
+            path_in_bucket=artifact_record.file_path,
+            file_object=file_object,
+        )
+
+        # 3. Update the artifact record in the database
+        artifact_record.size_bytes = new_file_size
+        artifact_record.mime_type = new_mime_type
+        self.db.commit()
+        logger.info(f"Successfully updated artifact {artifact_id} in place.")
+
 
     def read_artifact(self, file_id: str) -> Tuple[Generator[bytes, None, None], str]:
         """Retrieves a temporary artifact's content via a signed URL."""
