@@ -151,10 +151,8 @@ services:
 
   skyvern:
     image: public.ecr.aws/skyvern/skyvern:latest
-    replicas: 0
     env_file:
       - .env.skyvern
-    restart: on-failure
     volumes:
       - ./artifacts:/data/artifacts
       - ./videos:/data/videos
@@ -168,11 +166,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      replicas: 0
+      restart_policy:
+        condition: on-failure
 
   skyvern-ui:
     image: public.ecr.aws/skyvern/skyvern-ui:latest
-    replicas: 0
-    restart: on-failure
     env_file:
       - .env.skyvern
     volumes:
@@ -184,9 +184,12 @@ services:
       - services_network  # Connect to your existing network
     depends_on:
       - skyvern
+    deploy:
+      replicas: 0
+      restart_policy:
+        condition: on-failure
 
   postgres:
-    replicas: 0
     image: postgres:14-alpine
     restart: always
     volumes:
@@ -201,6 +204,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      replicas: 0
 
   redis:
     image: redis:7-alpine
