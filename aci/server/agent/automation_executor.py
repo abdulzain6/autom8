@@ -1,12 +1,11 @@
-import asyncio
 from datetime import datetime
-from typing import Literal, cast, List
+from typing import Literal, cast
 from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field, SecretStr
 from aci.common.db.sql_models import Automation, Function
 from langchain_core.tools import StructuredTool
 from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
-from aci.server.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL, TOGETHER_API_KEY, TOGETHER_BASE_URL
+from aci.server.config import TOGETHER_API_KEY, TOGETHER_BASE_URL
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     format_function_definition,

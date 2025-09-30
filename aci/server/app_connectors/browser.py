@@ -14,6 +14,7 @@ from aci.server.app_connectors.base import AppConnectorBase
 from browser_use import Agent, BrowserSession
 from browser_use.llm import ChatOpenAI
 from steel import Steel
+from skyvern import Skyvern
 
 logger = get_logger(__name__)
 
@@ -85,88 +86,115 @@ class Browser(AppConnectorBase):
         """
         logger.info(f"Submitting browser task to executor: {task[:100]}...")
 
-        # This nested function encapsulates the entire lifecycle of a single browser task.
-        # It's what will be executed by a thread from the thread pool.
-        def _setup_and_run_agent():
-            process_id = os.getpid()
-            thread_id = threading.get_ident()
-            logger.info(f"[PID: {process_id} | Thread: {thread_id}] Starting setup for a new browser task.")
+        if config.USE_SKYVERN:
+            # Use Skyvern for browser automation
+            async def _run_skyvern_task():
+                skyvern = Skyvern(
+                    base_url=config.SKYVERN_BASE_URL,
+                    api_key=config.SKYVERN_API_KEY
+                )
+                task_result = await skyvern.run_task(
+                    prompt=task,
+                    wait_for_completion=True,
+                    max_steps=10,
+                    model={"reasoning": {"enabled": False}},
+                )
+                return {"result": task_result.output, "success": True}
 
-            # All clients and sessions are created inside this function, not outside.
-            client = Steel(base_url=config.STEEL_BASE_URL)
-            session = None
-            try:
-                with _browser_semaphore:
-                    # 1. Create a new remote browser session for this task only.
-                    assert config.HTTP_PROXY is not None, "HTTP_PROXY must be set in config"
-                    disable_fingerprint = any(site in task for site in DISABLE_FINGERPRINT_SITES)
+            async def _run_skyvern():
+                try:
+                    return await _run_skyvern_task()
+                except Exception as e:
+                    logger.error(f"Skyvern task failed: {e}", exc_info=True)
+                    return {"result": None, "error": str(e), "success": False}
 
-                    stealth_settings = {
-                        "humanize_interactions": True,
-                        "skip_fingerprint_injection": disable_fingerprint
-                    }
-                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Stealth settings configured: {stealth_settings}")
+            with _browser_semaphore:
+                future = asyncio.run_coroutine_threadsafe(_run_skyvern(), _event_loop_manager.loop)
+                return future.result(timeout=300)
+        else:
+            # Use browser-use with Steel
+            # This nested function encapsulates the entire lifecycle of a single browser task.
+            # It's what will be executed by a thread from the thread pool.
+            def _setup_and_run_agent():
+                process_id = os.getpid()
+                thread_id = threading.get_ident()
+                logger.info(f"[PID: {process_id} | Thread: {thread_id}] Starting setup for a new browser task.")
+
+                # All clients and sessions are created inside this function, not outside.
+                client = Steel(base_url=config.STEEL_BASE_URL)
+                session = None
+                try:
+                    with _browser_semaphore:
+                        # 1. Create a new remote browser session for this task only.
+                        assert config.HTTP_PROXY is not None, "HTTP_PROXY must be set in config"
+                        disable_fingerprint = any(site in task for site in DISABLE_FINGERPRINT_SITES)
+
+                        stealth_settings = {
+                            "humanize_interactions": True,
+                            "skip_fingerprint_injection": disable_fingerprint
+                        }
+                        logger.info(f"[PID: {process_id} | Thread: {thread_id}] Stealth settings configured: {stealth_settings}")
 
 
-                    session = client.sessions.create(block_ads=True, use_proxy=True, proxy_url=config.HTTP_PROXY, stealth_config=stealth_settings) # type: ignore
-                    cdp_url = f"ws://{config.STEEL_BASE_URL.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
-                    
-                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Steel Session ID: {session.id}")
+                        session = client.sessions.create(block_ads=True, use_proxy=True, proxy_url=config.HTTP_PROXY, stealth_config=stealth_settings) # type: ignore
+                        cdp_url = f"ws://{config.STEEL_BASE_URL.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
+                        
+                        logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Steel Session ID: {session.id}")
 
-                    # LLM and Agent configuration
-                    api_key = config.OPENROUTER_API_KEY
-                    llm = ChatOpenAI(model="x-ai/grok-4-fast:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
-                    page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-20b:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
+                        # LLM and Agent configuration
+                        api_key = config.OPENROUTER_API_KEY
+                        llm = ChatOpenAI(model="x-ai/grok-4-fast:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
+                        page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-20b:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
 
-                    # 2. Create a new BrowserSession instance for this task only.
-                    browser_session_for_this_agent = BrowserSession(cdp_url=cdp_url)
-                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique BrowserSession object ID: {id(browser_session_for_this_agent)}")
+                        # 2. Create a new BrowserSession instance for this task only.
+                        browser_session_for_this_agent = BrowserSession(cdp_url=cdp_url)
+                        logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique BrowserSession object ID: {id(browser_session_for_this_agent)}")
 
-                    # 3. Create a new Agent instance tied to the unique session.
-                    # NOTE: Set use_vision=False as the Groq model doesn't support it.
-                    agent = Agent(
-                        task=task,
-                        llm=llm,
-                        browser_session=browser_session_for_this_agent,
-                        flash_mode=True,
-                        extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
-                        use_thinking=False,
-                        use_vision=False, # Corrected based on logs
-                        display_files_in_done_text=True,
-                        images_per_step=1,
-                        page_extraction_llm=page_extraction_llm,
-                    )
-                    agent.settings.use_vision = True
-                    
-                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Agent object ID: {id(agent)}")
-                    
-                    # The async part of the task
-                    async def _run_agent_async():
-                        result = await agent.run(max_steps=7) 
-                        return result.final_result() if result else None
+                        # 3. Create a new Agent instance tied to the unique session.
+                        # NOTE: Set use_vision=False as the Groq model doesn't support it.
+                        agent = Agent(
+                            task=task,
+                            llm=llm,
+                            browser_session=browser_session_for_this_agent,
+                            flash_mode=True,
+                            extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
+                            use_thinking=False,
+                            use_vision=False, # Corrected based on logs
+                            display_files_in_done_text=True,
+                            images_per_step=1,
+                            page_extraction_llm=page_extraction_llm,
+                        )
+                        agent.settings.use_vision = True
+                        
+                        logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created unique Agent object ID: {id(agent)}")
+                        
+                        # The async part of the task
+                        async def _run_agent_async():
+                            result = await agent.run(max_steps=7) 
+                            return result.final_result() if result else None
 
-                    # 4. Safely submit the async task to the shared event loop.
-                    future = asyncio.run_coroutine_threadsafe(_run_agent_async(), _event_loop_manager.loop)
-                    result = future.result(timeout=300) # 5 minute timeout
-                    
-                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Task finished successfully.")
-                    return {"result": result, "success": True}
+                        # 4. Safely submit the async task to the shared event loop.
+                        future = asyncio.run_coroutine_threadsafe(_run_agent_async(), _event_loop_manager.loop)
+                        result = future.result(timeout=300) # 5 minute timeout
+                        
+                        logger.info(f"[PID: {process_id} | Thread: {thread_id}] Task finished successfully.")
+                        return {"result": result, "success": True}
 
-            except Exception as e:
-                logger.error(f"[PID: {process_id} | Thread: {thread_id}] Browser automation failed: {e}", exc_info=True)
-                return {"result": None, "error": str(e), "success": False}
-            finally:
-                # 5. Always clean up and release the remote browser session.
-                if session:
-                    try:
-                        client.sessions.release(session.id)
-                        logger.info(f"[PID: {process_id} | Thread: {thread_id}] Released Steel Session ID: {session.id}")
-                    except Exception as e:
-                        logger.error(f"[PID: {process_id} | Thread: {thread_id}] Failed to release session {session.id}: {e}")
-        
-        # Submit the entire encapsulated function to the thread pool.
-        future = _browser_executor.submit(_setup_and_run_agent)
-        return future.result()
+                except Exception as e:
+                    logger.error(f"[PID: {process_id} | Thread: {thread_id}] Browser automation failed: {e}", exc_info=True)
+                    return {"result": None, "error": str(e), "success": False}
+                finally:
+                    # 5. Always clean up and release the remote browser session.
+                    if session:
+                        try:
+                            client.sessions.release(session.id)
+                            logger.info(f"[PID: {process_id} | Thread: {thread_id}] Released Steel Session ID: {session.id}")
+                        except Exception as e:
+                            logger.error(f"[PID: {process_id} | Thread: {thread_id}] Failed to release session {session.id}: {e}")
+            
+            # Submit the entire encapsulated function to the thread pool.
+            future = _browser_executor.submit(_setup_and_run_agent)
+            return future.result()
 
 
 

@@ -104,3 +104,7 @@ SMTP_USERNAME = check_and_get_env_variable("SERVER_SMTP_USERNAME")
 SMTP_PASSWORD = SecretStr(check_and_get_env_variable("SERVER_SMTP_PASSWORD"))
 FROM_EMAIL_AGENT = check_and_get_env_variable("SERVER_FROM_EMAIL_AGENT")
 FIREBASE_SERVICE_ACCOUNT_KEY_PATH = check_and_get_env_variable("SERVER_FIREBASE_SERVICE_ACCOUNT_KEY_PATH")
+
+SKYVERN_BASE_URL = check_and_get_env_variable("SERVER_SKYVERN_BASE_URL")
+SKYVERN_API_KEY = check_and_get_env_variable("SERVER_SKYVERN_API_KEY")
+USE_SKYVERN = os.getenv("SERVER_USE_SKYVERN", "false").lower() == "true"
