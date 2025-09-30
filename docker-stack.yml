@@ -151,6 +151,7 @@ services:
 
   skyvern:
     image: public.ecr.aws/skyvern/skyvern:latest
+    replicas: 0
     env_file:
       - .env.skyvern
     restart: on-failure
@@ -170,6 +171,7 @@ services:
 
   skyvern-ui:
     image: public.ecr.aws/skyvern/skyvern-ui:latest
+    replicas: 0
     restart: on-failure
     env_file:
       - .env.skyvern
@@ -184,6 +186,7 @@ services:
       - skyvern
 
   postgres:
+    replicas: 0
     image: postgres:14-alpine
     restart: always
     volumes:
