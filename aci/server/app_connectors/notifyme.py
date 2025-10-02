@@ -6,6 +6,7 @@ from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from typing import Optional, List
 import os
+import io
 from aci.common.fcm import FCMManager
 from aci.common.utils import create_db_session
 from aci.server import config
@@ -15,10 +16,19 @@ from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
 
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
 logger = get_logger(__name__)
 
 # Define a constant for the maximum total size of attachments in megabytes.
 MAX_ATTACHMENT_SIZE_MB = 10
+# Maximum size for individual images before compression (in MB)
+MAX_IMAGE_SIZE_MB = 2.5
+# Image compression quality (1-100, lower = smaller file)
+IMAGE_COMPRESSION_QUALITY = 70
 
 
 class Notifyme(AppConnectorBase):
@@ -315,6 +325,63 @@ class Notifyme(AppConnectorBase):
         if not self.user_email:
             raise ValueError("User email is not available in the linked account.")
 
+    def _compress_image(self, image_bytes: bytes, filename: str) -> tuple[bytes, str]:
+        """
+        Compress an image to reduce file size for email compatibility.
+        
+        Args:
+            image_bytes: Raw image bytes
+            filename: Original filename
+            
+        Returns:
+            Tuple of (compressed_bytes, new_filename)
+        """
+        if Image is None:
+            logger.warning("PIL not available, cannot compress image")
+            return image_bytes, filename
+        
+        try:
+            # Open image from bytes
+            image = Image.open(io.BytesIO(image_bytes))
+            
+            # Convert to RGB if necessary (for JPEG compatibility)
+            if image.mode in ('RGBA', 'LA', 'P'):
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                if image.mode == 'P':
+                    image = image.convert('RGBA')
+                background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+                image = background
+            
+            # Calculate target size (aim for ~1MB max)
+            original_size = len(image_bytes)
+            target_size = min(1024 * 1024, original_size)  # 1MB max
+            
+            # If already small enough, don't compress
+            if original_size <= target_size:
+                return image_bytes, filename
+            
+            # Try different quality levels to get under target size
+            for quality in [IMAGE_COMPRESSION_QUALITY, 50, 30, 20]:
+                output = io.BytesIO()
+                image.save(output, format='JPEG', quality=quality, optimize=True)
+                compressed_bytes = output.getvalue()
+                
+                if len(compressed_bytes) <= target_size or quality == 20:
+                    # Update filename to reflect compression
+                    base_name = os.path.splitext(filename)[0]
+                    compressed_filename = f"{base_name}_compressed.jpg"
+                    
+                    compression_ratio = len(compressed_bytes) / original_size
+                    logger.info(f"Compressed image {filename}: {original_size:,} → {len(compressed_bytes):,} bytes ({compression_ratio:.1%}, quality={quality})")
+                    
+                    return compressed_bytes, compressed_filename
+                    
+        except Exception as e:
+            logger.warning(f"Failed to compress image {filename}: {e}")
+            return image_bytes, filename
+        
+        return image_bytes, filename
+
     def send_me_email(
         self, subject: str, body: str, artifact_ids: Optional[List[str]] = None
     ) -> dict:
@@ -399,22 +466,34 @@ class Notifyme(AppConnectorBase):
                         f"Artifact with ID {artifact_id} not found or access denied."
                     )
 
-                total_size += file_record.size_bytes
+                # Get file content first to calculate actual size after compression  
+                content_generator, _ = self.file_manager.read_artifact(artifact_id)
+                file_content = b"".join(content_generator)
+                
+                # Check if this is an image file and compress it if needed
+                filename = file_record.filename
+                file_extension = os.path.splitext(filename)[1].lower()
+                is_image = file_extension in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp']
+                
+                if is_image:
+                    # Compress the image to reduce size
+                    file_content, filename = self._compress_image(file_content, filename)
+
+                # Use actual size after compression for size check
+                actual_size = len(file_content)
+                total_size += actual_size
                 if total_size > max_size_bytes:
                     raise ValueError(
                         f"Total attachment size exceeds the {MAX_ATTACHMENT_SIZE_MB}MB limit."
                     )
 
-                content_generator, _ = self.file_manager.read_artifact(artifact_id)
-                file_content = b"".join(content_generator)
-
-                part = MIMEApplication(file_content, Name=file_record.filename)
+                part = MIMEApplication(file_content, Name=filename)
                 part["Content-Disposition"] = (
-                    f'attachment; filename="{file_record.filename}"'
+                    f'attachment; filename="{filename}"'
                 )
                 msg.attach(part)
                 logger.info(
-                    f"Attached artifact '{file_record.filename}' ({file_record.size_bytes} bytes) to email."
+                    f"Attached artifact '{filename}' ({len(file_content)} bytes) to email."
                 )
 
         try:

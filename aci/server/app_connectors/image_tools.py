@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 logger = get_logger(__name__)
 
 # Constants for AI-friendly image processing
-MAX_IMAGE_SIZE_MB = 20.0  # 50MB limit for AI image processing
+MAX_IMAGE_SIZE_MB = 10.0  # Allow larger images for NASA APOD and similar content
 DEFAULT_TTL_DAYS = 7
 
 # Internal/localhost IP ranges and service names to block
@@ -117,7 +117,7 @@ class ImageTools(AppConnectorBase):
         Args:
             url: The URL of the image to download.
             filename: The desired filename. If not provided, extracted from URL.
-            max_size_mb: Maximum file size in MB (default: 50MB for AI processing).
+            max_size_mb: Maximum file size in MB (default: 10MB for content like NASA APOD).
         """
         self._before_execute()
         
