@@ -60,8 +60,11 @@ def get_db_session() -> Generator[Session, None, None]:
     try:
         yield db_session
         db_session.commit()
-    except Exception:
+    except Exception as e:
         db_session.rollback()
+        # Invalidate the connection if we hit a transaction state error
+        if "INTRANS" in str(e) or "autocommit" in str(e):
+            db_session.connection().invalidate()
         raise
     finally:
         db_session.close()

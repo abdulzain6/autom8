@@ -1,0 +1,80 @@
+[
+  {
+    "name": "SHERLOCK_OSINT__INVESTIGATE_USERNAME",
+    "description": "Investigate a username across multiple social media platforms and websites using Sherlock. Returns raw QueryResult objects for each site checked, including status (CLAIMED/AVAILABLE), URLs, query times, and context information.",
+    "tags": ["osint", "username", "investigation", "social media", "sherlock", "intelligence"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "The username to investigate across social media platforms and websites."
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Timeout in seconds for each site check (default: 60).",
+          "default": 60,
+          "minimum": 5,
+          "maximum": 300
+        },
+        "include_nsfw": {
+          "type": "boolean",
+          "description": "Whether to include NSFW/adult sites in the search (default: false).",
+          "default": false
+        },
+        "max_sites": {
+          "type": "integer",
+          "description": "Maximum number of sites to check (default: all sites). Use to limit investigation scope.",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "site_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of specific site names to check (e.g., ['Twitter', 'Facebook', 'Instagram']). If not provided, all sites will be checked."
+        },
+        "strict_filtering": {
+          "type": "boolean",
+          "description": "Whether to apply strict filtering to reduce false positives by analyzing response content (default: true).",
+          "default": true
+        },
+        "only_positive": {
+          "type": "boolean",
+          "description": "Whether to only return claimed accounts and skip negative results to minimize data size (default: true).",
+          "default": true
+        }
+      },
+      "required": ["username"],
+      "visible": ["username", "timeout", "include_nsfw", "max_sites", "site_names", "strict_filtering", "only_positive"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "SHERLOCK_OSINT__GET_SUPPORTED_SITES",
+    "description": "Get a list of all supported sites and platforms for username investigation. Returns site names, URLs, categories, and NSFW flags to help understand investigation scope.",
+    "tags": ["osint", "sites", "platforms", "supported", "list"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "include_nsfw": {
+          "type": "boolean",
+          "description": "Whether to include NSFW/adult sites in the results (default: false).",
+          "default": false
+        }
+      },
+      "required": [],
+      "visible": ["include_nsfw"],
+      "additionalProperties": false
+    }
+  }
+]

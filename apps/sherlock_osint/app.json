@@ -1,0 +1,17 @@
+{
+  "name": "SHERLOCK_OSINT",
+  "display_name": "Sherlock OSINT",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/sherlock-osint.png",
+  "provider": "Internal",
+  "version": "1.0.0",
+  "description": "Open Source Intelligence (OSINT) username investigations using Sherlock. Search for usernames across multiple social media platforms and websites to gather intelligence and verify online presence.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Security"
+  ],
+  "visibility": "public",
+  "active": true
+}
