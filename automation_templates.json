@@ -947,7 +947,7 @@
       "tags": [
         "Science"
       ],
-      "goal": "First, use the HTTP_TOOLS app to fetch content from 'https://apod.nasa.gov/apod/astropix.html' and extract the clean text. From the fetched content, identify and extract the image URL (usually in an <img> tag or as a link to a high-resolution image). Look for patterns like 'image/XXXX/XXXX.jpg' or similar NASA image URLs. Next, use the IMAGE_TOOLS app to download the identified image URL and save it as an artifact. Finally, use the NOTIFYME app to send an email with the subject 'NASA Astronomy Picture of the Day - [Current Date]'. The email should include: 1) The downloaded image as an attachment using the artifact ID, 2) The title and explanation text extracted from the NASA APOD page, 3) A link back to the original NASA APOD page for full details. Format the email professionally with proper spacing and make it visually appealing. If any step fails (content fetch, image download, or email), send a fallback notification explaining what went wrong.",
+      "goal": "First, use the HTTP_TOOLS app to fetch content from 'https://apod.nasa.gov/apod/astropix.html' and extract the clean text. From the fetched content, identify and extract the image URL (usually in an <img> tag or as a link to a high-resolution image). Look for patterns like 'image/XXXX/XXXX.jpg' or similar NASA image URLs. Next, use the IMAGE_TOOLS app to download the identified image URL and save it as an artifact. Finally, use the NOTIFYME app to send an email with the subject 'NASA APOD - [Current Date]'. The email should be concise and include: 1) The downloaded image as an attachment using the artifact ID, 2) Only the title from the NASA APOD page (keep it short), 3) A brief summary of the explanation (maximum 2-3 sentences), 4) A link to the full NASA APOD page for complete details. Keep the email content minimal and focused - avoid including the full explanation text to reduce email size. If any step fails, send a brief error notification.",
       "variable_names": [],
       "required_app_names": [
         "HTTP_TOOLS",
@@ -955,6 +955,37 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "GitHub Trending Repositories",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/github_trending.png?raw=true",
+      "description": "Daily digest of today's trending GitHub repositories with descriptions, stars, and programming languages.",
+      "tags": [
+        "Developer Tools",
+        "Technology"
+      ],
+      "goal": "Use the BROWSER app to visit ONLY 'https://github.com/trending' - do NOT visit individual repository URLs one by one. Extract all the information directly from the trending page itself. From this single page, collect information about the top 10-15 repositories including: repository name, description, programming language, current star count, and GitHub URL (these URLs are visible on the trending page, just extract them without visiting). Organize this data into a clean, readable format and use the NOTIFYME app to send an email with the subject 'GitHub Trending Today - [Current Date]'. The email should include: 1) A brief introduction about trending repos, 2) A well-formatted list of repositories with name, language, stars, and short description for each, 3) GitHub URLs for each repository, 4) A footer encouraging exploration of interesting projects. Keep the email concise but informative, highlighting the most interesting repositories. IMPORTANT: Only visit the main trending page, do not navigate to individual repository pages.",
+      "variable_names": [],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Daily Brainy Quote",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/brainy_quote.png?raw=true",
+      "description": "Daily inspiration with a thought-provoking quote from BrainyQuote's Quote of the Day delivered to your mobile device.",
+      "tags": [
+        "Quotes"
+      ],
+      "goal": "Use the HTTP_TOOLS app to fetch content from 'https://www.brainyquote.com/quote_of_the_day' and extract the daily featured quote. From the fetched content, identify and extract the quote text and the author's name. Look for the main quote section which typically contains the quote text and attribution. Use the NOTIFYME app to send a mobile notification with the title 'Daily Brainy Quote 💭' and include the quote text followed by the author's name in a clean, readable format like: '[Quote text]' - Author Name. Keep the notification concise and inspiring. If the quote extraction fails, send a brief notification saying 'Quote of the day unavailable today' with an encouraging backup message.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }

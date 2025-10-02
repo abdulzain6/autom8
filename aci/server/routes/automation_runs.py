@@ -90,10 +90,10 @@ def delete_a_run(
         logger.info(f"Deleting {len(run.artifacts)} artifact files for run {run_id}.")
         for artifact in run.artifacts:
             try:
-                file_manager.delete_file(artifact.filer_path)
+                file_manager.delete_from_storage("artifacts", artifact.file_path)
             except Exception as e:
                 logger.error(
-                    f"Failed to delete artifact file {artifact.filer_path} "
+                    f"Failed to delete artifact file {artifact.file_path} "
                     f"from storage for run {run_id}: {e}"
                 )
 

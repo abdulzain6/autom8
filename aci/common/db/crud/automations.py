@@ -59,7 +59,7 @@ def list_user_automations(
     db: Session, user_id: str, limit: int, offset: int
 ) -> List[Automation]:
     """
-    Lists all automations for a given user with pagination, ordered by latest run time.
+    Lists all automations for a given user with pagination, ordered by latest run time, then by creation time.
     """
     # Subquery to get the latest run time per automation
     latest_run_subq = (
@@ -75,7 +75,10 @@ def list_user_automations(
         select(Automation)
         .outerjoin(latest_run_subq, Automation.id == latest_run_subq.c.automation_id)
         .where(Automation.user_id == user_id)
-        .order_by(latest_run_subq.c.latest_run_at.desc().nulls_last())
+        .order_by(
+            latest_run_subq.c.latest_run_at.desc().nulls_last(),
+            Automation.created_at.desc()
+        )
         .offset(offset)
         .limit(limit)
     )

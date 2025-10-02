@@ -1,15 +1,17 @@
 import re
-import requests
+import time
+import random
 from typing import Optional, Dict, Any, List
 from urllib.parse import urlparse, urljoin
 from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
-try:
-    import html2text
-except ImportError:
-    html2text = None
+from aci.server.config import CYCLE_TLS_SERVER_URL, HTTP_PROXY
+from aci.server.cycletls_client import CycleTlsServerClient
+import html2text
+
+
 
 logger = get_logger(__name__)
 
@@ -53,6 +55,13 @@ class HttpTools(AppConnectorBase):
             linked_account, security_scheme, security_credentials, run_id=run_id
         )
         self.user_id = linked_account.user_id
+        
+        # Set up CycleTLS client for bypassing bot detection
+        if HTTP_PROXY:
+            logger.info(f"HTTP Tools configured with proxy: {HTTP_PROXY}")
+            self.client = CycleTlsServerClient(server_url=CYCLE_TLS_SERVER_URL, proxy=HTTP_PROXY)
+        else:
+            self.client = CycleTlsServerClient(server_url=CYCLE_TLS_SERVER_URL)
         
         if html2text is None:
             logger.warning("html2text not available. Install with: pip install html2text")
@@ -150,7 +159,7 @@ class HttpTools(AppConnectorBase):
         include_links: bool = True
     ) -> Dict[str, Any]:
         """
-        Fetches content from a URL using GET request and returns clean text.
+        Fetches content from a URL using CycleTLS and returns clean text.
         
         Args:
             url: The URL to fetch content from.
@@ -170,51 +179,25 @@ class HttpTools(AppConnectorBase):
         max_length = min(max_length, MAX_CONTENT_LENGTH)
         
         try:
-            # Make GET request with security headers
-            response = requests.get(
-                url,
-                timeout=REQUEST_TIMEOUT,
-                headers={
-                    "User-Agent": "Mozilla/5.0 (compatible; Autom8/1.0)",
-                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                    "Accept-Language": "en-US,en;q=0.5",
-                    "Accept-Encoding": "gzip, deflate",
-                    "Connection": "keep-alive"
-                },
-                allow_redirects=True,
-                stream=True
-            )
-            response.raise_for_status()
+            # Add small random delay to appear more human-like
+            time.sleep(random.uniform(0.5, 2.0))
             
-            # Check content type
-            content_type = response.headers.get("Content-Type", "")
-            if not any(ct in content_type.lower() for ct in ["text/html", "text/plain", "application/xhtml"]):
+            # Make GET request using CycleTLS to bypass bot detection
+            content = self.client.get(url)
+            
+            if not content:
                 return {
                     "success": False,
-                    "error": f"Unsupported content type: {content_type}. Only HTML/text content is supported."
+                    "error": "Failed to fetch content from URL. The server may be blocking requests."
                 }
-            
-            # Get content with size limit
-            content = ""
-            total_size = 0
-            for chunk in response.iter_content(chunk_size=8192, decode_unicode=True):
-                if chunk:
-                    total_size += len(chunk)
-                    if total_size > MAX_CONTENT_LENGTH:
-                        logger.warning(f"Content too large, truncating at {MAX_CONTENT_LENGTH} characters")
-                        break
-                    content += chunk
             
             # Extract links if requested
             links = []
-            if include_links and "html" in content_type.lower():
+            if include_links:
                 links = self._extract_links(content, url)
             
             # Convert HTML to text
-            if "html" in content_type.lower():
-                text_content = self._html_to_text(content)
-            else:
-                text_content = content
+            text_content = self._html_to_text(content)
             
             # Trim content for LLM processing
             if len(text_content) > max_length:
@@ -226,7 +209,7 @@ class HttpTools(AppConnectorBase):
                 "success": True,
                 "url": url,
                 "content": text_content,
-                "content_type": content_type,
+                "content_type": "text/html",  # CycleTLS primarily handles HTML
                 "length": len(text_content),
                 "truncated": len(text_content) >= max_length,
                 "message": f"Successfully fetched and processed content from {url}"
@@ -238,12 +221,6 @@ class HttpTools(AppConnectorBase):
             
             return result
             
-        except requests.RequestException as e:
-            logger.error(f"Failed to fetch URL {url}: {e}")
-            return {
-                "success": False,
-                "error": f"Failed to fetch URL: {str(e)}"
-            }
         except Exception as e:
             logger.error(f"Unexpected error fetching URL {url}: {e}", exc_info=True)
             return {

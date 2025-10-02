@@ -2,22 +2,40 @@
 
 import requests
 from typing import Optional, Dict, Any
+from urllib.parse import urlparse
 
 # --- HTTP Client for Scraping ---
 
 DEFAULT_TLS_HEADERS = {
-    "authority": "www.amazon.com",
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "accept-language": "en-US,en;q=0.9",
-    "sec-ch-ua": '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"',
+    "cache-control": "no-cache",
+    "pragma": "no-cache",
+    "sec-ch-ua": '"Google Chrome";v="120", "Chromium";v="120", "Not_A Brand";v="24"',
     "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": '"Linux"',
+    "sec-ch-ua-platform": '"Windows"',
     "sec-fetch-dest": "document",
     "sec-fetch-mode": "navigate",
     "sec-fetch-site": "none",
     "sec-fetch-user": "?1",
     "upgrade-insecure-requests": "1",
-    "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+}
+
+# Special headers for quote/content sites
+QUOTE_SITE_HEADERS = {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "accept-language": "en-US,en;q=0.9",
+    "cache-control": "max-age=0",
+    "sec-ch-ua": '"Google Chrome";v="120", "Chromium";v="120", "Not_A Brand";v="24"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "document",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "same-origin",
+    "sec-fetch-user": "?1",
+    "upgrade-insecure-requests": "1",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 }
 
 class CycleTlsServerClient:
@@ -42,6 +60,21 @@ class CycleTlsServerClient:
             "proxy": proxy,
         }
 
+    def _get_headers_for_url(self, url: str) -> Dict[str, str]:
+        """Choose appropriate headers based on the URL domain."""
+        domain = urlparse(url).netloc.lower()
+        
+        # Use special headers for quote sites and similar content sites
+        if any(site in domain for site in ['brainyquote.com', 'quotes.com', 'goodreads.com', 'quotegarden.com']):
+            headers = QUOTE_SITE_HEADERS.copy()
+            headers["authority"] = domain
+            return headers
+        
+        # For other sites, use default headers with dynamic authority
+        headers = DEFAULT_TLS_HEADERS.copy()
+        headers["authority"] = domain
+        return headers
+
     def get(self, url: str) -> str:
         """
         Sends a GET request to the specified URL via the CycleTLS server.
@@ -52,7 +85,18 @@ class CycleTlsServerClient:
         Returns:
             The HTML body of the response as a string, or an empty string on failure.
         """
-        payload = {"url": url, "args": {**self.default_args, "body": ""}}
+        # Get appropriate headers for this URL
+        headers = self._get_headers_for_url(url)
+        
+        payload = {
+            "url": url, 
+            "args": {
+                **self.default_args, 
+                "headers": headers,
+                "body": ""
+            }
+        }
+        
         try:
             # The server URL should be the endpoint that processes requests, e.g., http://localhost:8080/request
             response = requests.post(self.server_url, json=payload, timeout=30)
