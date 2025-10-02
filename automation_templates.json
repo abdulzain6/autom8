@@ -939,6 +939,22 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "NASA Astronomy Picture of the Day",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/nasa_apod.png?raw=true",
+      "description": "Daily delivery of NASA's Astronomy Picture of the Day with image and explanation directly to your email.",
+      "tags": [
+        "Science"
+      ],
+      "goal": "First, use the HTTP_TOOLS app to fetch content from 'https://apod.nasa.gov/apod/astropix.html' and extract the clean text. From the fetched content, identify and extract the image URL (usually in an <img> tag or as a link to a high-resolution image). Look for patterns like 'image/XXXX/XXXX.jpg' or similar NASA image URLs. Next, use the IMAGE_TOOLS app to download the identified image URL and save it as an artifact. Finally, use the NOTIFYME app to send an email with the subject 'NASA Astronomy Picture of the Day - [Current Date]'. The email should include: 1) The downloaded image as an attachment using the artifact ID, 2) The title and explanation text extracted from the NASA APOD page, 3) A link back to the original NASA APOD page for full details. Format the email professionally with proper spacing and make it visually appealing. If any step fails (content fetch, image download, or email), send a fallback notification explaining what went wrong.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "IMAGE_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }

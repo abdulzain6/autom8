@@ -1,0 +1,33 @@
+[
+  {
+    "name": "HTTP_TOOLS__GET_URL",
+    "description": "Fetches content from a URL using GET request, extracts clean text using html2text, and returns formatted content with links. Includes security checks to prevent accessing internal services.",
+    "tags": ["http", "get", "url", "fetch", "html", "text", "links"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to fetch content from using GET request."
+        },
+        "max_length": {
+          "type": "integer",
+          "description": "Maximum length of returned text for LLM processing (default: 10000 characters).",
+          "default": 10000
+        },
+        "include_links": {
+          "type": "boolean",
+          "description": "Whether to include extracted links in the response (default: true).",
+          "default": true
+        }
+      },
+      "required": ["url"],
+      "visible": ["url", "max_length", "include_links"],
+      "additionalProperties": false
+    }
+  }
+]

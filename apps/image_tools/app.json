@@ -1,0 +1,17 @@
+{
+  "name": "IMAGE_TOOLS",
+  "display_name": "Image Tools",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/image-tools.png",
+  "provider": "Internal",
+  "version": "1.0.0",
+  "description": "Image utilities for downloading and processing images with security checks.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Utilities"
+  ],
+  "visibility": "public",
+  "active": true
+}

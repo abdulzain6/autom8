@@ -1,0 +1,32 @@
+[
+  {
+    "name": "IMAGE_TOOLS__DOWNLOAD_IMAGE",
+    "description": "Downloads an image from a URL and saves it as an artifact. Includes file size limits and security checks to prevent downloading from internal services.",
+    "tags": ["image", "download", "url", "fetch", "tools"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL of the image to download."
+        },
+        "filename": {
+          "type": "string",
+          "description": "The desired filename for the downloaded image (e.g., 'image.jpg'). If not provided, will be extracted from URL."
+        },
+        "max_size_mb": {
+          "type": "number",
+          "description": "Maximum file size in MB (default: 50MB for AI processing).",
+          "default": 50
+        }
+      },
+      "required": ["url"],
+      "visible": ["url", "filename", "max_size_mb"],
+      "additionalProperties": false
+    }
+  }
+]

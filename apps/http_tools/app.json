@@ -1,0 +1,17 @@
+{
+  "name": "HTTP_TOOLS",
+  "display_name": "HTTP Tools",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/http-tools.png",
+  "provider": "Internal",
+  "version": "1.0.0",
+  "description": "HTTP utilities for fetching web content with security checks and text extraction.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Utilities"
+  ],
+  "visibility": "public",
+  "active": true
+}
