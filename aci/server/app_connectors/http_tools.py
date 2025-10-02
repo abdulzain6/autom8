@@ -36,7 +36,7 @@ INTERNAL_SERVICE_NAMES = {
     "skyvern", "skyvern-ui", "code-executor"
 }
 
-class HTTPTools(AppConnectorBase):
+class HttpTools(AppConnectorBase):
     """
     A connector for HTTP utilities like fetching web content with security checks.
     """
