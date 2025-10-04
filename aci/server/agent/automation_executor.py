@@ -110,7 +110,7 @@ class AutomationExecutor:
 
         return functions
 
-    def _trim_tool_response(self, response, max_length: int = 2000):
+    def _trim_tool_response(self, response, max_length: int = 20000):
         """
         Trim tool responses to keep only essential information and reduce token usage.
         """
@@ -185,10 +185,11 @@ class AutomationExecutor:
                     run_id=self.run_id,
                 )
                 # Trim the response to reduce token usage while preserving essential information
-                trimmed_result = self._trim_tool_response(result, 3000)
+                trimmed_result = self._trim_tool_response(result, 20000)
                 logger.info(
                     f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(str(trimmed_result))} chars"
                 )
+                logger.info(f"Full trimmed result: {trimmed_result}")
                 return trimmed_result
             except Exception as e:
                 logger.error(
@@ -235,7 +236,6 @@ class AutomationExecutor:
             tools=self.get_tools(),
             response_format=AutomationResult,
             prompt=self.system_prompt,
-            debug=True,
         )
         return agent
 

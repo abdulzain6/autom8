@@ -60,7 +60,6 @@ class SherlockOsint(AppConnectorBase):
     def investigate_username(
         self,
         username: str,
-        timeout: int = 60,
         include_nsfw: bool = False,
         max_sites: Optional[int] = None,
         site_names: Optional[List[str]] = None,
@@ -72,7 +71,6 @@ class SherlockOsint(AppConnectorBase):
         
         Args:
             username: The username to investigate
-            timeout: Timeout in seconds for each site check (default: 60)
             include_nsfw: Whether to include NSFW/adult sites in the search (default: False)
             max_sites: Maximum number of sites to check (default: None, checks all sites)
             site_names: List of specific site names to check (default: None, checks all sites)
@@ -151,7 +149,6 @@ class SherlockOsint(AppConnectorBase):
                 tor=False,  # Don't use Tor for now
                 unique_tor=False,
                 proxy=proxy_url,
-                timeout=timeout
             )
             
             execution_time = time.time() - start_time
