@@ -65,7 +65,6 @@ def get_db_engine(db_url: str) -> Engine:
         connect_args={
             "prepare_threshold": None,  # Disable prepared statements
             "autocommit": False,  # Explicit autocommit setting
-            "server_side_cursors": False,  # Disable server-side cursors to avoid INTRANS issues
         },
         isolation_level="READ_COMMITTED",  # Set explicit isolation level
         echo=False,  # Set to True for debugging SQL queries
