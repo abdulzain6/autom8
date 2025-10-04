@@ -143,7 +143,7 @@ class Browser(AppConnectorBase):
 
                         # LLM and Agent configuration
                         api_key = config.OPENROUTER_API_KEY
-                        llm = ChatOpenAI(model="deepseek/deepseek-chat-v3.1:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
+                        llm = ChatOpenAI(model="x-ai/grok-4-fast", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
                         page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-20b:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
 
                         # 2. Create a new BrowserSession instance for this task only.

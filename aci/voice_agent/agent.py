@@ -173,7 +173,7 @@ Seventh, execute the newly loaded functions to complete the user's request.
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM(
                 base_url=DEEPINFRA_BASE_URL,
-                model="deepseek-ai/DeepSeek-V3.1-Terminus",
+                model="deepseek-ai/DeepSeek-V3.2-Exp",
                 api_key=DEEPINFRA_API_KEY,
             ),
             tts=openai.TTS(

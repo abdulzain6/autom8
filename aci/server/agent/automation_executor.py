@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, SecretStr
 from aci.common.db.sql_models import Automation, Function
 from langchain_core.tools import StructuredTool
 from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
-from aci.server.config import TOGETHER_API_KEY, TOGETHER_BASE_URL
+from aci.server.config import TOGETHER_API_KEY, TOGETHER_BASE_URL, DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     format_function_definition,
@@ -223,9 +223,9 @@ class AutomationExecutor:
 
     def create_agent(self):
         model = ChatOpenAI(
-            base_url=TOGETHER_BASE_URL,
-            api_key=SecretStr(TOGETHER_API_KEY),
-            model="Qwen/Qwen3-235B-A22B-Instruct-2507-tput",
+            base_url=DEEPINFRA_BASE_URL,
+            api_key=SecretStr(DEEPINFRA_API_KEY),
+            model="deepseek-ai/DeepSeek-V3.2-Exp",
             timeout=300,
             max_retries=3,
             temperature=0.1,
