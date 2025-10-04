@@ -174,31 +174,38 @@ class AutomationExecutor:
             self.browser_used = True
 
         # Create a new session within the async context to ensure thread safety.
-        with get_db_session() as tool_db_session:
-            try:
-                logger.info(f"Executing tool: {function.name} with args: {kwargs}")
-                result = execute_function(
-                    tool_db_session,
-                    function.name,
-                    self.automation.user_id,
-                    kwargs,
-                    run_id=self.run_id,
-                )
-                # Trim the response to reduce token usage while preserving essential information
-                trimmed_result = self._trim_tool_response(result, 20000)
-                logger.info(
-                    f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(str(trimmed_result))} chars"
-                )
-                logger.info(f"Full trimmed result: {trimmed_result}")
-                return trimmed_result
-            except Exception as e:
-                logger.error(
-                    f"Error executing tool: {function.name} with args: {kwargs}, error: {e}"
-                )
-                import traceback
-
-                traceback.print_exc()
-                return {"error": str(e)}
+        try:
+            with get_db_session() as tool_db_session:
+                try:
+                    logger.info(f"Executing tool: {function.name} with args: {kwargs}")
+                    result = execute_function(
+                        tool_db_session,
+                        function.name,
+                        self.automation.user_id,
+                        kwargs,
+                        run_id=self.run_id,
+                    )
+                    # Trim the response to reduce token usage while preserving essential information
+                    trimmed_result = self._trim_tool_response(result, 20000)
+                    logger.info(
+                        f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(str(trimmed_result))} chars"
+                    )
+                    logger.info(f"Full trimmed result: {trimmed_result}")
+                    return trimmed_result
+                except Exception as e:
+                    logger.error(
+                        f"Error executing tool: {function.name} with args: {kwargs}, error: {e}"
+                    )
+                    import traceback
+                    traceback.print_exc()
+                    return {"error": str(e)}
+        except Exception as db_error:
+            # Handle database session errors specifically
+            logger.error(f"Database session error for tool {function.name}: {db_error}")
+            if "pending rollback" in str(db_error).lower():
+                logger.warning("Handled pending rollback error, operation may have completed successfully")
+                return {"warning": "Database transaction issue occurred, but operation may have completed"}
+            return {"error": f"Database connection error: {str(db_error)}"}
 
     def get_tools(self) -> list[StructuredTool]:
         """Convert the automation's functions into LangChain tools."""

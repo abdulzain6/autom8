@@ -55,19 +55,44 @@ def get_db_session() -> Generator[Session, None, None]:
     A context manager for providing a SQLAlchemy database session.
     It automatically commits on success, rolls back on error,
     and ensures the session is always closed.
+    Enhanced for long-running operations.
     """
     db_session = utils.create_db_session(config.DB_FULL_URL)
     try:
         yield db_session
         db_session.commit()
     except Exception as e:
-        db_session.rollback()
-        # Invalidate the connection if we hit a transaction state error
-        if "INTRANS" in str(e) or "autocommit" in str(e):
-            db_session.connection().invalidate()
+        logger.error(f"Database session error: {e}")
+        try:
+            db_session.rollback()
+        except Exception as rollback_error:
+            logger.error(f"Error during rollback: {rollback_error}")
+            # Force close the connection if rollback fails
+            try:
+                db_session.connection().invalidate()
+            except Exception as invalidate_error:
+                logger.error(f"Error invalidating connection: {invalidate_error}")
+        
+        # Handle specific SQLAlchemy errors
+        if any(keyword in str(e).lower() for keyword in ['pending rollback', 'invalid transaction', 'intrans', 'autocommit']):
+            logger.warning("Database transaction error detected, forcing connection cleanup")
+            try:
+                # Force close and recreate connection for next use
+                db_session.connection().invalidate()
+                db_session.close()
+                # Don't re-raise for pending rollback errors after cleanup
+                if 'pending rollback' in str(e).lower():
+                    logger.info("Handled pending rollback error, connection cleaned up")
+                    return
+            except Exception as cleanup_error:
+                logger.error(f"Error during connection cleanup: {cleanup_error}")
+        
         raise
     finally:
-        db_session.close()
+        try:
+            db_session.close()
+        except Exception as close_error:
+            logger.error(f"Error closing database session: {close_error}")
 
 
 # --- Authentication and Authorization ---

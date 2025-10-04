@@ -31,7 +31,7 @@
       "required_app_names": [
         "YAHOO_FINANCE",
         "GOOGLE_TRENDS",
-        "DOCX_TOOLS"
+        "PDF_TOOLS"
       ],
       "is_deep": false
     },
@@ -48,7 +48,7 @@
       ],
       "required_app_names": [
         "IP_TOOLS",
-        "DOCX_TOOLS"
+        "PDF_TOOLS"
       ],
       "is_deep": false
     },
@@ -81,7 +81,7 @@
       "required_app_names": [
         "YAHOO_FINANCE",
         "GOOGLE_NEWS",
-        "DOCX_TOOLS"
+        "PDF_TOOLS"
       ],
       "is_deep": true
     },
@@ -99,7 +99,7 @@
       "required_app_names": [
         "WIKIPEDIA_API",
         "GOOGLE_NEWS",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "SEARXNG"
       ],
       "is_deep": true
@@ -250,7 +250,7 @@
       ],
       "required_app_names": [
         "JIRA",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": true
@@ -415,11 +415,11 @@
       "tags": [
         "Productivity"
       ],
-      "goal": "Generate schedule overview report using CAL__GET_SCHEDULES to retrieve all schedules, then create professional summary document with DOCX_TOOLS showing schedule details and availability patterns.",
+      "goal": "Generate schedule overview report using CAL__GET_SCHEDULES to retrieve all schedules, then create professional summary document with PDF_TOOLS__MARKDOWN_TO_PDF showing schedule details and availability patterns in a professional PDF format.",
       "variable_names": [],
       "required_app_names": [
         "CAL",
-        "DOCX_TOOLS"
+        "PDF_TOOLS"
       ],
       "is_deep": true
     },
@@ -450,11 +450,11 @@
       "tags": [
         "Productivity"
       ],
-      "goal": "Backup all Cal.com schedules using CAL__GET_SCHEDULES to retrieve schedule data, then create detailed backup document with DOCX_TOOLS containing all schedule configurations and settings.",
+      "goal": "Backup all Cal.com schedules using CAL__GET_SCHEDULES to retrieve schedule data, then create detailed backup document with PDF_TOOLS__MARKDOWN_TO_PDF containing all schedule configurations and settings in a professional PDF format.",
       "variable_names": [],
       "required_app_names": [
         "CAL",
-        "DOCX_TOOLS"
+        "PDF_TOOLS"
       ],
       "is_deep": true
     },
@@ -613,14 +613,14 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Generate detailed performance report for '{{ variables['Team Name'] }}' by searching recent matches in CRICBUZZ__GET_UPCOMING_SCHEDULE and checking current status in CRICBUZZ__GET_LIVE_MATCHES. Use SEARXNG to search for '{{ variables['Team Name'] }} cricket recent performance statistics' to get additional context. Analyze recent form, key player performances, win-loss record, and upcoming challenges. Create comprehensive team report using DOCX_TOOLS with sections for: Recent Match Results, Key Player Stats, Team Strengths/Weaknesses, Upcoming Fixtures, and Performance Trends. Send detailed analysis via NOTIFYME__SEND_ME_EMAIL with subject '{{ variables['Team Name'] }} Performance Report' including statistical insights and team outlook.",
+      "goal": "Generate detailed performance report for '{{ variables['Team Name'] }}' by searching recent matches in CRICBUZZ__GET_UPCOMING_SCHEDULE and checking current status in CRICBUZZ__GET_LIVE_MATCHES. Use SEARXNG to search for '{{ variables['Team Name'] }} cricket recent performance statistics' to get additional context. Analyze recent form, key player performances, win-loss record, and upcoming challenges. Create comprehensive team report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Recent Match Results, ## Key Player Stats, ## Team Strengths/Weaknesses, ## Upcoming Fixtures, and ## Performance Trends. Send detailed analysis via NOTIFYME__SEND_ME_EMAIL with subject '{{ variables['Team Name'] }} Performance Report' including statistical insights and team outlook.",
       "variable_names": [
         "Team Name"
       ],
       "required_app_names": [
         "CRICBUZZ",
         "SEARXNG",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": true
@@ -684,14 +684,14 @@
       "tags": [
         "YouTube"
       ],
-      "goal": "Create a comprehensive summary of the YouTube video '{{ variables['Video URL'] }}'. STEP 1 - Extract Transcript: Use YOUTUBE_UNOFFICIAL__GET_VIDEO_TRANSCRIPT to fetch the video's transcript/captions in the specified language. STEP 2 - Get Video Details: Use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to retrieve video metadata including title, author, duration, and view count. STEP 3 - Content Analysis: Analyze the transcript to identify key topics, main arguments, and important insights discussed in the video. STEP 4 - Generate Summary: Create a structured summary including: Executive Summary (2-3 sentences), Key Points (bullet points), Important Timestamps (with time markers), Main Takeaways, and Related Topics. STEP 5 - Professional Report: Format the analysis into a comprehensive document using DOCX_TOOLS with sections for video overview, detailed summary, key insights, and actionable takeaways. STEP 6 - Distribution: Send the video summary via NOTIFYME__SEND_ME_EMAIL with subject 'YouTube Video Summary - {{ variables['Video Title'] }}' including the complete analysis, transcript highlights, and key timestamps for easy reference.",
+      "goal": "Create a comprehensive summary of the YouTube video '{{ variables['Video URL'] }}'. STEP 1 - Extract Transcript: Use YOUTUBE_UNOFFICIAL__GET_VIDEO_TRANSCRIPT to fetch the video's transcript/captions in the specified language. STEP 2 - Get Video Details: Use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to retrieve video metadata including title, author, duration, and view count. STEP 3 - Content Analysis: Analyze the transcript to identify key topics, main arguments, and important insights discussed in the video. STEP 4 - Generate Summary: Create a structured summary including: Executive Summary (2-3 sentences), Key Points (bullet points), Important Timestamps (with time markers), Main Takeaways, and Related Topics. STEP 5 - Professional Report: Format the analysis into a comprehensive document using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Video Overview, ## Detailed Summary, ## Key Insights, and ## Actionable Takeaways. STEP 6 - Distribution: Send the video summary via NOTIFYME__SEND_ME_EMAIL with subject 'YouTube Video Summary - {{ variables['Video Title'] }}' including the complete analysis, transcript highlights, and key timestamps for easy reference.",
       "variable_names": [
         "Video URL",
         "Video Title"
       ],
       "required_app_names": [
         "YOUTUBE_UNOFFICIAL",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": true
@@ -1012,14 +1012,14 @@
       "tags": [
         "OSINT"
       ],
-      "goal": "Conduct comprehensive social media reconnaissance for potential hire '{{ variables['Candidate Name'] }}' using username '{{ variables['Username/Alias'] }}'. STEP 1 - Initial Investigation: Use SHERLOCK_OSINT__INVESTIGATE_USERNAME to scan for the candidate's presence across 376+ platforms including professional networks (LinkedIn, GitHub, GitLab), developer communities (Stack Overflow, dev.to, HackerRank), social media (Twitter, Instagram, Facebook), and other platforms. Set parameters: username='{{ variables['Username/Alias'] }}', only_positive=true (focus on confirmed profiles), strict_filtering=true for accurate results. STEP 2 - Profile Analysis: Categorize discovered profiles by platform type: PROFESSIONAL (LinkedIn, GitHub, dev.to, Stack Overflow), SOCIAL (Twitter, Instagram, Facebook, Reddit), DEVELOPER (GitHub, GitLab, coding platforms), and OTHER (forums, blogs, personal sites). Analyze profile completeness, activity level, and professional relevance. STEP 3 - Risk Assessment: Evaluate profiles for potential red flags including inappropriate content, conflicting information, or concerning behavior patterns. Also identify positive indicators like technical contributions, professional engagement, and community involvement. STEP 4 - Professional Highlights: Extract key professional information from discovered profiles including: GitHub repositories and contributions, Stack Overflow reputation and answers, dev.to articles and engagement, LinkedIn experience and connections, and any other relevant professional activities. STEP 5 - Comprehensive Report Generation: Use DOCX_TOOLS to create a detailed recruitment reconnaissance report with sections for: Executive Summary, Discovered Platforms (with URLs), Professional Profile Analysis, Technical Contributions Assessment, Social Media Presence Review, Risk Assessment, and Recommendations. Include profile screenshots and activity summaries where relevant. STEP 6 - Secure Delivery: Send the social reconnaissance report via NOTIFYME__SEND_ME_EMAIL with subject 'Social Recon Report - {{ variables['Candidate Name'] }}' including: candidate overview, platform discovery summary, professional assessment highlights, and note that the complete DOCX report is available for download in the app artifacts for detailed review and hiring decision support.",
+      "goal": "Conduct comprehensive social media reconnaissance for potential hire '{{ variables['Candidate Name'] }}' using username '{{ variables['Username/Alias'] }}'. STEP 1 - Initial Investigation: Use SHERLOCK_OSINT__INVESTIGATE_USERNAME to scan for the candidate's presence across 376+ platforms including professional networks (LinkedIn, GitHub, GitLab), developer communities (Stack Overflow, dev.to, HackerRank), social media (Twitter, Instagram, Facebook), and other platforms. Set parameters: username='{{ variables['Username/Alias'] }}', only_positive=true (focus on confirmed profiles), strict_filtering=true for accurate results. STEP 2 - Profile Analysis: Categorize discovered profiles by platform type: PROFESSIONAL (LinkedIn, GitHub, dev.to, Stack Overflow), SOCIAL (Twitter, Instagram, Facebook, Reddit), DEVELOPER (GitHub, GitLab, coding platforms), and OTHER (forums, blogs, personal sites). Analyze profile completeness, activity level, and professional relevance. STEP 3 - Risk Assessment: Evaluate profiles for potential red flags including inappropriate content, conflicting information, or concerning behavior patterns. Also identify positive indicators like technical contributions, professional engagement, and community involvement. STEP 4 - Professional Highlights: Extract key professional information from discovered profiles including: GitHub repositories and contributions, Stack Overflow reputation and answers, dev.to articles and engagement, LinkedIn experience and connections, and any other relevant professional activities. STEP 5 - Comprehensive Report Generation: Use PDF_TOOLS__MARKDOWN_TO_PDF to create a detailed recruitment reconnaissance report with proper Markdown formatting including sections for: # Executive Summary, ## Discovered Platforms (with URLs), ## Professional Profile Analysis, ## Technical Contributions Assessment, ## Social Media Presence Review, ## Risk Assessment, and ## Recommendations. Include profile screenshots and activity summaries where relevant. STEP 6 - Secure Delivery: Send the social reconnaissance report via NOTIFYME__SEND_ME_EMAIL with subject 'Social Recon Report - {{ variables['Candidate Name'] }}' including: candidate overview, platform discovery summary, professional assessment highlights, and note that the complete professional PDF report is available for download in the app artifacts for detailed review and hiring decision support.",
       "variable_names": [
         "Candidate Name",
         "Username/Alias"
       ],
       "required_app_names": [
         "SHERLOCK_OSINT",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": true
@@ -1031,14 +1031,14 @@
       "tags": [
         "Monitoring"
       ],
-      "goal": "Perform comprehensive uptime and performance monitoring for your website '{{ variables['Your Website URL'] }}' and competitor websites. STEP 1 - Primary Site Check: Use IP_TOOLS__CHECK_WEBSITE_STATUS to monitor your main website '{{ variables['Your Website URL'] }}', recording HTTP status code, response time, and availability status. Set timeout to 10 seconds for reliable testing. STEP 2 - Competitor Analysis: Parse the comma-separated list '{{ variables['Competitor URLs'] }}' to extract individual competitor URLs. For each competitor website, use IP_TOOLS__CHECK_WEBSITE_STATUS to gather comparative performance data including status codes, load times, and uptime status. Handle cases where no competitor URLs are provided. STEP 3 - Performance Comparison: Analyze response times across all monitored sites to identify performance leaders and laggers. Calculate average response times and identify any sites experiencing issues (4xx/5xx status codes or timeouts). Compare your website's performance against competitors. STEP 4 - Markdown Report Generation: Create comprehensive uptime report in **Markdown format** using DOCX_TOOLS__MARKDOWN_TO_DOCX with proper Markdown syntax including: # Executive Summary, ## Your Website Performance (with status, response time, analysis), ## Competitor Performance Analysis (table format with | Site | Status | Response Time | Analysis |), ## Performance Comparison (rankings and insights), ## Issues Detected (any problems found), and ## Recommendations (performance improvement suggestions). Use proper Markdown headers, tables, and formatting. STEP 5 - Alert Generation: If your website shows issues (status code ≠ 200 or response time > 5 seconds), send immediate alert via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with urgent status update including the specific issue detected. STEP 6 - Comprehensive Report: Send detailed uptime monitoring report via NOTIFYME__SEND_ME_EMAIL with subject 'Website Uptime Report - {{ variables['Your Website URL'] }}' including: status summary for all sites tested, performance comparison analysis with specific metrics, competitive insights and rankings, issues detected with actionable recommendations, and note that the complete professionally formatted DOCX report is available for download in the app artifacts for detailed performance tracking and competitive analysis.",
+      "goal": "Perform comprehensive uptime and performance monitoring for your website '{{ variables['Your Website URL'] }}' and competitor websites. STEP 1 - Primary Site Check: Use IP_TOOLS__CHECK_WEBSITE_STATUS to monitor your main website '{{ variables['Your Website URL'] }}', recording HTTP status code, response time, and availability status. Set timeout to 10 seconds for reliable testing. STEP 2 - Competitor Analysis: Parse the comma-separated list '{{ variables['Competitor URLs'] }}' to extract individual competitor URLs. For each competitor website, use IP_TOOLS__CHECK_WEBSITE_STATUS to gather comparative performance data including status codes, load times, and uptime status. Handle cases where no competitor URLs are provided. STEP 3 - Performance Comparison: Analyze response times across all monitored sites to identify performance leaders and laggers. Calculate average response times and identify any sites experiencing issues (4xx/5xx status codes or timeouts). Compare your website's performance against competitors. STEP 4 - Professional Report Generation: Create comprehensive uptime report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown syntax including: # Executive Summary, ## Your Website Performance (with status, response time, analysis), ## Competitor Performance Analysis (table format with | Site | Status | Response Time | Analysis |), ## Performance Comparison (rankings and insights), ## Issues Detected (any problems found), and ## Recommendations (performance improvement suggestions). Use proper Markdown headers, tables, and formatting. STEP 5 - Alert Generation: If your website shows issues (status code ≠ 200 or response time > 5 seconds), send immediate alert via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with urgent status update including the specific issue detected. STEP 6 - Comprehensive Report: Send detailed uptime monitoring report via NOTIFYME__SEND_ME_EMAIL with subject 'Website Uptime Report - {{ variables['Your Website URL'] }}' including: status summary for all sites tested, performance comparison analysis with specific metrics, competitive insights and rankings, issues detected with actionable recommendations, and note that the complete professionally formatted PDF report is available for download in the app artifacts for detailed performance tracking and competitive analysis.",
       "variable_names": [
         "Your Website URL",
         "Competitor URLs"
       ],
       "required_app_names": [
         "IP_TOOLS",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": true
@@ -1046,15 +1046,15 @@
     {
       "name": "IPO Screener",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/ipo_screener.png?raw=true",
-      "description": "Comprehensive IPO screening tool that scrapes Nasdaq's upcoming IPO listings to extract company tickers, offering dates, price ranges, and market insights for investment opportunities.",
+      "description": "Comprehensive IPO screening tool that scrapes IPOScoop's upcoming IPO listings to extract company tickers, offering dates, price ranges, and market insights for investment opportunities.",
       "tags": [
         "Finance"
       ],
-      "goal": "Perform comprehensive IPO screening by scraping IPOScoop's upcoming IPO calendar for investment opportunities. STEP 1 - IPO Data Collection: Use BROWSER to visit https://www.iposcoop.com/ipo-calendar/ and extract upcoming IPO information including company names, ticker symbols, expected offering dates, price ranges, estimated market caps, shares offered, underwriters, and market sectors. Parse the structured IPO calendar table systematically. STEP 2 - Enhanced Data Gathering: For each identified IPO, collect additional details including company descriptions, industry classifications, offering sizes, underwriter information, and any available links to company profiles or SEC filing references. STEP 3 - Market Analysis: Analyze the collected IPO data to identify trends including sector concentration, pricing patterns, offering sizes, timing clusters, and underwriter preferences. Calculate average price ranges and identify high-profile offerings based on market cap estimates. STEP 4 - Report Generation: Create comprehensive IPO screening report using DOCX_TOOLS with sections for: Executive Summary, Upcoming IPO Calendar, High-Priority Investment Opportunities, Sector Analysis, Price Range Insights, Underwriter Analysis, and Investment Recommendations. Include direct links to IPOScoop company pages and SEC filings where available. STEP 5 - Investment Digest: Format findings into a professional email summary focusing on the most promising upcoming IPOs, key dates to watch, market timing considerations, and underwriter insights. STEP 6 - Distribution: Send IPO screening digest via NOTIFYME__SEND_ME_EMAIL with subject 'IPO Screening Report - Upcoming Opportunities [Current Date]' including: summary of upcoming IPOs (next 30 days), highlighted investment opportunities with price ranges and market caps, key dates calendar, sector breakdown, underwriter analysis, direct links to IPOScoop IPO calendar (https://www.iposcoop.com/ipo-calendar/), individual company IPO pages, and note that the complete DOCX report is available for download in the app artifacts for detailed investment analysis and due diligence.",
+      "goal": "Perform comprehensive IPO screening by scraping IPOScoop's upcoming IPO calendar for investment opportunities. STEP 1 - IPO Data Collection: Use HTTP_TOOLS__GET_URL to fetch content from https://www.iposcoop.com/ipo-calendar/ and parse the HTML to extract upcoming IPO information including company names, ticker symbols, expected offering dates, price ranges, estimated market caps, shares offered, underwriters, and market sectors. Analyze the HTML table structure to systematically extract IPO data. STEP 2 - Enhanced Data Gathering: For each identified IPO with available company page links, use HTTP_TOOLS__GET_URL to fetch additional details including company descriptions, industry classifications, offering sizes, underwriter information, and SEC filing references from individual IPO pages. STEP 3 - Market Analysis: Analyze the collected IPO data to identify trends including sector concentration, pricing patterns, offering sizes, timing clusters, and underwriter preferences. Calculate average price ranges and identify high-profile offerings based on market cap estimates. STEP 4 - Report Generation: Create comprehensive IPO screening report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Executive Summary, ## Upcoming IPO Calendar, ## High-Priority Investment Opportunities, ## Sector Analysis, ## Price Range Insights, ## Underwriter Analysis, and ## Investment Recommendations. Include direct links to IPOScoop company pages and SEC filings where available. STEP 5 - Investment Digest: Format findings into a professional email summary focusing on the most promising upcoming IPOs, key dates to watch, market timing considerations, and underwriter insights. STEP 6 - Distribution: Send IPO screening digest via NOTIFYME__SEND_ME_EMAIL with subject 'IPO Screening Report - Upcoming Opportunities [Current Date]' including: summary of upcoming IPOs (next 30 days), highlighted investment opportunities with price ranges and market caps, key dates calendar, sector breakdown, underwriter analysis, direct links to IPOScoop IPO calendar (https://www.iposcoop.com/ipo-calendar/), individual company IPO pages, and note that the complete professional PDF report is available for download in the app artifacts for detailed investment analysis and due diligence.",
       "variable_names": [],
       "required_app_names": [
-        "BROWSER",
-        "DOCX_TOOLS",
+        "HTTP_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": true
@@ -1066,11 +1066,11 @@
       "tags": [
         "Entertainment"
       ],
-      "goal": "Generate personalized daily movie recommendations from IMDb's top-rated collection. STEP 1 - Fetch Top Movies: Use MOVIE_GURU__GET_TOP_250_MOVIES to retrieve the current top-rated films from IMDb's prestigious Top 250 list, limiting to 20 movies for variety. STEP 2 - Detailed Analysis: For each movie, use MOVIE_GURU__GET_MOVIE_DETAILS with info_sets=['main', 'plot', 'keywords'] to gather comprehensive information including plot summaries, cast details, genres, ratings, and key themes. STEP 3 - Curation & Filtering: Analyze movie data to select 5-7 diverse recommendations spanning different genres, decades, and styles. Prioritize highly-rated films with engaging plots and strong critical reception. STEP 4 - Recommendation Report: Create detailed movie guide using DOCX_TOOLS with sections for: Featured Recommendations, Plot Summaries, Cast Highlights, Why You Should Watch, Genre Diversity, and Viewing Order Suggestions. Include IMDb ratings and release information. STEP 5 - Daily Digest: Format recommendations into an engaging email with movie posters (if available), brief descriptions, and compelling reasons to watch each film. STEP 6 - Distribution: Send movie recommendations digest via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Movie Recommendations - Curated Cinema Picks [Current Date]' including: featured movie highlights, genre variety showcase, IMDb ratings and plot teasers, viewing suggestions for different moods, and note that the complete movie guide with detailed analysis is available for download in the app artifacts for comprehensive film exploration.",
+      "goal": "Generate personalized daily movie recommendations using multiple data sources with intelligent fallbacks. STEP 1 - Primary Source: Attempt to use MOVIE_GURU__GET_TOP_250_MOVIES to retrieve top-rated films from IMDb's Top 250 list, limiting to 20 movies for variety. STEP 2 - Fallback Strategy: If MovieGuru fails or returns empty results, use SEARXNG to search for 'best movies 2024 top rated films IMDb' and 'classic movies must watch list' to gather alternative movie recommendations from reliable movie review sites. STEP 3 - Enhanced Research: For each identified movie (from either source), use SEARXNG to search for detailed information including plot summaries, cast details, ratings, and critical reviews from sources like Rotten Tomatoes, Metacritic, and film blogs. STEP 4 - Curation & Analysis: Analyze gathered data to select 5-7 diverse recommendations spanning different genres, decades, and styles. Prioritize highly-rated films with engaging plots and strong critical reception based on available review data. STEP 5 - Recommendation Report: Create detailed movie guide using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Featured Recommendations, ## Plot Summaries, ## Critical Reception, ## Why You Should Watch, ## Genre Diversity, and ## Viewing Recommendations. Include available ratings and release information. STEP 6 - Daily Digest: Format recommendations into an engaging email with brief descriptions and compelling reasons to watch each film, noting data sources used. STEP 7 - Distribution: Send movie recommendations digest via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Movie Recommendations - Curated Cinema Picks [Current Date]' including: featured movie highlights, genre variety showcase, available ratings and critical scores, viewing suggestions for different moods, data source transparency (IMDb/MovieGuru vs web research), and note that the complete professional movie guide PDF is available for download in the app artifacts for comprehensive film exploration.",
       "variable_names": [],
       "required_app_names": [
         "MOVIE_GURU",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME",
         "SEARXNG"
       ],
@@ -1083,11 +1083,11 @@
       "tags": [
         "Entertainment"
       ],
-      "goal": "Create the perfect weekend movie marathon plan combining classic favorites and exciting new releases. STEP 1 - Classic Collection: Use MOVIE_GURU__GET_TOP_250_MOVIES with limit=15 to gather acclaimed films from IMDb's top-rated collection. STEP 2 - Upcoming Excitement: Use MOVIE_GURU__GET_UPCOMING_MOVIES with limit=10 to discover the hottest new releases and trending films. STEP 3 - Detailed Research: For each selected movie, use MOVIE_GURU__GET_MOVIE_DETAILS with comprehensive info_sets=['main', 'plot', 'keywords'] to gather full details including runtime, genres, plot summaries, and cast information. STEP 4 - Marathon Planning: Organize movies into themed viewing sessions considering runtime, genre balance, and emotional pacing. Create different weekend plans: Classic Cinema Night, Modern Blockbuster Marathon, Genre-Specific Themes. STEP 5 - Comprehensive Guide: Generate detailed weekend planner using DOCX_TOOLS with sections for: Weekend Schedule Overview, Movie Lineup with Timings, Plot Previews, Snack Pairing Suggestions, Genre Analysis, and Alternative Options. STEP 6 - Email Summary: Send weekend movie planner via NOTIFYME__SEND_ME_EMAIL with subject 'Your Weekend Movie Marathon Plan - [Current Date]' including: curated movie lineup with showtimes, genre breakdown and viewing flow, runtime calculations for perfect pacing, snack and mood pairing suggestions, and note that the complete weekend planner with detailed schedules is available for download in the app artifacts for the ultimate movie weekend experience.",
+      "goal": "Create the perfect weekend movie marathon plan using reliable movie data sources with intelligent fallbacks. STEP 1 - Classic Collection Attempt: Try to use MOVIE_GURU__GET_TOP_250_MOVIES with limit=15 to gather acclaimed films. If this fails or returns empty results, use SEARXNG to search for 'best classic movies all time must watch films IMDb top rated' to identify acclaimed cinema from reliable movie review sources. STEP 2 - New Releases Research: Attempt MOVIE_GURU__GET_UPCOMING_MOVIES with limit=10, but if unsuccessful, use SEARXNG to search for 'new movies 2024 latest releases popular films' and 'upcoming movies to watch this weekend' to discover current and trending films. STEP 3 - Detailed Research: For each identified movie, use SEARXNG to gather comprehensive information including runtime, genres, plot summaries, cast information, ratings from multiple sources (Rotten Tomatoes, Metacritic, IMDb), and viewer reviews. STEP 4 - Marathon Planning: Organize movies into themed viewing sessions considering runtime, genre balance, and emotional pacing. Create different weekend plans: Classic Cinema Night, Modern Blockbuster Marathon, Genre-Specific Themes, accounting for total viewing time and break periods. STEP 5 - Comprehensive Guide: Generate detailed weekend planner using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Weekend Schedule Overview, ## Movie Lineup with Timings, ## Plot Previews, ## Critical Reception Summary, ## Snack Pairing Suggestions, ## Genre Analysis, and ## Alternative Options. STEP 6 - Email Summary: Send weekend movie planner via NOTIFYME__SEND_ME_EMAIL with subject 'Your Weekend Movie Marathon Plan - [Current Date]' including: curated movie lineup with accurate runtimes, genre breakdown and viewing flow, total marathon duration calculations, snack and mood pairing suggestions, data source transparency, and note that the complete professional weekend planner PDF is available for download in the app artifacts for the ultimate movie weekend experience.",
       "variable_names": [],
       "required_app_names": [
         "MOVIE_GURU",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME",
         "SEARXNG"
       ],
@@ -1100,11 +1100,11 @@
       "tags": [
         "Entertainment"
       ],
-      "goal": "Deliver a curated weekly digest of the highest-rated movies from IMDb's prestigious rankings. STEP 1 - Top Films Collection: Use MOVIE_GURU__GET_TOP_250_MOVIES with limit=25 to gather the current top-rated films from IMDb's elite collection. STEP 2 - Detailed Profiles: For the top 10 movies, use MOVIE_GURU__GET_MOVIE_DETAILS with comprehensive info_sets=['main', 'plot', 'keywords'] to gather detailed information including plot summaries, cast details, genres, ratings, and thematic elements. STEP 3 - Trend Analysis: Analyze the top movies to identify patterns in genres, decades, directors, and themes. Compare current rankings with historical data to spot trending classics. STEP 4 - Curator's Selection: Select 5-7 must-watch films from the top collection, focusing on diverse genres, acclaimed directors, and culturally significant works. STEP 5 - Weekly Report: Create professional movie digest using DOCX_TOOLS with sections for: This Week's Top Movies, Curator's Must-Watch Picks, Genre Analysis, Director Spotlights, Decade Breakdown, and Viewing Recommendations. Include ratings progression and cultural significance notes. STEP 6 - Email Digest: Send weekly top movies alert via NOTIFYME__SEND_ME_EMAIL with subject 'Weekly Top Movies Digest - IMDb Elite Collection [Current Date]' including: current top movie rankings, curator's must-watch selections, genre and trend analysis, director and decade highlights, viewing priority recommendations, and note that the complete weekly movie digest with detailed analysis is available for download in the app artifacts for serious film exploration.",
+      "goal": "Deliver a curated weekly digest of the highest-rated movies using reliable data sources with fallback strategies. STEP 1 - Primary Data Collection: Attempt to use MOVIE_GURU__GET_TOP_250_MOVIES with limit=25 to gather top-rated films from IMDb's elite collection. If this fails or returns empty results, use SEARXNG to search for 'IMDb top 250 movies list best rated films all time' and 'highest rated movies 2024 critical acclaim' to identify acclaimed cinema. STEP 2 - Supplementary Research: For identified top movies, use SEARXNG to gather detailed information from multiple sources including plot summaries, cast details, director information, ratings from Rotten Tomatoes/Metacritic/IMDb, and critical reviews. STEP 3 - Trend Analysis: Analyze the collected movie data to identify patterns in genres, decades, directors, and themes. Look for recurring acclaim patterns and emerging classics. STEP 4 - Curator's Selection: Select 5-7 must-watch films from the researched collection, focusing on diverse genres, acclaimed directors, and culturally significant works based on critical consensus. STEP 5 - Weekly Report: Create professional movie digest using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # This Week's Top Movies, ## Curator's Must-Watch Picks, ## Genre Analysis, ## Director Spotlights, ## Critical Reception Summary, and ## Viewing Recommendations. Include available ratings and cultural significance notes. STEP 6 - Email Digest: Send weekly top movies alert via NOTIFYME__SEND_ME_EMAIL with subject 'Weekly Top Movies Digest - Elite Cinema Collection [Current Date]' including: current top movie research summary, curator's must-watch selections with rationale, genre and trend analysis, director and decade highlights, viewing priority recommendations, data source transparency (noting whether IMDb direct access or web research was used), and note that the complete professional weekly movie digest PDF is available for download in the app artifacts for serious film exploration.",
       "variable_names": [],
       "required_app_names": [
         "MOVIE_GURU",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME",
         "SEARXNG"
       ],
@@ -1117,11 +1117,11 @@
       "tags": [
         "Entertainment"
       ],
-      "goal": "Track and analyze the most anticipated upcoming movies for cinema enthusiasts. STEP 1 - Upcoming Collection: Use MOVIE_GURU__GET_UPCOMING_MOVIES with limit=15 to gather the latest trending and soon-to-release films from popular cinema listings. STEP 2 - Detailed Preview: For each upcoming movie, use MOVIE_GURU__GET_MOVIE_DETAILS with info_sets=['main', 'plot', 'keywords'] to collect available information including plot summaries, cast announcements, genres, and anticipated release details. STEP 3 - Anticipation Analysis: Analyze upcoming movies to identify the most exciting releases, categorize by genre and target audience, and assess potential blockbuster status based on cast, director, and studio involvement. STEP 4 - Release Planning: Organize movies by anticipated release dates and create viewing priority recommendations based on genre preferences and excitement levels. STEP 5 - Preview Report: Generate comprehensive upcoming movies guide using DOCX_TOOLS with sections for: Most Anticipated Releases, Genre Breakdown, Cast & Director Highlights, Release Timeline, Excitement Ratings, and Must-Watch Recommendations. Include trailer availability and pre-release buzz analysis. STEP 6 - Tracker Update: Send upcoming movies tracker via NOTIFYME__SEND_ME_EMAIL with subject 'Upcoming Movies Tracker - What to Watch Next [Current Date]' including: most anticipated releases overview, genre and timeline breakdown, cast and director spotlights, excitement ratings and recommendations, release calendar for planning, and note that the complete upcoming movies guide with detailed previews is available for download in the app artifacts for comprehensive cinema planning. Use SEARXNG as backup to fill in missing info.",
+      "goal": "Track and analyze the most anticipated upcoming movies using comprehensive web research with reliable fallback strategies. STEP 1 - Primary Attempt: Try to use MOVIE_GURU__GET_UPCOMING_MOVIES with limit=15 to gather upcoming films. If this fails or returns empty results, proceed with comprehensive web research approach. STEP 2 - Alternative Research: Use SEARXNG to search for 'upcoming movies 2024 2025 new releases' and 'most anticipated films coming soon theater releases' and 'latest movie trailers new films' to gather comprehensive upcoming movie information from reliable entertainment sources. STEP 3 - Detailed Preview Research: For each identified upcoming movie, use SEARXNG to collect comprehensive information including plot summaries, cast announcements, director details, production companies, anticipated release dates, trailer availability, and pre-release buzz from entertainment news sources. STEP 4 - Anticipation Analysis: Analyze gathered upcoming movie data to identify the most exciting releases, categorize by genre and target audience, and assess potential impact based on cast, director, studio involvement, and early critical reception. STEP 5 - Release Planning: Organize movies by anticipated release dates and create viewing priority recommendations based on genre preferences, excitement levels, and release timeline accuracy. STEP 6 - Preview Report: Generate comprehensive upcoming movies guide using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Most Anticipated Releases, ## Genre Breakdown, ## Cast & Director Highlights, ## Release Timeline, ## Pre-Release Buzz Analysis, and ## Must-Watch Recommendations. Include trailer links and source attribution. STEP 7 - Tracker Update: Send upcoming movies tracker via NOTIFYME__SEND_ME_EMAIL with subject 'Upcoming Movies Tracker - What to Watch Next [Current Date]' including: most anticipated releases overview with sources, genre and timeline breakdown, cast and director spotlights, excitement ratings and viewing recommendations, accurate release calendar for planning, data source transparency (direct vs research-based), and note that the complete professional upcoming movies guide PDF is available for download in the app artifacts for comprehensive cinema planning.",
       "variable_names": [],
       "required_app_names": [
         "MOVIE_GURU",
-        "DOCX_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME",
         "SEARXNG"
       ],

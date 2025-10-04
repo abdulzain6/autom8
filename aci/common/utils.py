@@ -59,14 +59,16 @@ def get_db_engine(db_url: str) -> Engine:
         db_url,
         pool_size=10,
         max_overflow=10,
-        pool_timeout=30,
-        pool_recycle=3600,  # recycle connections after 1 hour
-        pool_pre_ping=False,  # Disable pre-ping to avoid INTRANS issues
+        pool_timeout=120,  # Increased from 30 to 120 seconds for long-running operations
+        pool_recycle=1800,  # Reduced from 3600 to 1800 seconds (30 minutes) for better connection health
+        pool_pre_ping=True,  # Enable pre-ping to detect dead connections
         connect_args={
             "prepare_threshold": None,  # Disable prepared statements
             "autocommit": False,  # Explicit autocommit setting
+            "server_side_cursors": False,  # Disable server-side cursors to avoid INTRANS issues
         },
         isolation_level="READ_COMMITTED",  # Set explicit isolation level
+        echo=False,  # Set to True for debugging SQL queries
     )
 
 

@@ -1,11 +1,22 @@
-from typing import Optional, List, Dict, Any
+import os
+import html2text
+import re
+import requests
 from imdb import Cinemagoer, IMDbError
+from typing import Optional, List, Dict, Any
 from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
-from aci.server.config import HTTP_PROXY
-import os
+from aci.server.config import CYCLE_TLS_SERVER_URL, HTTP_PROXY
+
+try:
+    from aci.server.cycletls_client import CycleTlsServerClient
+    CYCLETLS_AVAILABLE = True
+except ImportError:
+    CYCLETLS_AVAILABLE = False
+    logger = get_logger(__name__)
+    logger.warning("CycleTLS client not available, using direct HTTP requests")
 
 logger = get_logger(__name__)
 
@@ -28,12 +39,89 @@ class MovieGuru(AppConnectorBase):
         else:
             self.ia = Cinemagoer()
             logger.info("MovieGuru initialized without proxy.")
+        
+        # Set up HTTP client for web scraping fallback
+        self.use_cycletls = False
+        self.session = None
+        
+        if CYCLETLS_AVAILABLE:
+            try:
+                if HTTP_PROXY:
+                    self.client = CycleTlsServerClient(server_url=CYCLE_TLS_SERVER_URL, proxy=HTTP_PROXY)
+                else:
+                    self.client = CycleTlsServerClient(server_url=CYCLE_TLS_SERVER_URL)
+                self.use_cycletls = True
+                logger.info("MovieGuru using CycleTLS for web scraping")
+            except Exception as e:
+                logger.warning(f"CycleTLS initialization failed: {e}, falling back to requests")
+                self.use_cycletls = False
+        
+        # Always set up requests session as fallback
+        self.session = requests.Session()
+        if HTTP_PROXY:
+            proxy_config = {
+                'http': HTTP_PROXY,
+                'https': HTTP_PROXY
+            }
+            self.session.proxies.update(proxy_config)
+        
+        # Set a user agent to avoid being blocked
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        })
+        
+        if not self.use_cycletls:
+            logger.info("MovieGuru using direct HTTP requests for web scraping")
             
         self._imdb_base = os.getenv("IMDB_BASE_URL", "https://www.imdb.com")
-        logger.info("MovieGuru initialized.")
+        logger.info("MovieGuru initialized with web scraping fallback.")
+
+    def _get_web_content(self, url: str) -> Optional[str]:
+        """Get web content using CycleTLS or direct HTTP as fallback."""
+        try:
+            if self.use_cycletls and hasattr(self, 'client'):
+                content = self.client.get(url)
+                if content:
+                    return content
+                else:
+                    logger.warning("CycleTLS request failed, trying direct HTTP")
+            
+            # Use direct HTTP (either as primary method or fallback)
+            if self.session:
+                response = self.session.get(url, timeout=30)
+                response.raise_for_status()
+                return response.text
+            else:
+                logger.error("No HTTP client available")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Failed to fetch content from {url}: {e}")
+            return None
 
     def _before_execute(self) -> None:
         pass
+
+    def _html_to_text(self, html_content: str) -> str:
+        """Convert HTML to clean text using html2text."""
+        try:
+            h = html2text.HTML2Text()
+            h.ignore_links = False
+            h.ignore_images = True
+            h.ignore_emphasis = False
+            h.body_width = 0  # Don't wrap lines
+            text = h.handle(html_content)
+            
+            # Clean up extra whitespace
+            text = re.sub(r'\n\s*\n\s*\n', '\n\n', text)  # Remove excessive newlines
+            text = re.sub(r'[ \t]+', ' ', text)  # Normalize spaces
+            return text.strip()
+        except Exception as e:
+            logger.warning(f"html2text conversion failed: {e}")
+            # Fallback to simple tag removal
+            text = re.sub(r'<[^>]+>', '', html_content)
+            text = re.sub(r'\s+', ' ', text)
+            return text.strip()
 
     def search_movie(self, title: str, limit: int = 5) -> List[Dict[str, Any]]:
         self._before_execute()
@@ -60,25 +148,76 @@ class MovieGuru(AppConnectorBase):
         if HTTP_PROXY:
             logger.info(f"Using proxy for MovieGuru Top 250 request: {HTTP_PROXY}")
         try:
+            # Try the original Cinemagoer method first
             results = self.ia.get_top250_movies() or []
-            if not results:
-                logger.warning("Empty Top 250, falling back to popular100")
-                results = self.ia.get_popular100_movies() or []
-            if not results:
-                raise RuntimeError("No movies found for top or popular lists")
-            return [self._movie_summary(m) for m in results[: max(limit, 0)]]
+            if results:
+                return [self._movie_summary(m) for m in results[: max(limit, 0)]]
+            
+            logger.warning("Cinemagoer Top 250 failed, falling back to web scraping")
+            # Fallback: Get HTML content and return as text for LLM processing
+            url = "https://www.imdb.com/chart/top/"
+            content = self._get_web_content(url)
+            
+            if content:
+                # Convert HTML to clean text using html2text
+                text_content = self._html_to_text(content)
+                
+                # Return as a single "movie" entry with the full text content
+                return [{
+                    "id": "imdb_top_250_list",
+                    "imdb_id": "top250",
+                    "imdb_url": url,
+                    "title": "IMDb Top 250 Movies List",
+                    "year": None,
+                    "kind": "list",
+                    "rating": None,
+                    "votes": None,
+                    "cover_url": None,
+                    "content": text_content,
+                    "message": f"Retrieved IMDb Top 250 movies list content for LLM processing"
+                }]
+            
+            raise RuntimeError("No movies found using any available method")
         except IMDbError as e:
             logger.error(f"Error fetching top movies: {e}", exc_info=True)
             raise
 
     def get_upcoming_movies(self, limit: int = 10) -> List[Dict[str, Any]]:
         self._before_execute()
-        logger.info(f"Fetching upcoming (popular100) (limit={limit})")
+        logger.info(f"Fetching upcoming (popular) movies (limit={limit})")
         if HTTP_PROXY:
             logger.info(f"Using proxy for MovieGuru upcoming movies request: {HTTP_PROXY}")
         try:
-            results = self.ia.get_popular100_movies()[: max(limit, 0)]
-            return [self._movie_summary(m) for m in results]
+            # Try the original Cinemagoer method first
+            results = self.ia.get_popular100_movies() or []
+            if results:
+                return [self._movie_summary(m) for m in results[: max(limit, 0)]]
+            
+            logger.warning("Cinemagoer popular movies failed, falling back to web scraping")
+            # Fallback: Get HTML content and return as text for LLM processing
+            url = "https://www.imdb.com/chart/moviemeter/"
+            content = self._get_web_content(url)
+            
+            if content:
+                # Convert HTML to clean text using html2text
+                text_content = self._html_to_text(content)
+                
+                # Return as a single "movie" entry with the full text content
+                return [{
+                    "id": "imdb_popular_movies_list",
+                    "imdb_id": "popular",
+                    "imdb_url": url,
+                    "title": "IMDb Most Popular Movies List",
+                    "year": None,
+                    "kind": "list",
+                    "rating": None,
+                    "votes": None,
+                    "cover_url": None,
+                    "content": text_content,
+                    "message": f"Retrieved IMDb popular movies list content for LLM processing"
+                }]
+            
+            raise RuntimeError("No movies found using any available method")
         except IMDbError as e:
             logger.error(f"Error fetching upcoming movies: {e}", exc_info=True)
             raise
