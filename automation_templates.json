@@ -986,6 +986,161 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Username Availability Scanner",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/username_scanner.png?raw=true",
+      "description": "Comprehensive username availability check across 376+ social media platforms and websites. Perfect for brand hunting, startup naming, or personal account creation.",
+      "tags": [
+        "OSINT"
+      ],
+      "goal": "Perform comprehensive username availability scanning for '{{ variables['Desired Username'] }}' across all major social media platforms and websites. STEP 1 - Initial Scan: Use SHERLOCK_OSINT__INVESTIGATE_USERNAME to check username availability across 376+ platforms including social media sites, forums, and other online services. Set parameters: username='{{ variables['Desired Username'] }}', only_positive=false (to see both taken and available), strict_filtering=true, max_sites=100 for faster results. STEP 2 - Categorize Results: Organize findings into clear categories: AVAILABLE (username is free to claim), TAKEN (username already exists), UNCERTAIN (requires manual verification), and BLOCKED (platform restrictions). STEP 3 - Priority Analysis: Identify high-value platforms where the username is available, focusing on major social networks (Twitter, Instagram, Facebook, LinkedIn, TikTok), developer platforms (GitHub, GitLab), and business platforms. STEP 4 - Generate CSV Report: Use CSV_TOOLS to create a detailed availability report with columns for Platform, Status, URL, Priority_Level, Category, and Notes. Format the data properly and save as '{{ variables['Desired Username'] }}_username_availability_report.csv' for easy tracking and follow-up actions. STEP 5 - Action Plan: Generate prioritized action plan for claiming available usernames, starting with most important platforms and including direct links for account creation. STEP 6 - Comprehensive Notification: Send username availability report via NOTIFYME__SEND_ME_EMAIL with subject 'Username Availability Report - {{ variables['Desired Username'] }}' including: summary statistics (total checked, available count, taken count), top 10 available high-priority platforms, note that CSV report is available for download in the app artifacts, and step-by-step action plan for brand protection or account creation.",
+      "variable_names": [
+        "Desired Username"
+      ],
+      "required_app_names": [
+        "SHERLOCK_OSINT",
+        "CSV_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "New Hire Social Recon",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/social_recon.png?raw=true",
+      "description": "Comprehensive social media reconnaissance for potential hires. Automatically investigates candidate's online presence across 376+ platforms and generates a professional recruitment report.",
+      "tags": [
+        "OSINT"
+      ],
+      "goal": "Conduct comprehensive social media reconnaissance for potential hire '{{ variables['Candidate Name'] }}' using username '{{ variables['Username/Alias'] }}'. STEP 1 - Initial Investigation: Use SHERLOCK_OSINT__INVESTIGATE_USERNAME to scan for the candidate's presence across 376+ platforms including professional networks (LinkedIn, GitHub, GitLab), developer communities (Stack Overflow, dev.to, HackerRank), social media (Twitter, Instagram, Facebook), and other platforms. Set parameters: username='{{ variables['Username/Alias'] }}', only_positive=true (focus on confirmed profiles), strict_filtering=true for accurate results. STEP 2 - Profile Analysis: Categorize discovered profiles by platform type: PROFESSIONAL (LinkedIn, GitHub, dev.to, Stack Overflow), SOCIAL (Twitter, Instagram, Facebook, Reddit), DEVELOPER (GitHub, GitLab, coding platforms), and OTHER (forums, blogs, personal sites). Analyze profile completeness, activity level, and professional relevance. STEP 3 - Risk Assessment: Evaluate profiles for potential red flags including inappropriate content, conflicting information, or concerning behavior patterns. Also identify positive indicators like technical contributions, professional engagement, and community involvement. STEP 4 - Professional Highlights: Extract key professional information from discovered profiles including: GitHub repositories and contributions, Stack Overflow reputation and answers, dev.to articles and engagement, LinkedIn experience and connections, and any other relevant professional activities. STEP 5 - Comprehensive Report Generation: Use DOCX_TOOLS to create a detailed recruitment reconnaissance report with sections for: Executive Summary, Discovered Platforms (with URLs), Professional Profile Analysis, Technical Contributions Assessment, Social Media Presence Review, Risk Assessment, and Recommendations. Include profile screenshots and activity summaries where relevant. STEP 6 - Secure Delivery: Send the social reconnaissance report via NOTIFYME__SEND_ME_EMAIL with subject 'Social Recon Report - {{ variables['Candidate Name'] }}' including: candidate overview, platform discovery summary, professional assessment highlights, and note that the complete DOCX report is available for download in the app artifacts for detailed review and hiring decision support.",
+      "variable_names": [
+        "Candidate Name",
+        "Username/Alias"
+      ],
+      "required_app_names": [
+        "SHERLOCK_OSINT",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Uptime Checker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/uptime_checker.png?raw=true",
+      "description": "Monitor your website and competitors' uptime. Checks HTTP status codes, response times, and availability across multiple sites for comprehensive performance comparison.",
+      "tags": [
+        "Monitoring"
+      ],
+      "goal": "Perform comprehensive uptime and performance monitoring for your website '{{ variables['Your Website URL'] }}' and competitor websites. STEP 1 - Primary Site Check: Use IP_TOOLS__CHECK_WEBSITE_STATUS to monitor your main website, recording HTTP status code, response time, and availability status. Set timeout to 10 seconds for reliable testing. STEP 2 - Competitor Analysis: Check each competitor website in '{{ variables['Competitor URLs'] }}' (comma-separated list) using IP_TOOLS__CHECK_WEBSITE_STATUS to gather comparative performance data including status codes, load times, and uptime status. STEP 3 - Performance Comparison: Analyze response times across all monitored sites to identify performance leaders and laggers. Calculate average response times and identify any sites experiencing issues (4xx/5xx status codes or timeouts). STEP 4 - Status Report Generation: Create comprehensive uptime report using DOCX_TOOLS with sections for: Executive Summary, Your Website Performance, Competitor Performance Analysis, Response Time Comparison Chart, Issues Detected, and Performance Recommendations. Include color-coded status indicators and timing comparisons. STEP 5 - Alert Generation: If your website shows issues (status code ≠ 200 or response time > 5 seconds), send immediate alert via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with urgent status update. STEP 6 - Comprehensive Report: Send detailed uptime monitoring report via NOTIFYME__SEND_ME_EMAIL with subject 'Website Uptime Report - {{ variables['Your Website URL'] }}' including: status summary for all sites, performance comparison analysis, competitive insights, and note that the complete DOCX report is available for download in the app artifacts for detailed performance tracking and competitive analysis.",
+      "variable_names": [
+        "Your Website URL",
+        "Competitor URLs"
+      ],
+      "required_app_names": [
+        "IP_TOOLS",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "IPO Screener",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/ipo_screener.png?raw=true",
+      "description": "Comprehensive IPO screening tool that scrapes Nasdaq's upcoming IPO listings to extract company tickers, offering dates, price ranges, and market insights for investment opportunities.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Perform comprehensive IPO screening by scraping IPOScoop's upcoming IPO calendar for investment opportunities. STEP 1 - IPO Data Collection: Use BROWSER to visit https://www.iposcoop.com/ipo-calendar/ and extract upcoming IPO information including company names, ticker symbols, expected offering dates, price ranges, estimated market caps, shares offered, underwriters, and market sectors. Parse the structured IPO calendar table systematically. STEP 2 - Enhanced Data Gathering: For each identified IPO, collect additional details including company descriptions, industry classifications, offering sizes, underwriter information, and any available links to company profiles or SEC filing references. STEP 3 - Market Analysis: Analyze the collected IPO data to identify trends including sector concentration, pricing patterns, offering sizes, timing clusters, and underwriter preferences. Calculate average price ranges and identify high-profile offerings based on market cap estimates. STEP 4 - Report Generation: Create comprehensive IPO screening report using DOCX_TOOLS with sections for: Executive Summary, Upcoming IPO Calendar, High-Priority Investment Opportunities, Sector Analysis, Price Range Insights, Underwriter Analysis, and Investment Recommendations. Include direct links to IPOScoop company pages and SEC filings where available. STEP 5 - Investment Digest: Format findings into a professional email summary focusing on the most promising upcoming IPOs, key dates to watch, market timing considerations, and underwriter insights. STEP 6 - Distribution: Send IPO screening digest via NOTIFYME__SEND_ME_EMAIL with subject 'IPO Screening Report - Upcoming Opportunities [Current Date]' including: summary of upcoming IPOs (next 30 days), highlighted investment opportunities with price ranges and market caps, key dates calendar, sector breakdown, underwriter analysis, direct links to IPOScoop IPO calendar (https://www.iposcoop.com/ipo-calendar/), individual company IPO pages, and note that the complete DOCX report is available for download in the app artifacts for detailed investment analysis and due diligence.",
+      "variable_names": [],
+      "required_app_names": [
+        "BROWSER",
+        "DOCX_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Daily Movie Recommendations",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/movie_recommendations.png?raw=true",
+      "description": "Curates and delivers personalized daily movie recommendations from IMDb's top-rated films with detailed reviews and viewing suggestions.",
+      "tags": [
+        "Entertainment"
+      ],
+      "goal": "Generate personalized daily movie recommendations from IMDb's top-rated collection. STEP 1 - Fetch Top Movies: Use MOVIE_GURU__GET_TOP_250_MOVIES to retrieve the current top-rated films from IMDb's prestigious Top 250 list, limiting to 20 movies for variety. STEP 2 - Detailed Analysis: For each movie, use MOVIE_GURU__GET_MOVIE_DETAILS with info_sets=['main', 'plot', 'keywords'] to gather comprehensive information including plot summaries, cast details, genres, ratings, and key themes. STEP 3 - Curation & Filtering: Analyze movie data to select 5-7 diverse recommendations spanning different genres, decades, and styles. Prioritize highly-rated films with engaging plots and strong critical reception. STEP 4 - Recommendation Report: Create detailed movie guide using DOCX_TOOLS with sections for: Featured Recommendations, Plot Summaries, Cast Highlights, Why You Should Watch, Genre Diversity, and Viewing Order Suggestions. Include IMDb ratings and release information. STEP 5 - Daily Digest: Format recommendations into an engaging email with movie posters (if available), brief descriptions, and compelling reasons to watch each film. STEP 6 - Distribution: Send movie recommendations digest via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Movie Recommendations - Curated Cinema Picks [Current Date]' including: featured movie highlights, genre variety showcase, IMDb ratings and plot teasers, viewing suggestions for different moods, and note that the complete movie guide with detailed analysis is available for download in the app artifacts for comprehensive film exploration.",
+      "variable_names": [],
+      "required_app_names": [
+        "MOVIE_GURU",
+        "DOCX_TOOLS",
+        "NOTIFYME",
+        "SEARXNG"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Weekend Movie Planner",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners//home/zain/autom8-logos/automation_banners/weekend_movie_planner.jpg?raw=true",
+      "description": "Plans your perfect weekend movie marathon with curated selections from top-rated and upcoming films tailored to your preferences.",
+      "tags": [
+        "Entertainment"
+      ],
+      "goal": "Create the perfect weekend movie marathon plan combining classic favorites and exciting new releases. STEP 1 - Classic Collection: Use MOVIE_GURU__GET_TOP_250_MOVIES with limit=15 to gather acclaimed films from IMDb's top-rated collection. STEP 2 - Upcoming Excitement: Use MOVIE_GURU__GET_UPCOMING_MOVIES with limit=10 to discover the hottest new releases and trending films. STEP 3 - Detailed Research: For each selected movie, use MOVIE_GURU__GET_MOVIE_DETAILS with comprehensive info_sets=['main', 'plot', 'keywords'] to gather full details including runtime, genres, plot summaries, and cast information. STEP 4 - Marathon Planning: Organize movies into themed viewing sessions considering runtime, genre balance, and emotional pacing. Create different weekend plans: Classic Cinema Night, Modern Blockbuster Marathon, Genre-Specific Themes. STEP 5 - Comprehensive Guide: Generate detailed weekend planner using DOCX_TOOLS with sections for: Weekend Schedule Overview, Movie Lineup with Timings, Plot Previews, Snack Pairing Suggestions, Genre Analysis, and Alternative Options. STEP 6 - Email Summary: Send weekend movie planner via NOTIFYME__SEND_ME_EMAIL with subject 'Your Weekend Movie Marathon Plan - [Current Date]' including: curated movie lineup with showtimes, genre breakdown and viewing flow, runtime calculations for perfect pacing, snack and mood pairing suggestions, and note that the complete weekend planner with detailed schedules is available for download in the app artifacts for the ultimate movie weekend experience.",
+      "variable_names": [],
+      "required_app_names": [
+        "MOVIE_GURU",
+        "DOCX_TOOLS",
+        "NOTIFYME",
+        "SEARXNG"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Top Movies Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/top_movies_alert.jpg?raw=true",
+      "description": "Weekly digest of IMDb's top-rated movies with trending analysis and must-watch recommendations for serious film enthusiasts.",
+      "tags": [
+        "Entertainment"
+      ],
+      "goal": "Deliver a curated weekly digest of the highest-rated movies from IMDb's prestigious rankings. STEP 1 - Top Films Collection: Use MOVIE_GURU__GET_TOP_250_MOVIES with limit=25 to gather the current top-rated films from IMDb's elite collection. STEP 2 - Detailed Profiles: For the top 10 movies, use MOVIE_GURU__GET_MOVIE_DETAILS with comprehensive info_sets=['main', 'plot', 'keywords'] to gather detailed information including plot summaries, cast details, genres, ratings, and thematic elements. STEP 3 - Trend Analysis: Analyze the top movies to identify patterns in genres, decades, directors, and themes. Compare current rankings with historical data to spot trending classics. STEP 4 - Curator's Selection: Select 5-7 must-watch films from the top collection, focusing on diverse genres, acclaimed directors, and culturally significant works. STEP 5 - Weekly Report: Create professional movie digest using DOCX_TOOLS with sections for: This Week's Top Movies, Curator's Must-Watch Picks, Genre Analysis, Director Spotlights, Decade Breakdown, and Viewing Recommendations. Include ratings progression and cultural significance notes. STEP 6 - Email Digest: Send weekly top movies alert via NOTIFYME__SEND_ME_EMAIL with subject 'Weekly Top Movies Digest - IMDb Elite Collection [Current Date]' including: current top movie rankings, curator's must-watch selections, genre and trend analysis, director and decade highlights, viewing priority recommendations, and note that the complete weekly movie digest with detailed analysis is available for download in the app artifacts for serious film exploration.",
+      "variable_names": [],
+      "required_app_names": [
+        "MOVIE_GURU",
+        "DOCX_TOOLS",
+        "NOTIFYME",
+        "SEARXNG"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Upcoming Movies Tracker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/upcoming_movies_tracker.png?raw=true",
+      "description": "Stay ahead of the curve with weekly updates on the most anticipated upcoming movies, complete with release schedules and excitement ratings.",
+      "tags": [
+        "Entertainment"
+      ],
+      "goal": "Track and analyze the most anticipated upcoming movies for cinema enthusiasts. STEP 1 - Upcoming Collection: Use MOVIE_GURU__GET_UPCOMING_MOVIES with limit=15 to gather the latest trending and soon-to-release films from popular cinema listings. STEP 2 - Detailed Preview: For each upcoming movie, use MOVIE_GURU__GET_MOVIE_DETAILS with info_sets=['main', 'plot', 'keywords'] to collect available information including plot summaries, cast announcements, genres, and anticipated release details. STEP 3 - Anticipation Analysis: Analyze upcoming movies to identify the most exciting releases, categorize by genre and target audience, and assess potential blockbuster status based on cast, director, and studio involvement. STEP 4 - Release Planning: Organize movies by anticipated release dates and create viewing priority recommendations based on genre preferences and excitement levels. STEP 5 - Preview Report: Generate comprehensive upcoming movies guide using DOCX_TOOLS with sections for: Most Anticipated Releases, Genre Breakdown, Cast & Director Highlights, Release Timeline, Excitement Ratings, and Must-Watch Recommendations. Include trailer availability and pre-release buzz analysis. STEP 6 - Tracker Update: Send upcoming movies tracker via NOTIFYME__SEND_ME_EMAIL with subject 'Upcoming Movies Tracker - What to Watch Next [Current Date]' including: most anticipated releases overview, genre and timeline breakdown, cast and director spotlights, excitement ratings and recommendations, release calendar for planning, and note that the complete upcoming movies guide with detailed previews is available for download in the app artifacts for comprehensive cinema planning. Use SEARXNG as backup to fill in missing info.",
+      "variable_names": [],
+      "required_app_names": [
+        "MOVIE_GURU",
+        "DOCX_TOOLS",
+        "NOTIFYME",
+        "SEARXNG"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Word of the Day",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/word_of_the_day.jpg?raw=true",
+      "description": "Daily vocabulary boost with Merriam-Webster's Word of the Day featuring the word and its definition delivered to your mobile device.",
+      "tags": [
+        "Education"
+      ],
+      "goal": "Get Merriam-Webster's daily word and definition. Use HTTP_TOOLS__GET_URL to fetch content from 'https://www.merriam-webster.com/word-of-the-day' and extract the featured word and its definition. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Word of the Day 📚' including just the word and its meaning in a simple, clean format for quick vocabulary learning.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }
