@@ -228,7 +228,7 @@ class AutomationExecutor:
             model="deepseek-ai/DeepSeek-V3.2-Exp",
             timeout=300,
             max_retries=3,
-            model_kwargs={"reasoning_enabled" : False}
+            reasoning_effort="none",
         )
         agent = create_react_agent(
             model=model,
