@@ -12,7 +12,7 @@ from aci.server.function_executors.function_utils import (
     FunctionDefinitionFormat,
     execute_function,
 )
-from langchain_openai import ChatOpenAI
+from langchain_openai.chat_models.base import BaseChatOpenAI
 from logging import getLogger
 import logging
 
@@ -223,7 +223,7 @@ class AutomationExecutor:
         return tools
 
     def create_agent(self):
-        model = ChatOpenAI(
+        model = BaseChatOpenAI(
             base_url=DEEPINFRA_BASE_URL,
             api_key=SecretStr(DEEPINFRA_API_KEY),
             model="deepseek-ai/DeepSeek-V3.2-Exp",
