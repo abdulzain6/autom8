@@ -1061,7 +1061,7 @@
     },
     {
       "name": "Daily Movie Recommendations",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/movie_recommendations.png?raw=true",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/movie_recommendations.jpg?raw=true",
       "description": "Curates and delivers personalized daily movie recommendations from IMDb's top-rated films with detailed reviews and viewing suggestions.",
       "tags": [
         "Entertainment"
@@ -1078,7 +1078,7 @@
     },
     {
       "name": "Weekend Movie Planner",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners//home/zain/autom8-logos/automation_banners/weekend_movie_planner.jpg?raw=true",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/weekend_movie_planner.jpg?raw=true",
       "description": "Plans your perfect weekend movie marathon with curated selections from top-rated and upcoming films tailored to your preferences.",
       "tags": [
         "Entertainment"
@@ -1112,7 +1112,7 @@
     },
     {
       "name": "Upcoming Movies Tracker",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/upcoming_movies_tracker.png?raw=true",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/upcoming_movies_tracker.jpg?raw=true",
       "description": "Stay ahead of the curve with weekly updates on the most anticipated upcoming movies, complete with release schedules and excitement ratings.",
       "tags": [
         "Entertainment"

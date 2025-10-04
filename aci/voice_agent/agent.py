@@ -175,6 +175,7 @@ Seventh, execute the newly loaded functions to complete the user's request.
                 base_url=DEEPINFRA_BASE_URL,
                 model="deepseek-ai/DeepSeek-V3.2-Exp",
                 api_key=DEEPINFRA_API_KEY,
+                reasoning_effort="minimal"
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
