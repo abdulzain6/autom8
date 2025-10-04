@@ -96,6 +96,24 @@ def execute_automation(run_id: str):
 
                 logger.info(f"Automation Output: {automation_output}")
 
+                # Check if automation_output is None
+                if automation_output is None:
+                    logger.warning(f"Automation executor returned None for automation {automation_id}")
+                    automation_runs.finalize_run(
+                        db_session,
+                        run_id=automation_run.id,
+                        status=RunStatus.failure,
+                        message="Automation executor returned no output",
+                        artifact_ids=[],
+                    )
+                    # Track failed automation run in usage
+                    try:
+                        increment_automation_runs(db_session, automation.user_id, success=False)
+                        logger.info(f"Tracked failed automation run for user {automation.user_id}")
+                    except Exception as usage_e:
+                        logger.warning(f"Failed to track automation usage: {usage_e}")
+                    return
+
                 automation_runs.finalize_run(
                     db_session,
                     run_id=automation_run.id,
@@ -130,8 +148,8 @@ def execute_automation(run_id: str):
                                 "automation_id": automation_id,
                                 "run_id": run_id,
                                 "automation_name": automation.name,
-                                "status": automation_output.status,
-                                "message": automation_output.automation_output[:100] if automation_output.automation_output else ""
+                                "status": automation_output.status if automation_output else "success",
+                                "message": automation_output.automation_output[:100] if automation_output and automation_output.automation_output else ""
                             }
                         )
                         logger.info(f"Sent success notification for automation {automation.name} to user {automation.user_id}")

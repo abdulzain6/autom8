@@ -59,25 +59,18 @@ def list_user_automations(
     db: Session, user_id: str, limit: int, offset: int
 ) -> List[Automation]:
     """
-    Lists all automations for a given user with pagination, ordered by latest run time, then by creation time.
+    Lists all automations for a given user with pagination, ordered by priority:
+    1. Active automations first
+    2. Recurring automations (scheduled to run) before one-time automations
+    3. Then by creation time (newest first)
     """
-    # Subquery to get the latest run time per automation
-    latest_run_subq = (
-        select(
-            AutomationRun.automation_id,
-            func.max(AutomationRun.started_at).label('latest_run_at')
-        )
-        .group_by(AutomationRun.automation_id)
-        .subquery()
-    )
-
     stmt = (
         select(Automation)
-        .outerjoin(latest_run_subq, Automation.id == latest_run_subq.c.automation_id)
         .where(Automation.user_id == user_id)
         .order_by(
-            latest_run_subq.c.latest_run_at.desc().nulls_last(),
-            Automation.created_at.desc()
+            Automation.active.desc(),                    # Active automations first
+            Automation.is_recurring.desc(),              # Recurring automations next
+            Automation.created_at.desc()                 # Then by creation time (newest first)
         )
         .offset(offset)
         .limit(limit)

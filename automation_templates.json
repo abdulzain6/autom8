@@ -630,9 +630,7 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/youtube_digest.jpeg?raw=true",
       "description": "Creates a personalized daily digest of trending YouTube videos based on your interests with video details and summaries.",
       "tags": [
-        "YouTube",
-        "Video",
-        "Entertainment"
+        "YouTube"
       ],
       "goal": "Create a personalized YouTube video digest for '{{ variables['Topic'] }}'. STEP 1 - Search Videos: Use YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS to find the latest and most relevant videos about {{ variables['Topic'] }} with max_results set to 10. STEP 2 - Get Details: For each video, use YOUTUBE_UNOFFICIAL__GET_VIDEO_DETAILS to fetch comprehensive information including title, author, views, duration, and upload date. STEP 3 - Content Analysis: Analyze video metadata to identify trending content, popular channels, and emerging topics. STEP 4 - Digest Creation: Structure findings into a professional HTML email briefing with sections for: Top Videos, Trending Channels, Content Highlights, and Viewing Recommendations. STEP 5 - Delivery: Send the YouTube Video Digest via NOTIFYME__SEND_ME_EMAIL with subject 'Daily YouTube Digest - {{ variables['Topic'] }} - [Current Date]' including video thumbnails, direct links, and engagement metrics in a well-formatted HTML email.",
       "variable_names": [
@@ -961,8 +959,7 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/github_trending.png?raw=true",
       "description": "Daily digest of today's trending GitHub repositories with descriptions, stars, and programming languages.",
       "tags": [
-        "Developer Tools",
-        "Technology"
+        "Developer Tools"
       ],
       "goal": "Use the BROWSER app to visit ONLY 'https://github.com/trending' - do NOT visit individual repository URLs one by one. Extract all the information directly from the trending page itself. From this single page, collect information about the top 10-15 repositories including: repository name, description, programming language, current star count, and GitHub URL (these URLs are visible on the trending page, just extract them without visiting). Organize this data into a clean, readable format and use the NOTIFYME app to send an email with the subject 'GitHub Trending Today - [Current Date]'. The email should include: 1) A brief introduction about trending repos, 2) A well-formatted list of repositories with name, language, stars, and short description for each, 3) GitHub URLs for each repository, 4) A footer encouraging exploration of interesting projects. Keep the email concise but informative, highlighting the most interesting repositories. IMPORTANT: Only visit the main trending page, do not navigate to individual repository pages.",
       "variable_names": [],
@@ -977,7 +974,7 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/brainy_quote.png?raw=true",
       "description": "Daily inspiration with a thought-provoking quote from BrainyQuote's Quote of the Day delivered to your mobile device.",
       "tags": [
-        "Quotes"
+        "Education"
       ],
       "goal": "Use the HTTP_TOOLS app to fetch content from 'https://www.brainyquote.com/quote_of_the_day' and extract the daily featured quote. From the fetched content, identify and extract the quote text and the author's name. Look for the main quote section which typically contains the quote text and attribution. Use the NOTIFYME app to send a mobile notification with the title 'Daily Brainy Quote 💭' and include the quote text followed by the author's name in a clean, readable format like: '[Quote text]' - Author Name. Keep the notification concise and inspiring. If the quote extraction fails, send a brief notification saying 'Quote of the day unavailable today' with an encouraging backup message.",
       "variable_names": [],
@@ -1138,6 +1135,39 @@
       "variable_names": [],
       "required_app_names": [
         "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "On This Day Historical Events",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/on_this_day.jpg?raw=true",
+      "description": "Daily dose of history with events that happened on this day in history, delivered straight to your email for educational enlightenment.",
+      "tags": [
+        "Education"
+      ],
+      "goal": "Discover fascinating historical events that occurred on today's date. Use HTTP_TOOLS__GET_URL to fetch content from 'https://www.onthisday.com' and extract the day's historical events, including major happenings, notable births, deaths, and significant milestones. Parse the content to identify the most interesting and educational events from various categories like politics, science, culture, and world events. Format the findings into an engaging and informative summary highlighting 5-7 key historical events with brief descriptions and their historical significance. STEP 1 - Send Quick Alert: Identify the most historically significant event from the extracted content and send an immediate mobile notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'On This Day 📅 Oct 5' and a concise one-line summary of the most important event with short date (e.g., 'Oct 5, 1969: First Moon Landing achieved by Apollo 11'). STEP 2 - Detailed Email: Send a comprehensive historical digest via NOTIFYME__SEND_ME_EMAIL with subject 'On This Day in History - [Current Date]' including: a curated selection of the most fascinating events, brief context for each event's importance, diverse categories covering politics, science, culture, and world events, exact dates and years for historical accuracy, and educational insights about how these events shaped history. Keep the content engaging, educational, and well-formatted for an enriching daily history lesson.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Flight Tracker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/flight_tracker.jpg?raw=true",
+      "description": "Real-time flight tracking with status updates including departure, arrival, delays, and gate information delivered via mobile notification.",
+      "tags": [
+        "Travel",
+        "Transportation"
+      ],
+      "goal": "Track real-time flight status and provide instant updates. Use the BROWSER app to visit 'https://www.flightaware.com/live/flight/{{ variables['Flight Number'] }}' and extract key flight details including departure time, arrival time, current status, gate information, delays, and aircraft location. Parse the content to identify the most important flight information such as on-time status, departure/arrival gates, any delays or cancellations, and current flight phase (boarding, departed, en route, landed). Send a concise flight update via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Flight {{ variables['Flight Number'] }} ✈️' and a very brief summary with only the most critical info (e.g., 'On time - Gate A12' or 'Delayed 30min - Gate B5'). Keep the notification extremely short and focused on just the essential status.",
+      "variable_names": [
+        "Flight Number"
+      ],
+      "required_app_names": [
+        "BROWSER",
         "NOTIFYME"
       ],
       "is_deep": false
