@@ -44,7 +44,7 @@
         }
       },
       "required": ["username"],
-      "visible": ["username", "timeout", "include_nsfw", "max_sites", "site_names", "strict_filtering", "only_positive"],
+      "visible": ["username", "include_nsfw", "max_sites", "site_names", "strict_filtering", "only_positive"],
       "additionalProperties": false
     }
   },

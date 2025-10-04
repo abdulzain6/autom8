@@ -22,15 +22,12 @@ class MovieGuru(AppConnectorBase):
         
         # Configure Cinemagoer with proxy if available
         if HTTP_PROXY:
-            # Cinemagoer accepts proxy configuration in its constructor
-            proxy_config = {
-                'http': HTTP_PROXY,
-                'https': HTTP_PROXY
-            }
-            self.ia = Cinemagoer(proxy=proxy_config)
+            # Cinemagoer expects a string proxy URL, not a dictionary
+            self.ia = Cinemagoer(proxy=HTTP_PROXY)
             logger.info(f"MovieGuru configured with proxy: {HTTP_PROXY}")
         else:
             self.ia = Cinemagoer()
+            logger.info("MovieGuru initialized without proxy.")
             
         self._imdb_base = os.getenv("IMDB_BASE_URL", "https://www.imdb.com")
         logger.info("MovieGuru initialized.")
