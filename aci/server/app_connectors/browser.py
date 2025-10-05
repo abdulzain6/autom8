@@ -295,13 +295,13 @@ class Browser(AppConnectorBase):
                             if crawl_config:
                                 result = await crawler.arun(url=url, config=crawl_config)
                                 return {
-                                    "markdown": getattr(result, 'markdown', None) if result else None,  # type: ignore
+                                    "markdown": None,
                                     "extracted_content": getattr(result, 'extracted_content', None) if result else None  # type: ignore
                                 }
                             else:
                                 result = await crawler.arun(url=url)
                                 return {
-                                    "extracted_content": getattr(result, 'extracted_content', None) if result else None,  # type: ignore
+                                    "extracted_content": None,
                                     "markdown": getattr(result, 'markdown', None) if result else None,  # type: ignore
                                 }
                     
