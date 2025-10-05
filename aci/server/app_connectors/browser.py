@@ -148,7 +148,7 @@ class Browser(AppConnectorBase):
                         # LLM and Agent configuration
                         api_key = config.OPENROUTER_API_KEY
                         llm = ChatOpenAI(model="x-ai/grok-4-fast", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
-                        page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-20b:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL, reasoning_effort="minimal")
+                        page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-120b", temperature=0.3, api_key=config.DEEPINFRA_API_KEY, base_url=config.DEEPINFRA_BASE_URL, reasoning_effort="minimal")
 
                         # 2. Create a new BrowserSession instance for this task only.
                         browser_session_for_this_agent = BrowserSession(cdp_url=cdp_url)
