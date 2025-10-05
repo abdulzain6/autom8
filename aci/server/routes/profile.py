@@ -98,7 +98,7 @@ def get_my_avatar(
     """
     file_manager = FileManager(context.db_session)
     try:
-        content_generator, mime_type = file_manager.read_avatar(user_id=context.user.id)
-        return StreamingResponse(content_generator, media_type=mime_type)
+        url = file_manager.read_avatar(user_id=context.user.id)
+        return {"avatar_url": url}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

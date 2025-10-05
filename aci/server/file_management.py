@@ -135,7 +135,7 @@ class FileManager:
             # Optionally, re-raise or handle the error appropriately
             raise RuntimeError("Failed to stream file content.")
 
-    def read_avatar(self, user_id: str) -> Tuple[Generator[bytes, None, None], str]:
+    def read_avatar(self, user_id: str) -> str:
         """
         Reads a user's avatar from storage using a temporary signed URL.
 
@@ -157,18 +157,13 @@ class FileManager:
             )
             signed_url = signed_response["signedURL"]
             
-            # Perform a HEAD request to get the content type without downloading
-            head_response = self.session.head(signed_url)
-            head_response.raise_for_status()
-            mime_type = head_response.headers.get("Content-Type", "application/octet-stream")
+            return signed_url
         except StorageException as e:
             raise ValueError(f"Could not create signed URL for avatar: {str(e)}")
         except requests.RequestException as e:
             logger.error(f"ERROR: Failed to get headers for avatar {path_in_bucket}: {e}")
             raise ValueError("Avatar file could not be accessed.")
         
-        return self._create_stream_generator(signed_url), mime_type
-
     def upload_artifact(
         self,
         user_id: str,
