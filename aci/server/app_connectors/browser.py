@@ -310,8 +310,8 @@ class Browser(AppConnectorBase):
                     
                     logger.info(f"[PID: {process_id} | Thread: {thread_id}] Browser scraping completed successfully.")
                     return {
-                        "markdown": crawler_result["markdown"],
-                        "extracted_content": crawler_result["extracted_content"],
+                        "markdown": crawler_result["markdown"] if "markdown" in crawler_result else None,
+                        "extracted_content": crawler_result["extracted_content"] if "extracted_content" in crawler_result else None,
                         "success": True
                     }
                     
