@@ -266,9 +266,9 @@ class Browser(AppConnectorBase):
                         if extraction_instructions:
                             # Setup LLM extraction strategy with GPT-OSS
                             llm_config = LLMConfig(
-                                provider="openrouter/openai/gpt-oss-20b:free",
-                                api_token=config.OPENROUTER_API_KEY,
-                                base_url=config.OPENROUTER_BASE_URL,
+                                provider="deepinfra/openai/gpt-oss-120b",
+                                api_token=config.DEEPINFRA_API_KEY,
+                                base_url=config.DEEPINFRA_BASE_URL,
                             )
                             
                             llm_strategy = LLMExtractionStrategy(
