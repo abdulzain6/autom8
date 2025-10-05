@@ -42,6 +42,10 @@
         },
         "output_schema": {
           "type": "object",
+          "properties": {},
+          "required": [],
+          "visible": [],
+          "additionalProperties": true,
           "description": "Required JSON schema defining the exact output structure for validation. Must be a valid JSON Schema (Draft 7) with type definitions. Example: {\"type\": \"object\", \"properties\": {\"name\": {\"type\": \"string\"}, \"price\": {\"type\": \"number\"}, \"features\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}}, \"required\": [\"name\", \"price\"]}"
         }
       },

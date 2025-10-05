@@ -8,7 +8,7 @@ import json
 import jsonschema
 from jsonschema import validate, ValidationError
 from redis_semaphore import Semaphore
-from typing import Optional
+from typing import Any, Optional
 from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
@@ -296,7 +296,7 @@ class Browser(AppConnectorBase):
                         # Build extraction strategy with required schema
                         extraction_kwargs = {
                             "llm_config": llm_config,
-                            "extraction_type": "block",
+                            "extraction_type": "schema",
                             "instruction": extraction_instructions,
                             "schema": output_schema,
                             "overlap_rate": 0.1,
@@ -304,7 +304,6 @@ class Browser(AppConnectorBase):
                             "apply_chunking": True,
                             "input_format": "markdown",
                             "reasoning_effort": "minimal",
-                            "force_json_response" : True
                         }
                         
                         logger.info(f"[PID: {process_id} | Thread: {thread_id}] Using output schema: {output_schema}")
@@ -320,17 +319,18 @@ class Browser(AppConnectorBase):
                             config=browser_config
                         ) as crawler:
                             # Run the crawler with LLM extraction
-                            result = await crawler.arun(url=url, config=crawl_config)
-                            extracted_content = getattr(result, 'extracted_content', None) if result else None  # type: ignore
-                            
+                            result: Any = await crawler.arun(url=url, config=crawl_config)  
+
+                            logger.info(f"[PID: {process_id} | Thread: {thread_id}] Crawler run completed. Result: {result}")
+
                             # Validate extracted content against schema
-                            if extracted_content:
+                            if result.success:
                                 try:
                                     # Parse JSON if it's a string
-                                    if isinstance(extracted_content, str):
-                                        extracted_data = json.loads(extracted_content)
+                                    if isinstance(result.extracted_content, str):
+                                        extracted_data = json.loads(result.extracted_content)
                                     else:
-                                        extracted_data = extracted_content
+                                        extracted_data = result.extracted_content
 
                                     logger.info(f"[PID: {process_id} | Thread: {thread_id}] Extracted content validation passed")
                                     
@@ -342,14 +342,14 @@ class Browser(AppConnectorBase):
                                 except json.JSONDecodeError as e:
                                     logger.error(f"[PID: {process_id} | Thread: {thread_id}] JSON parsing failed: {e}")
                                     return {
-                                        "extracted_content": extracted_content,
+                                        "extracted_content": result.extracted_content,
                                         "validation_errors": f"JSON parsing failed: {str(e)}"
                                     }
                                     
                                 except ValidationError as e:
                                     logger.error(f"[PID: {process_id} | Thread: {thread_id}] Schema validation failed: {e.message}")
                                     return {
-                                        "extracted_content": extracted_data if 'extracted_data' in locals() else extracted_content,
+                                        "extracted_content": extracted_data if 'extracted_data' in locals() else result.extracted_content,
                                         "validation_errors": f"Schema validation failed: {e.message}"
                                     }
                             else:
