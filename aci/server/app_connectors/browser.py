@@ -4,6 +4,9 @@ import concurrent.futures
 import os
 import threading
 import redis
+import json
+import jsonschema
+from jsonschema import validate, ValidationError
 from redis_semaphore import Semaphore
 from typing import Optional
 from aci.common.db.sql_models import LinkedAccount
@@ -200,22 +203,44 @@ class Browser(AppConnectorBase):
             future = _browser_executor.submit(_setup_and_run_agent)
             return future.result()
 
-    def scrape_with_browser(self, url: str, extraction_instructions: Optional[str] = None) -> dict:
+    def scrape_with_browser(self, url: str, extraction_instructions: str, output_schema: dict) -> dict:
         """
-        Scrapes a website using crawl4ai with Steel browser via CDP and returns markdown content.
-        Optionally uses LLM extraction strategy with custom instructions.
+        Scrapes a website using crawl4ai with Steel browser via CDP and returns structured data.
+        Uses LLM extraction strategy with custom instructions and validates output against provided schema.
         Uses semaphore locking to manage concurrent browser sessions.
         
         Args:
             url (str): The URL to scrape
-            extraction_instructions (Optional[str]): LLM instructions for data extraction. If provided,
-                                                   uses GPT-OSS model to extract structured data according to instructions.
+            extraction_instructions (str): LLM instructions for data extraction using GPT-OSS model.
+                                         Must be specific about what data to extract and how to format it.
+            output_schema (dict): Required JSON schema defining the expected output structure.
+                                Must be a valid JSON schema with type definitions and properties.
+                                Example: {"type": "object", "properties": {"title": {"type": "string"}, "price": {"type": "number"}}}
             
         Returns:
-            dict: Contains 'markdown' content and 'success' status, or 'error' on failure.
-                  If extraction_instructions provided, also contains 'extracted_content' with LLM results.
+            dict: Contains 'extracted_content' with validated structured data and 'success' status.
+                  On validation failure, includes 'validation_errors' with details.
+                  On scraping failure, includes 'error' with error message.
         """
         logger.info(f"Starting browser scraping for URL: {url}")
+        
+        # Validate the output schema before proceeding
+        try:
+            # Ensure schema is a valid JSON schema structure
+            if not isinstance(output_schema, dict):
+                return {"extracted_content": None, "error": "output_schema must be a dictionary", "success": False}
+            
+            # Basic schema validation - check for required fields
+            if "type" not in output_schema:
+                return {"extracted_content": None, "error": "output_schema must include 'type' field", "success": False}
+            
+            # Test schema validity by creating a validator
+            jsonschema.Draft7Validator.check_schema(output_schema)
+            logger.info(f"Output schema validation passed: {output_schema}")
+            
+        except jsonschema.SchemaError as e:
+            logger.error(f"Invalid output schema provided: {e}")
+            return {"extracted_content": None, "error": f"Invalid schema: {str(e)}", "success": False}
         
         def _setup_and_run_crawler():
             process_id = os.getpid()
@@ -261,48 +286,76 @@ class Browser(AppConnectorBase):
                             browser_adapter=undetected_adapter
                         )
 
-                        # Setup crawler run config with optional LLM extraction
-                        crawl_config = None
-                        if extraction_instructions:
-                            # Setup LLM extraction strategy with GPT-OSS
-                            llm_config = LLMConfig(
-                                provider="deepinfra/openai/gpt-oss-120b",
-                                api_token=config.DEEPINFRA_API_KEY,
-                                base_url=config.DEEPINFRA_BASE_URL,
-                            )
-                            
-                            llm_strategy = LLMExtractionStrategy(
-                                llm_config=llm_config,
-                                extraction_type="block",
-                                instruction=extraction_instructions,
-                                overlap_rate=0.1,
-                                chunk_token_threshold=20000,
-                                apply_chunking=True,
-                                input_format="markdown",
-                                reasoning_effort="minimal",
-                            )
-                            
-                            crawl_config = CrawlerRunConfig(
-                                extraction_strategy=llm_strategy,
-                                cache_mode=CacheMode.BYPASS
-                            )
+                        # Setup LLM extraction strategy with required schema
+                        llm_config = LLMConfig(
+                            provider="deepinfra/openai/gpt-oss-120b",
+                            api_token=config.DEEPINFRA_API_KEY,
+                            base_url=config.DEEPINFRA_BASE_URL,
+                        )
+                        
+                        # Build extraction strategy with required schema
+                        extraction_kwargs = {
+                            "llm_config": llm_config,
+                            "extraction_type": "block",
+                            "instruction": extraction_instructions,
+                            "schema": output_schema,
+                            "overlap_rate": 0.1,
+                            "chunk_token_threshold": 20000,
+                            "apply_chunking": True,
+                            "input_format": "markdown",
+                            "reasoning_effort": "minimal",
+                            "force_json_response" : True
+                        }
+                        
+                        logger.info(f"[PID: {process_id} | Thread: {thread_id}] Using output schema: {output_schema}")
+                        llm_strategy = LLMExtractionStrategy(**extraction_kwargs)
+                        
+                        crawl_config = CrawlerRunConfig(
+                            extraction_strategy=llm_strategy,
+                            cache_mode=CacheMode.BYPASS
+                        )
 
                         async with AsyncWebCrawler(
                             crawler_strategy=crawler_strategy,
                             config=browser_config
                         ) as crawler:
-                            # Run the crawler on the URL
-                            if crawl_config:
-                                result = await crawler.arun(url=url, config=crawl_config)
-                                return {
-                                    "markdown": None,
-                                    "extracted_content": getattr(result, 'extracted_content', None) if result else None  # type: ignore
-                                }
+                            # Run the crawler with LLM extraction
+                            result = await crawler.arun(url=url, config=crawl_config)
+                            extracted_content = getattr(result, 'extracted_content', None) if result else None  # type: ignore
+                            
+                            # Validate extracted content against schema
+                            if extracted_content:
+                                try:
+                                    # Parse JSON if it's a string
+                                    if isinstance(extracted_content, str):
+                                        extracted_data = json.loads(extracted_content)
+                                    else:
+                                        extracted_data = extracted_content
+
+                                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Extracted content validation passed")
+                                    
+                                    return {
+                                        "extracted_content": extracted_data,
+                                        "validation_errors": None
+                                    }
+                                    
+                                except json.JSONDecodeError as e:
+                                    logger.error(f"[PID: {process_id} | Thread: {thread_id}] JSON parsing failed: {e}")
+                                    return {
+                                        "extracted_content": extracted_content,
+                                        "validation_errors": f"JSON parsing failed: {str(e)}"
+                                    }
+                                    
+                                except ValidationError as e:
+                                    logger.error(f"[PID: {process_id} | Thread: {thread_id}] Schema validation failed: {e.message}")
+                                    return {
+                                        "extracted_content": extracted_data if 'extracted_data' in locals() else extracted_content,
+                                        "validation_errors": f"Schema validation failed: {e.message}"
+                                    }
                             else:
-                                result = await crawler.arun(url=url)
                                 return {
                                     "extracted_content": None,
-                                    "markdown": getattr(result, 'markdown', None) if result else None,  # type: ignore
+                                    "validation_errors": "No content extracted from the webpage"
                                 }
                     
                     # Submit to event loop and get result
@@ -310,15 +363,20 @@ class Browser(AppConnectorBase):
                     crawler_result = future.result(timeout=300)  # 5 minute timeout
                     
                     logger.info(f"[PID: {process_id} | Thread: {thread_id}] Browser scraping completed successfully.")
+                    
+                    # Determine success based on validation results
+                    has_validation_errors = crawler_result.get("validation_errors") is not None
+                    success = not has_validation_errors
+                    
                     return {
-                        "markdown": crawler_result["markdown"] if "markdown" in crawler_result else None,
-                        "extracted_content": crawler_result["extracted_content"] if "extracted_content" in crawler_result else None,
-                        "success": True
+                        "extracted_content": crawler_result.get("extracted_content"),
+                        "validation_errors": crawler_result.get("validation_errors"),
+                        "success": success
                     }
                     
             except Exception as e:
                 logger.error(f"[PID: {process_id} | Thread: {thread_id}] Browser scraping failed: {e}", exc_info=True)
-                return {"markdown": None, "extracted_content": None, "error": str(e), "success": False}
+                return {"extracted_content": None, "validation_errors": None, "error": str(e), "success": False}
             finally:
                 # Clean up Steel session
                 if session:

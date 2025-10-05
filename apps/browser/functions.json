@@ -22,8 +22,8 @@
   },
   {
     "name": "BROWSER__SCRAPE_WITH_BROWSER",
-    "description": "Scrapes website content using advanced crawl4ai library with Steel browser via CDP connection. Returns clean markdown content from any webpage with stealth capabilities, proxy support, and anti-detection features. Optionally supports LLM-based extraction with custom instructions using GPT-OSS model for structured data extraction.",
-    "tags": ["browser", "scraping", "crawl4ai", "markdown", "stealth", "extraction", "llm", "gpt-oss"],
+    "description": "Scrapes website content using advanced crawl4ai library with Steel browser and returns validated structured data. Uses LLM-based extraction with GPT-OSS model and validates output against provided JSON schema. Ensures consistent, type-safe data extraction with automatic validation.",
+    "tags": ["browser", "scraping", "crawl4ai", "stealth", "extraction", "llm", "gpt-oss", "schema", "validation"],
     "visibility": "public",
     "active": true,
     "protocol": "connector",
@@ -34,15 +34,19 @@
         "url": {
           "type": "string",
           "format": "uri",
-          "description": "The complete URL of the website to scrape. Must include protocol (http:// or https://). Example: 'https://example.com/page' or 'https://news.site.com/article/123'"
+          "description": "The complete URL of the website to scrape. Must include protocol (http:// or https://). Example: 'https://example.com/page' or 'https://shop.com/product/123'"
         },
         "extraction_instructions": {
           "type": "string",
-          "description": "Optional LLM extraction instructions. If provided, uses GPT-OSS model to extract structured data according to your specific requirements. Example: 'Extract all product names and prices as a JSON array' or 'Summarize the main points of this article in bullet format' or 'Extract contact information including emails and phone numbers'"
+          "description": "Detailed LLM extraction instructions. Specify exactly what data to extract and how to structure it. Be specific about elements, formatting, and data types. Example: 'Extract product name, price in USD, availability status, and feature list from the product page' or 'Extract all trending repository names, authors, star counts, and descriptions from the GitHub trending page'"
+        },
+        "output_schema": {
+          "type": "object",
+          "description": "Required JSON schema defining the exact output structure for validation. Must be a valid JSON Schema (Draft 7) with type definitions. Example: {\"type\": \"object\", \"properties\": {\"name\": {\"type\": \"string\"}, \"price\": {\"type\": \"number\"}, \"features\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}}, \"required\": [\"name\", \"price\"]}"
         }
       },
-      "required": ["url"],
-      "visible": ["url", "extraction_instructions"],
+      "required": ["url", "extraction_instructions", "output_schema"],
+      "visible": ["url", "extraction_instructions", "output_schema"],
       "additionalProperties": false
     }
   }
