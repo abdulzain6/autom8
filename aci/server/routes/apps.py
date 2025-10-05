@@ -26,6 +26,32 @@ router = APIRouter()
 openai_client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BASE_URL)
 
 
+
+@router.get("/categories", response_model_exclude_none=True)
+@deps.typed_cache(expire=3600)  # Cache for 1 hour since categories change infrequently
+def get_all_categories(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+) -> list[str]:
+    """
+    Get all unique categories (tags) from all active apps.
+    Returns a sorted list of unique category names that can be used for filtering.
+    """
+    categories = crud.apps.get_all_unique_categories(
+        db_session=context.db_session,
+        active_only=True,
+        configured_only=False
+    )
+    
+    logger.info(
+        f"Retrieved {len(categories)} unique categories",
+        extra={
+            "categories": categories,
+            "total_categories": len(categories)
+        }
+    )
+    
+    return categories
+
 @router.get("", response_model_exclude_none=True)
 @deps.typed_cache(expire=350) 
 def list_apps(

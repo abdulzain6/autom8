@@ -329,3 +329,43 @@ def get_apps_with_functions_by_names(
         select(App).options(selectinload(App.functions)).where(App.name.in_(app_names))
     )
     return list(db_session.execute(stmt).scalars().all())
+
+def get_all_unique_categories(
+    db_session: Session,
+    active_only: bool = True,
+    configured_only: bool = False,
+) -> List[str]:
+    """
+    Efficiently retrieves all unique categories from apps.
+    
+    Args:
+        db_session: The SQLAlchemy database session.
+        active_only: If True, only include categories from active apps.
+        configured_only: If True, only include categories from configured apps.
+    
+    Returns:
+        A sorted list of unique category names.
+    """
+    # Build the query to get categories from apps
+    statement = select(App.categories).distinct()
+    
+    if active_only:
+        statement = statement.filter(App.active == True)
+    
+    if configured_only:
+        statement = statement.filter(App.configuration.has())
+    
+    # Filter out null categories
+    statement = statement.filter(App.categories.isnot(None))
+    
+    # Execute query and get all category arrays
+    category_arrays = db_session.execute(statement).scalars().all()
+    
+    # Flatten all category arrays into a single set of unique categories
+    unique_categories = set()
+    for category_array in category_arrays:
+        if category_array:  # Handle empty arrays
+            unique_categories.update(category_array)
+    
+    # Return sorted list
+    return sorted(list(unique_categories))
