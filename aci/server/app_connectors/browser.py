@@ -311,7 +311,10 @@ class Browser(AppConnectorBase):
                         
                         crawl_config = CrawlerRunConfig(
                             extraction_strategy=llm_strategy,
-                            cache_mode=CacheMode.BYPASS
+                            cache_mode=CacheMode.BYPASS,
+                            delay_before_return_html=7,
+                            max_scroll_steps=5,
+                            scroll_delay=2
                         )
 
                         async with AsyncWebCrawler(
