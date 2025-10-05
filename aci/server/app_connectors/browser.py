@@ -276,9 +276,11 @@ class Browser(AppConnectorBase):
                                 extraction_type="block",
                                 instruction=extraction_instructions,
                                 overlap_rate=0.1,
+                                chunk_token_threshold=75000,
                                 apply_chunking=True,
                                 input_format="markdown",
                                 reasoning_effort="minimal",
+                                force_json_response=True
                             )
                             
                             crawl_config = CrawlerRunConfig(
@@ -294,14 +296,12 @@ class Browser(AppConnectorBase):
                             if crawl_config:
                                 result = await crawler.arun(url=url, config=crawl_config)
                                 return {
-                                    "markdown": getattr(result, 'markdown', None) if result else None,  # type: ignore
                                     "extracted_content": getattr(result, 'extracted_content', None) if result else None  # type: ignore
                                 }
                             else:
                                 result = await crawler.arun(url=url)
                                 return {
                                     "markdown": getattr(result, 'markdown', None) if result else None,  # type: ignore
-                                    "extracted_content": None
                                 }
                     
                     # Submit to event loop and get result
