@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 logger = get_logger(__name__)
 
 
-class CSVTools(AppConnectorBase):
+class CsvTools(AppConnectorBase):
     """
     A connector for creating and manipulating CSV (.csv) files.
     """

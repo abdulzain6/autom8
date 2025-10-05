@@ -1254,6 +1254,37 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Hugging Face Trending Models Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/huggingface_trending.png?raw=true",
+      "description": "Daily digest of the top 10 trending AI models from Hugging Face with descriptions, download counts, and direct links to keep you updated on the latest AI breakthroughs.",
+      "tags": [
+        "Technology"
+      ],
+      "goal": "Visit Hugging Face to discover the top 10 trending AI models using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://huggingface.co/models?sort=trending' with extraction_instructions to find the top 10 trending models. Extract model name, author/organization, model description, model type/task (text generation, image classification, etc.), download count, likes count, and Hugging Face URL for each of the top 10 trending models. Focus on the main model listings with popularity metrics and brief descriptions. Organize this information into a comprehensive AI models digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Hugging Face Trending Models - Top 10 AI Breakthroughs [Current Date]' including: structured model summaries with names and descriptions, popularity metrics (downloads and likes), author/organization information, model capabilities and use cases, direct Hugging Face links for each model, categorization by AI task type, and brief analysis of trending AI technologies. Format as an engaging email that highlights the most innovative and popular AI models for researchers, developers, and AI enthusiasts.",
+      "variable_names": [],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Stock Buyback Announcements Tracker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/stock_buybacks.png?raw=true",
+      "description": "Tracks companies announcing stock buybacks in the past 10 days, extracts buyback details, and generates a CSV report for investment analysis.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Monitor recent stock buyback announcements using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.rttnews.com/corpinfo/stockbuybacks.aspx?PageNum=1' with extraction_instructions to find all buyback announcements from the past 10 days. Extract the following data for each announcement: date, company name, stock symbol, buyback amount, outstanding shares info, and news status. Look specifically for the table rows containing Date, Company, Symbol, Buyback, Outstanding, and News columns. Filter results to include only announcements from the last 10 days based on the date column. Use CSV_TOOLS to create a comprehensive buyback report with columns for Date, Company_Name, Stock_Symbol, Buyback_Amount, Outstanding_Shares, News_Status, and Analysis_Notes. Format the CSV data properly with headers and save as 'stock_buybacks_last_10_days.csv' for easy analysis and tracking. Send a brief notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Buyback Report Ready 📈' and message 'CSV report of recent stock buybacks is available for download in app artifacts' to alert when the report is generated. Focus on providing actionable investment intelligence about companies returning capital to shareholders.",
+      "variable_names": [],
+      "required_app_names": [
+        "BROWSER",
+        "CSV_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }

@@ -60,7 +60,7 @@ class Notifyme(AppConnectorBase):
 
     def _convert_markdown_to_html(self, text: str, include_logo: bool = False) -> str:
         """
-        Converts markdown text to HTML format for email compatibility.
+        Converts markdown text to HTML format for email compatibility with robust edge case handling.
         
         Args:
             text: The markdown text to convert.
@@ -70,9 +70,43 @@ class Notifyme(AppConnectorBase):
             HTML formatted text.
         """
         try:
+            # Handle None or empty text
+            if not text:
+                return '<p style="color: #FFFFFF;">No content provided.</p>'
+            
+            # Convert to string if not already
+            text = str(text).strip()
+            
+            if not text:
+                return '<p style="color: #FFFFFF;">No content provided.</p>'
+            
+            # Clean up common problematic characters and sequences
+            text = text.replace('\r\n', '\n').replace('\r', '\n')  # Normalize line endings
+            text = text.replace('\u00a0', ' ')  # Replace non-breaking spaces
+            text = text.replace('\u2018', "'").replace('\u2019', "'")  # Smart quotes
+            text = text.replace('\u201c', '"').replace('\u201d', '"')  # Smart quotes
+            text = text.replace('\u2013', '-').replace('\u2014', '--')  # En/em dashes
+            
+            # Handle multiple consecutive newlines (preserve intentional spacing)
+            import re
+            text = re.sub(r'\n{3,}', '\n\n', text)  # Limit to max 2 consecutive newlines
+            
             # Ensure text has proper newlines for markdown processing
             if not text.endswith('\n'):
                 text += '\n'
+            
+            # Pre-process to handle edge cases
+            lines = text.split('\n')
+            processed_lines = []
+            
+            for line in lines:
+                # Handle URLs that might break markdown parsing
+                line = re.sub(r'(https?://[^\s]+)', r'<\1>', line)
+                # Handle email addresses
+                line = re.sub(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', r'<\1>', line)
+                processed_lines.append(line)
+            
+            text = '\n'.join(processed_lines)
             
             # Configure markdown with extensions for better email compatibility and line breaks
             md = markdown.Markdown(
@@ -81,7 +115,8 @@ class Notifyme(AppConnectorBase):
                     'markdown.extensions.fenced_code',
                     'markdown.extensions.nl2br',  # Convert newlines to <br>
                     'markdown.extensions.codehilite',
-                    'markdown.extensions.sane_lists'  # Better list handling
+                    'markdown.extensions.sane_lists',  # Better list handling
+                    'markdown.extensions.def_list'  # Definition lists
                 ],
                 extension_configs={
                     'codehilite': {
@@ -92,27 +127,48 @@ class Notifyme(AppConnectorBase):
                         'br': True  # Ensure <br> tags are added
                     }
                 },
-                output_format='html'  # Better HTML output
+                output_format='html',  # Better HTML output
+                tab_length=4  # Consistent tab handling
             )
+            
             html_content = md.convert(text)
+            
+            # Post-process HTML to fix common issues
+            # Fix URLs and emails that were protected
+            html_content = re.sub(r'&lt;(https?://[^&]+)&gt;', r'<a href="\1">\1</a>', html_content)
+            html_content = re.sub(r'&lt;([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})&gt;', r'<a href="mailto:\1">\1</a>', html_content)
+            
+            # Ensure proper spacing around elements
+            html_content = re.sub(r'</p>\s*<p>', '</p>\n<p>', html_content)
+            html_content = re.sub(r'</li>\s*<li>', '</li>\n<li>', html_content)
+            
+            # Handle empty paragraphs (convert to line breaks)
+            html_content = re.sub(r'<p>\s*</p>', '<br>', html_content)
             
             # Logo HTML if requested
             logo_html = ""
             if include_logo:
                 logo_html = '<img src="cid:logo" alt="Autom8 Logo" style="max-width: 150px; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;">'
             
-            # Enhanced dark theme CSS with improved line break and text wrapping
+            # Enhanced dark theme CSS with improved handling for all edge cases
             email_css = """
             <style>
+                /* Reset and base styles */
+                * {
+                    box-sizing: border-box;
+                }
                 body { 
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                    line-height: 1.7; /* Increased for better readability */
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+                    line-height: 1.6; 
                     color: #FFFFFF; 
                     background-color: #121212; 
                     margin: 0; 
                     padding: 20px; 
-                    word-wrap: break-word; /* Ensure long words break */
-                    white-space: pre-wrap; /* Preserve whitespace and wrap */
+                    word-wrap: break-word; 
+                    word-break: break-word;
+                    overflow-wrap: break-word;
+                    -webkit-text-size-adjust: 100%;
+                    -ms-text-size-adjust: 100%;
                 }
                 .email-container {
                     max-width: 600px;
@@ -122,115 +178,124 @@ class Notifyme(AppConnectorBase):
                     padding: 20px;
                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
                     word-wrap: break-word;
+                    word-break: break-word;
+                    overflow-wrap: break-word;
                 }
+                
+                /* Typography */
                 h1, h2, h3, h4, h5, h6 { 
                     color: #00FFFF; 
-                    margin-top: 1.5em; 
-                    margin-bottom: 0.8em; 
+                    margin: 1.5em 0 0.8em 0; 
                     font-weight: 600;
                     line-height: 1.3;
-                }
-                h1 { font-size: 28px; }
-                h2 { font-size: 24px; }
-                h3 { font-size: 20px; }
-                h4 { font-size: 18px; }
-                p { 
-                    margin-bottom: 1.2em; 
-                    color: #FFFFFF;
-                    white-space: pre-line; /* Preserve newlines in paragraphs */
                     word-wrap: break-word;
+                    word-break: break-word;
                 }
-                /* Improved list styling with proper numbering for nested lists and better spacing */
-                ol, ul { 
-                    margin-bottom: 1.2em; 
-                    padding-left: 30px; 
+                h1 { font-size: 24px; margin-top: 0; }
+                h2 { font-size: 20px; }
+                h3 { font-size: 18px; }
+                h4 { font-size: 16px; }
+                h5 { font-size: 14px; }
+                h6 { font-size: 13px; }
+                
+                p { 
+                    margin: 0 0 1em 0; 
                     color: #FFFFFF;
-                    line-height: 1.6;
+                    word-wrap: break-word;
+                    word-break: break-word;
+                    overflow-wrap: break-word;
                 }
-                ol {
-                    list-style-type: decimal;
-                    padding-left: 35px;
+                
+                /* Handle empty paragraphs and spacing */
+                p:empty {
+                    margin: 0.5em 0;
+                    line-height: 0.5em;
                 }
-                ul {
-                    list-style-type: disc;
-                    padding-left: 30px;
+                
+                /* Improved list styling */
+                ol, ul { 
+                    margin: 0 0 1em 0; 
+                    padding-left: 25px; 
+                    color: #FFFFFF;
+                    line-height: 1.5;
                 }
                 li { 
-                    margin-bottom: 0.6em; 
+                    margin-bottom: 0.5em; 
                     color: #FFFFFF;
-                    line-height: 1.6;
                     word-wrap: break-word;
+                    word-break: break-word;
                 }
-                li p {
-                    margin: 0.3em 0; /* Ensure paragraphs in list items have spacing */
+                li:last-child {
+                    margin-bottom: 0;
                 }
-                /* Nested list styling with proper indentation */
+                
+                /* Nested lists */
                 ol ol, ol ul, ul ol, ul ul {
-                    margin-top: 0.5em;
-                    margin-bottom: 0.5em;
-                    padding-left: 25px;
+                    margin: 0.3em 0;
+                    padding-left: 20px;
                 }
-                ol ol {
-                    list-style-type: lower-alpha;
-                    padding-left: 30px;
-                }
-                ol ol ol {
-                    list-style-type: lower-roman;
-                    padding-left: 35px;
-                }
-                ul ul {
-                    list-style-type: circle;
-                    padding-left: 30px;
-                }
+                
+                /* Blockquotes */
                 blockquote { 
-                    border-left: 4px solid #00FFFF; 
-                    margin: 1.2em 0; 
-                    padding-left: 1.2em; 
+                    border-left: 3px solid #00FFFF; 
+                    margin: 1em 0; 
+                    padding: 0.5em 0 0.5em 1em; 
                     color: #CCCCCC; 
                     font-style: italic; 
                     background-color: #232323;
                     border-radius: 0 4px 4px 0;
-                    line-height: 1.5;
+                    word-wrap: break-word;
                 }
+                
+                /* Code styling */
                 code { 
                     background-color: #232323; 
                     color: #00FFFF;
-                    padding: 2px 6px; 
-                    border-radius: 4px; 
-                    font-family: 'Courier New', monospace; 
-                    font-size: 0.9em; 
-                    border: 1px solid #00FFFF;
-                    white-space: pre-wrap;
+                    padding: 2px 4px; 
+                    border-radius: 3px; 
+                    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; 
+                    font-size: 0.85em; 
+                    border: 1px solid #444;
                     word-wrap: break-word;
+                    word-break: break-all;
                 }
                 pre { 
                     background-color: #232323; 
                     color: #FFFFFF;
-                    padding: 15px; 
+                    padding: 12px; 
                     border-radius: 6px; 
-                    border: 1px solid #00FFFF;
+                    border: 1px solid #444;
                     overflow-x: auto; 
-                    font-family: 'Courier New', monospace; 
-                    margin: 1.2em 0;
-                    white-space: pre-wrap;
-                    word-wrap: normal;
+                    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; 
+                    margin: 1em 0;
                     line-height: 1.4;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
                 }
+                pre code {
+                    background: none;
+                    border: none;
+                    padding: 0;
+                    font-size: inherit;
+                }
+                
+                /* Table styling */
                 table { 
                     border-collapse: collapse; 
                     width: 100%; 
-                    margin-bottom: 1.2em; 
+                    margin: 1em 0; 
                     background-color: #232323;
                     border-radius: 6px;
                     overflow: hidden;
-                    word-wrap: break-word;
+                    font-size: 14px;
                 }
                 th, td { 
-                    border: 1px solid #00FFFF; 
-                    padding: 12px; 
+                    border: 1px solid #444; 
+                    padding: 8px 12px; 
                     text-align: left; 
                     color: #FFFFFF;
                     word-wrap: break-word;
+                    word-break: break-word;
                     vertical-align: top;
                 }
                 th { 
@@ -238,73 +303,112 @@ class Notifyme(AppConnectorBase):
                     color: #00FFFF;
                     font-weight: bold; 
                 }
-                tr:nth-child(even) {
-                    background-color: #232323;
-                }
-                tr:hover {
-                    background-color: #1e1e1e;
-                }
+                
+                /* Links */
                 a { 
                     color: #00FFFF; 
-                    text-decoration: none; 
-                    border-bottom: 1px solid transparent;
-                    transition: border-bottom 0.2s;
+                    text-decoration: underline; 
                     word-wrap: break-word;
+                    word-break: break-all;
+                    overflow-wrap: break-word;
                 }
                 a:hover { 
-                    text-decoration: underline; 
-                    border-bottom: 1px solid #00FFFF;
+                    color: #00CCCC;
                 }
+                
+                /* Horizontal rules */
                 hr { 
                     border: none; 
-                    border-top: 1px solid #00FFFF; 
-                    margin: 2em 0; 
-                    opacity: 0.5;
+                    border-top: 1px solid #444; 
+                    margin: 1.5em 0; 
+                    opacity: 0.7;
                 }
-                /* Button-like styling for links that look like buttons */
-                .btn {
-                    display: inline-block;
-                    background-color: #00FFFF;
-                    color: #121212 !important;
-                    padding: 10px 20px;
-                    text-decoration: none;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    margin: 10px 0;
-                    transition: background-color 0.2s;
-                    word-wrap: break-word;
+                
+                /* Images */
+                img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 4px;
                 }
-                .btn:hover {
-                    background-color: #00CCCC;
-                    text-decoration: none;
+                
+                /* Line breaks */
+                br {
+                    line-height: 1.5;
                 }
-                /* Card-like styling for sections */
-                .card {
-                    background-color: #232323;
-                    border: 1px solid #00FFFF;
-                    border-radius: 8px;
-                    padding: 15px;
-                    margin: 15px 0;
-                    word-wrap: break-word;
+                
+                /* Handle long URLs and text */
+                .long-url {
+                    word-break: break-all;
+                    overflow-wrap: break-word;
+                }
+                
+                /* Mobile responsiveness */
+                @media only screen and (max-width: 480px) {
+                    body {
+                        padding: 10px;
+                    }
+                    .email-container {
+                        padding: 15px;
+                    }
+                    h1 { font-size: 20px; }
+                    h2 { font-size: 18px; }
+                    h3 { font-size: 16px; }
+                    table {
+                        font-size: 12px;
+                    }
+                    th, td {
+                        padding: 6px 8px;
+                    }
+                }
+                
+                /* Fix for specific email clients */
+                .outlookfix {
+                    width: 100%;
+                }
+                
+                /* Ensure proper spacing */
+                .content-spacing > *:first-child {
+                    margin-top: 0 !important;
+                }
+                .content-spacing > *:last-child {
+                    margin-bottom: 0 !important;
                 }
             </style>
             """
             
+            # Clean up HTML content and add safety wrappers
+            html_content = html_content.strip()
+            if not html_content:
+                html_content = '<p style="color: #FFFFFF;">No content to display.</p>'
+            
             # Wrap in a complete HTML document with dark theme container and optional logo
             full_html = f"""
             <!DOCTYPE html>
-            <html>
+            <html lang="en">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
                 <title>Email Notification</title>
                 {email_css}
             </head>
             <body>
+                <!--[if mso]>
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                <td>
+                <![endif]-->
                 <div class="email-container">
                     {logo_html}
-                    {html_content}
+                    <div class="content-spacing">
+                        {html_content}
+                    </div>
                 </div>
+                <!--[if mso]>
+                </td>
+                </tr>
+                </table>
+                <![endif]-->
             </body>
             </html>
             """
@@ -312,11 +416,55 @@ class Notifyme(AppConnectorBase):
             return full_html
             
         except Exception as e:
-            logger.warning(f"Failed to convert markdown to HTML: {e}. Using plain text fallback.")
-            # Enhanced plain text fallback with manual line breaks
-            lines = text.split('\n')
-            formatted_text = '<br>'.join(line.strip() for line in lines if line.strip())
-            return f'<div style="white-space: pre-line; line-height: 1.6; color: #FFFFFF; background-color: #1e1e1e; padding: 20px; border-radius: 8px;">{formatted_text}</div>'
+            logger.error(f"Failed to convert markdown to HTML: {e}")
+            # Robust fallback for any conversion errors
+            safe_text = str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+            lines = safe_text.split('\n')
+            formatted_lines = []
+            
+            for line in lines:
+                line = line.strip()
+                if line:
+                    formatted_lines.append(f'<p style="color: #FFFFFF; margin: 0 0 0.5em 0; word-wrap: break-word;">{line}</p>')
+                else:
+                    formatted_lines.append('<br>')
+            
+            formatted_content = ''.join(formatted_lines)
+            
+            return f"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Email Notification</title>
+                <style>
+                    body {{ 
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+                        line-height: 1.6; 
+                        color: #FFFFFF; 
+                        background-color: #121212; 
+                        margin: 0; 
+                        padding: 20px;
+                        word-wrap: break-word;
+                    }}
+                    .container {{ 
+                        max-width: 600px; 
+                        margin: 0 auto; 
+                        background-color: #1e1e1e; 
+                        padding: 20px; 
+                        border-radius: 8px;
+                        word-wrap: break-word;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    {formatted_content}
+                </div>
+            </body>
+            </html>
+            """
 
     def _before_execute(self) -> None:
         """
@@ -382,6 +530,124 @@ class Notifyme(AppConnectorBase):
         
         return image_bytes, filename
 
+    def _clean_text_for_email(self, text: str) -> str:
+        """
+        Clean and normalize text for email compatibility.
+        
+        Args:
+            text: The text to clean
+            
+        Returns:
+            Cleaned text
+        """
+        if not text:
+            return ""
+        
+        # Convert to string and normalize
+        text = str(text)
+        
+        # Normalize line endings
+        text = text.replace('\r\n', '\n').replace('\r', '\n')
+        
+        # Replace problematic Unicode characters
+        text = text.replace('\u00a0', ' ')  # Non-breaking space
+        text = text.replace('\u2018', "'").replace('\u2019', "'")  # Smart quotes
+        text = text.replace('\u201c', '"').replace('\u201d', '"')  # Smart quotes
+        text = text.replace('\u2013', '-').replace('\u2014', '--')  # En/em dashes
+        text = text.replace('\u2026', '...')  # Ellipsis
+        
+        # Clean up excessive whitespace
+        import re
+        text = re.sub(r'\n{3,}', '\n\n', text)  # Limit consecutive newlines
+        text = re.sub(r'[ \t]+', ' ', text)  # Normalize spaces and tabs
+        
+        return text.strip()
+
+    def _create_html_wrapper(self, text: str) -> str:
+        """
+        Create an HTML wrapper for plain text with proper styling.
+        
+        Args:
+            text: The plain text to wrap
+            
+        Returns:
+            HTML wrapped text
+        """
+        if not text:
+            return '<p style="color: #FFFFFF;">No content provided.</p>'
+        
+        # Escape HTML characters for safety
+        import html
+        safe_text = html.escape(text)
+        
+        # Convert newlines to proper HTML
+        lines = safe_text.split('\n')
+        formatted_lines = []
+        
+        for line in lines:
+            line = line.strip()
+            if line:
+                formatted_lines.append(f'<p style="color: #FFFFFF; margin: 0 0 0.8em 0; word-wrap: break-word; word-break: break-word;">{line}</p>')
+            else:
+                formatted_lines.append('<br>')
+        
+        formatted_content = ''.join(formatted_lines)
+        
+        return f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <title>Email Notification</title>
+            <style>
+                body {{ 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                    line-height: 1.6; 
+                    color: #FFFFFF; 
+                    background-color: #121212; 
+                    margin: 0; 
+                    padding: 20px;
+                    word-wrap: break-word;
+                    word-break: break-word;
+                    -webkit-text-size-adjust: 100%;
+                    -ms-text-size-adjust: 100%;
+                }}
+                .container {{ 
+                    max-width: 600px; 
+                    margin: 0 auto; 
+                    background-color: #1e1e1e; 
+                    padding: 20px; 
+                    border-radius: 8px;
+                    word-wrap: break-word;
+                    word-break: break-word;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                }}
+                p {{
+                    word-wrap: break-word;
+                    word-break: break-word;
+                    overflow-wrap: break-word;
+                }}
+                a {{
+                    color: #00FFFF;
+                    word-wrap: break-word;
+                    word-break: break-all;
+                }}
+                @media only screen and (max-width: 480px) {{
+                    body {{ padding: 10px; }}
+                    .container {{ padding: 15px; }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                {formatted_content}
+            </div>
+        </body>
+        </html>
+        """
+
     def send_me_email(
         self, subject: str, body: str, artifact_ids: Optional[List[str]] = None
     ) -> dict:
@@ -409,37 +675,47 @@ class Notifyme(AppConnectorBase):
         msg["To"] = self.user_email
         msg["Subject"] = subject
         
-        # Check if the body contains markdown-like syntax
-        markdown_indicators = ['#', '*', '_', '```', '[', ']', '|', '>', '-', '+']
+        # Check if the body contains markdown-like syntax or special characters
+        markdown_indicators = ['#', '*', '_', '```', '[', ']', '|', '>', '-', '+', '**', '__', '~~']
         likely_markdown = any(indicator in body for indicator in markdown_indicators)
+        
+        # Also check for multiple newlines which might need better formatting
+        has_formatting_needs = '\n\n' in body or len(body.split('\n')) > 3
+        
         include_logo = False
         
-        if likely_markdown:
-            # Convert markdown to HTML with optional logo
-            html_body = self._convert_markdown_to_html(body, include_logo=include_logo)
-            
-            # Create both plain text and HTML versions
-            text_part = MIMEText(body, "plain", "utf-8")
-            html_part = MIMEText(html_body, "html", "utf-8")
-            
-            # Add both versions to the email
-            msg.attach(text_part)
-            msg.attach(html_part)
-            
-            logger.info("Email body converted from markdown to HTML format")
+        if likely_markdown or has_formatting_needs:
+            try:
+                # Convert markdown to HTML with optional logo
+                html_body = self._convert_markdown_to_html(body, include_logo=include_logo)
+                
+                # Create both plain text and HTML versions
+                # Clean the plain text version
+                clean_text = body.replace('\r\n', '\n').replace('\r', '\n')
+                text_part = MIMEText(clean_text, "plain", "utf-8")
+                html_part = MIMEText(html_body, "html", "utf-8")
+                
+                # Add both versions to the email
+                msg.attach(text_part)
+                msg.attach(html_part)
+                
+                logger.info("Email body converted from markdown to HTML format")
+            except Exception as e:
+                logger.warning(f"Failed to process markdown, falling back to enhanced plain text: {e}")
+                # Enhanced fallback processing
+                clean_text = self._clean_text_for_email(body)
+                text_part = MIMEText(clean_text, "plain", "utf-8")
+                html_wrapper = self._create_html_wrapper(clean_text)
+                html_part = MIMEText(html_wrapper, "html", "utf-8")
+                msg.attach(text_part)
+                msg.attach(html_part)
         else:
             # Enhanced plain text handling
-            text_part = MIMEText(body, "plain", "utf-8")
-            # For plain text, create a simple HTML wrapper
-            payload_bytes = text_part.get_payload(decode=True)
-            payload_text = payload_bytes.decode('utf-8', errors='ignore') if isinstance(payload_bytes, bytes) else str(payload_bytes)
-            html_wrapper = f"""
-            <div style="font-family: 'Segoe UI', sans-serif; line-height: 1.7; color: #FFFFFF; background-color: #1e1e1e; padding: 20px; border-radius: 8px; white-space: pre-line; word-wrap: break-word;">
-                {payload_text}
-            </div>
-            """
+            clean_text = self._clean_text_for_email(body)
+            text_part = MIMEText(clean_text, "plain", "utf-8")
+            html_wrapper = self._create_html_wrapper(clean_text)
             html_part = MIMEText(html_wrapper, "html", "utf-8")
-            msg.attach(text_part)  # Keep original plain text
+            msg.attach(text_part)
             msg.attach(html_part)
             
             logger.info("Email body enhanced as HTML from plain text")
