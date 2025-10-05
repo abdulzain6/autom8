@@ -55,7 +55,7 @@ def format_to_screaming_snake_case(name: str) -> str:
 # TODO: fine tune the pool settings
 @cache
 def get_db_engine(db_url: str) -> Engine:
-    return create_engine(
+    engine = create_engine(
         db_url,
         pool_size=10,
         max_overflow=10,
@@ -69,13 +69,99 @@ def get_db_engine(db_url: str) -> Engine:
         },
         isolation_level="READ_COMMITTED",  # Set explicit isolation level
         echo=False,  # Set to True for debugging SQL queries
-        # Add event listeners for better connection management
-        listeners=[
-            ('connect', lambda conn, record: conn.set_session(autocommit=False)),
-            ('checkout', lambda conn, record, proxy: None),
-            ('checkin', lambda conn, record: None),
-        ] if hasattr(create_engine, 'listeners') else None,
     )
+
+    # Add event listeners for better connection management
+    @event.listens_for(engine, "connect")
+    def set_autocommit_false(dbapi_connection, connection_record):
+        """Ensure autocommit is disabled on connection."""
+        dbapi_connection.autocommit = False
+
+    @event.listens_for(engine, "checkout")
+    def on_checkout(dbapi_connection, connection_record, connection_proxy):
+        """Called when a connection is retrieved from the pool."""
+        pass  # Can add additional connection validation here if needed
+
+    @event.listens_for(engine, "checkin")
+    def on_checkin(dbapi_connection, connection_record):
+        """Called when a connection is returned to the pool."""
+        pass  # Can add connection cleanup here if needed
+
+    # Set up user creation listener after engine is created
+    setup_user_creation_listener()
+
+    return engine
+
+
+# Event listener for user creation (triggered by PostgreSQL trigger)
+def setup_user_creation_listener():
+    """
+    Set up the event listener for user creation. This must be called after all models are imported.
+    """
+    from aci.common.db.sql_models import SupabaseUser
+
+    @event.listens_for(SupabaseUser, "after_insert")
+    def on_user_created(mapper, connection, target):
+        """
+        Automatically enable all NO_AUTH apps for new users when they are synced
+        from the auth schema to the public schema via the PostgreSQL trigger.
+        """
+        # Import here to avoid circular imports
+        from aci.common.db.sql_models import App, LinkedAccount
+        from aci.common.enums import SecurityScheme
+
+        try:
+            logger.info(f"New user created via trigger: {target.id} ({target.email})")
+
+            # Get all apps that support NO_AUTH security scheme
+            from sqlalchemy import select
+
+            # Query for apps that have NO_AUTH in their security_schemes
+            stmt = select(App).where(
+                App.security_schemes.has_key(SecurityScheme.NO_AUTH)
+            )
+            result = connection.execute(stmt)
+            noauth_apps = result.scalars().all()
+
+            logger.info(f"Found {len(noauth_apps)} NO_AUTH apps to enable for user {target.id}")
+
+            # Create LinkedAccount records for each NO_AUTH app
+            for app in noauth_apps:
+                try:
+                    # Check if user already has a linked account for this app
+                    existing_stmt = select(LinkedAccount).where(
+                        LinkedAccount.user_id == target.id,
+                        LinkedAccount.app_id == app.id
+                    )
+                    existing = connection.execute(existing_stmt).scalar_one_or_none()
+
+                    if existing:
+                        logger.info(f"User {target.id} already has linked account for app {app.name}")
+                        continue
+
+                    # Create new LinkedAccount for NO_AUTH app
+                    linked_account = LinkedAccount(
+                        user_id=target.id,
+                        app_id=app.id,
+                        security_scheme=SecurityScheme.NO_AUTH,
+                        security_credentials={},  # Empty dict for NO_AUTH
+                        disabled_functions=[]  # Enable all functions by default
+                    )
+
+                    connection.add(linked_account)
+                    logger.info(f"Created NO_AUTH linked account for user {target.id} and app {app.name}")
+
+                except Exception as e:
+                    logger.error(f"Failed to create linked account for app {app.name}: {e}")
+                    continue
+
+            # Commit the changes
+            connection.commit()
+            logger.info(f"Successfully enabled {len(noauth_apps)} NO_AUTH apps for new user {target.id}")
+
+        except Exception as e:
+            logger.error(f"Error in user creation trigger handler: {e}")
+            # Don't re-raise the exception to avoid breaking the user creation process
 
 
 @cache
