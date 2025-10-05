@@ -321,7 +321,7 @@ class Browser(AppConnectorBase):
                             # Run the crawler with LLM extraction
                             result: Any = await crawler.arun(url=url, config=crawl_config)  
 
-                            logger.info(f"[PID: {process_id} | Thread: {thread_id}] Crawler run completed. Result: {result}")
+                            logger.info(f"[PID: {process_id} | Thread: {thread_id}] Crawler run completed. Result: {result.markdown}")
 
                             # Validate extracted content against schema
                             if result.success:
