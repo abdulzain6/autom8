@@ -194,7 +194,7 @@ class Browser(AppConnectorBase):
 
                 except Exception as e:
                     logger.error(f"[PID: {process_id} | Thread: {thread_id}] Browser automation failed: {e}", exc_info=True)
-                    return {"result": None, "error": str(e), "success": False}
+                    raise RuntimeError(f"Browser automation failed: {str(e)}")
                 finally:
                     # 5. Always clean up and release the remote browser session.
                     if session:
@@ -235,19 +235,19 @@ class Browser(AppConnectorBase):
         try:
             # Ensure schema is a valid JSON schema structure
             if not isinstance(output_schema, dict):
-                return {"extracted_content": None, "error": "output_schema must be a dictionary", "success": False}
+                raise ValueError("output_schema must be a dictionary")
             
             # Basic schema validation - check for required fields
             if "type" not in output_schema:
-                return {"extracted_content": None, "error": "output_schema must include 'type' field", "success": False}
-            
+                raise ValueError("output_schema must include 'type' field")
+
             # Test schema validity by creating a validator
             jsonschema.Draft7Validator.check_schema(output_schema)
             logger.info(f"Output schema validation passed: {output_schema}")
             
         except jsonschema.SchemaError as e:
             logger.error(f"Invalid output schema provided: {e}")
-            return {"extracted_content": None, "error": f"Invalid schema: {str(e)}", "success": False}
+            raise ValueError(f"Invalid schema: {str(e)}")
         
         def _setup_and_run_crawler():
             process_id = os.getpid()
@@ -386,7 +386,7 @@ class Browser(AppConnectorBase):
                     
             except Exception as e:
                 logger.error(f"[PID: {process_id} | Thread: {thread_id}] Browser scraping failed: {e}", exc_info=True)
-                return {"extracted_content": None, "validation_errors": None, "error": str(e), "success": False}
+                raise RuntimeError(f"Browser scraping failed: {str(e)}")
             finally:
                 # Clean up Steel session
                 if session:
