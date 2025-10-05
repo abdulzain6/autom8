@@ -300,7 +300,7 @@ class Browser(AppConnectorBase):
                             "instruction": extraction_instructions,
                             "schema": output_schema,
                             "overlap_rate": 0.1,
-                            "chunk_token_threshold": 20000,
+                            "chunk_token_threshold": 10000,
                             "apply_chunking": True,
                             "input_format": "markdown",
                             "reasoning_effort": "minimal",
