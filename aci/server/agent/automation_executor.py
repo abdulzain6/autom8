@@ -114,7 +114,7 @@ class AutomationExecutor:
         """
         Trim tool responses to keep only essential information and reduce token usage.
         """
-        # Handle FunctionExecutionResult objects
+        # Convert to dict if needed
         if hasattr(response, "model_dump"):
             response_dict = response.model_dump()
         elif hasattr(response, "__dict__"):
@@ -122,45 +122,31 @@ class AutomationExecutor:
         elif isinstance(response, dict):
             response_dict = response
         else:
+            # For simple types, just convert to string and trim if needed
+            response_str = str(response)
+            if len(response_str) > max_length:
+                return f"{response_str[:max_length]}...[TRUNCATED]"
             return response
 
-        trimmed = {}
-        for key, value in response_dict.items():
+        # Simple recursive trimming
+        def trim_value(value):
             if isinstance(value, str):
                 if len(value) > max_length:
-                    # Keep first part, add truncation notice, keep last part if it contains important info
-                    trimmed[key] = (
-                        f"{value[:max_length//2]}...[TRUNCATED {len(value)-max_length} chars]...{value[-max_length//4:]}"
-                    )
-                else:
-                    trimmed[key] = value
+                    return f"{value[:max_length//2]}...[TRUNCATED {len(value)-max_length} chars]...{value[-max_length//4:]}"
+                return value
             elif isinstance(value, (list, tuple)):
-                # For lists, limit the number of items and truncate each item
+                # Limit to first 10 items and trim each
+                limited_items = value[:10]
+                trimmed_items = [trim_value(item) for item in limited_items]
                 if len(value) > 10:
-                    trimmed_list = []
-                    for item in value[:8]:  # Keep first 8 items
-                        if isinstance(item, str) and len(item) > 200:
-                            trimmed_list.append(f"{item[:150]}...[TRUNCATED]")
-                        else:
-                            trimmed_list.append(item)
-                    trimmed_list.append(f"...[{len(value)-8} more items truncated]")
-                    trimmed[key] = trimmed_list
-                else:
-                    # Truncate individual items if they're too long
-                    trimmed_list = []
-                    for item in value:
-                        if isinstance(item, str) and len(item) > 300:
-                            trimmed_list.append(f"{item[:250]}...[TRUNCATED]")
-                        else:
-                            trimmed_list.append(item)
-                    trimmed[key] = trimmed_list
+                    trimmed_items.append(f"...[{len(value)-10} more items]")
+                return trimmed_items
             elif isinstance(value, dict):
-                # Recursively trim nested dictionaries
-                trimmed[key] = self._trim_tool_response(value, max_length)
+                return {k: trim_value(v) for k, v in value.items()}
             else:
-                trimmed[key] = value
+                return value
 
-        return trimmed
+        return trim_value(response_dict)
 
     def _execute_tool_logic(self, function: Function, **kwargs):
         """
@@ -168,7 +154,7 @@ class AutomationExecutor:
         It creates a new, isolated database session for each execution.
         """
         # Restrict browser tool to one use per automation run
-        if function.name == "BROWSER__RUN_BROWSER_AUTOMATION":
+        if function.name in ["BROWSER__RUN_BROWSER_AUTOMATION", "BROWSER__SCRAPE_WITH_BROWSER"]:
             if self.browser_used:
                 return {"error": "Browser tool can only be used once per automation run"}
             self.browser_used = True
@@ -186,7 +172,7 @@ class AutomationExecutor:
                         run_id=self.run_id,
                     )
                     # Trim the response to reduce token usage while preserving essential information
-                    trimmed_result = self._trim_tool_response(result, 20000)
+                    trimmed_result = self._trim_tool_response(result, 35000)
                     logger.info(
                         f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(str(trimmed_result))} chars"
                     )
