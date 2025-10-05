@@ -3,6 +3,7 @@ import asyncio
 import concurrent.futures
 import os
 import threading
+import time
 import redis
 import json
 import jsonschema
@@ -117,7 +118,11 @@ class Browser(AppConnectorBase):
 
             with _browser_semaphore:
                 future = asyncio.run_coroutine_threadsafe(_run_skyvern(), _event_loop_manager.loop)
-                return future.result(timeout=300)
+                result = future.result(timeout=300)
+            
+            # Small delay to prevent connection conflicts when semaphore is released
+            time.sleep(1)
+            return result
         else:
             # Use browser-use with Steel
             # This nested function encapsulates the entire lifecycle of a single browser task.
@@ -196,6 +201,8 @@ class Browser(AppConnectorBase):
                         try:
                             client.sessions.release(session.id)
                             logger.info(f"[PID: {process_id} | Thread: {thread_id}] Released Steel Session ID: {session.id}")
+                            # Small delay to prevent connection conflicts when new sessions are created
+                            time.sleep(1)
                         except Exception as e:
                             logger.error(f"[PID: {process_id} | Thread: {thread_id}] Failed to release session {session.id}: {e}")
             
@@ -386,6 +393,8 @@ class Browser(AppConnectorBase):
                     try:
                         client.sessions.release(session.id)
                         logger.info(f"[PID: {process_id} | Thread: {thread_id}] Released Steel Session ID: {session.id}")
+                        # Small delay to prevent connection conflicts when new sessions are created
+                        time.sleep(1)
                     except Exception as e:
                         logger.error(f"[PID: {process_id} | Thread: {thread_id}] Failed to release session {session.id}: {e}")
         

@@ -5,6 +5,7 @@ from typing import Annotated, Awaitable, Optional, TypeVar, overload
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from aci.common import utils
 from aci.common.logging_setup import get_logger
 from aci.server import config
@@ -55,44 +56,92 @@ def get_db_session() -> Generator[Session, None, None]:
     A context manager for providing a SQLAlchemy database session.
     It automatically commits on success, rolls back on error,
     and ensures the session is always closed.
-    Enhanced for long-running operations.
+    Enhanced for long-running operations with robust error handling.
     """
-    db_session = utils.create_db_session(config.DB_FULL_URL)
+    db_session = None
     try:
+        db_session = utils.create_db_session(config.DB_FULL_URL)
+        
+        # Verify the connection is in a good state before proceeding
+        try:
+            # Test the connection with a simple query
+            db_session.execute(text("SELECT 1"))
+        except Exception as connection_test_error:
+            logger.warning(f"Database connection test failed, creating new session: {connection_test_error}")
+            try:
+                db_session.close()
+            except:
+                pass
+            db_session = utils.create_db_session(config.DB_FULL_URL)
+        
         yield db_session
-        db_session.commit()
+        
+        # Only commit if there are pending changes and no active transaction issues
+        try:
+            if db_session.dirty or db_session.new or db_session.deleted:
+                db_session.commit()
+        except Exception as commit_error:
+            logger.error(f"Error during commit: {commit_error}")
+            raise
+            
     except Exception as e:
         logger.error(f"Database session error: {e}")
-        try:
-            db_session.rollback()
-        except Exception as rollback_error:
-            logger.error(f"Error during rollback: {rollback_error}")
-            # Force close the connection if rollback fails
-            try:
-                db_session.connection().invalidate()
-            except Exception as invalidate_error:
-                logger.error(f"Error invalidating connection: {invalidate_error}")
         
-        # Handle specific SQLAlchemy errors
-        if any(keyword in str(e).lower() for keyword in ['pending rollback', 'invalid transaction', 'intrans', 'autocommit']):
-            logger.warning("Database transaction error detected, forcing connection cleanup")
+        if db_session is not None:
             try:
-                # Force close and recreate connection for next use
-                db_session.connection().invalidate()
-                db_session.close()
-                # Don't re-raise for pending rollback errors after cleanup
-                if 'pending rollback' in str(e).lower():
-                    logger.info("Handled pending rollback error, connection cleaned up")
-                    return
-            except Exception as cleanup_error:
-                logger.error(f"Error during connection cleanup: {cleanup_error}")
+                # Check if we're in a transaction state that can be rolled back
+                if hasattr(db_session, 'in_transaction') and db_session.in_transaction():
+                    db_session.rollback()
+                elif db_session.is_active:
+                    # Try to rollback if the session is active
+                    db_session.rollback()
+            except Exception as rollback_error:
+                logger.error(f"Error during rollback: {rollback_error}")
+                
+                # Handle specific psycopg/SQLAlchemy transaction errors
+                error_str = str(e).lower()
+                rollback_error_str = str(rollback_error).lower()
+                
+                if any(keyword in error_str or keyword in rollback_error_str for keyword in [
+                    'pending rollback', 'invalid transaction', 'intrans', 'autocommit',
+                    'connection in transaction status', 'programmingerror'
+                ]):
+                    logger.warning("Database transaction state error detected, forcing connection cleanup")
+                    try:
+                        # Force invalidate the connection to clear transaction state
+                        if hasattr(db_session, 'connection'):
+                            db_session.connection().invalidate()
+                        
+                        # Close the session completely
+                        db_session.close()
+                        
+                        # Create a fresh session for cleanup if needed
+                        db_session = None
+                        
+                        # For specific autocommit/transaction errors, don't re-raise after cleanup
+                        if any(keyword in error_str for keyword in ['autocommit', 'intrans', 'pending rollback']):
+                            logger.info("Handled database transaction state error, connection cleaned up")
+                            return
+                            
+                    except Exception as cleanup_error:
+                        logger.error(f"Error during connection cleanup: {cleanup_error}")
         
         raise
+        
     finally:
-        try:
-            db_session.close()
-        except Exception as close_error:
-            logger.error(f"Error closing database session: {close_error}")
+        if db_session is not None:
+            try:
+                # Ensure session is properly closed
+                if db_session.is_active:
+                    db_session.close()
+            except Exception as close_error:
+                logger.error(f"Error closing database session: {close_error}")
+                # If normal close fails, try to invalidate the connection
+                try:
+                    if hasattr(db_session, 'connection'):
+                        db_session.connection().invalidate()
+                except Exception as invalidate_error:
+                    logger.error(f"Error invalidating connection during cleanup: {invalidate_error}")
 
 
 # --- Authentication and Authorization ---

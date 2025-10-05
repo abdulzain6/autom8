@@ -2,7 +2,7 @@ import os
 import re
 from functools import cache
 from uuid import UUID
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from aci.common.logging_setup import get_logger
 from typing import Optional
@@ -65,9 +65,16 @@ def get_db_engine(db_url: str) -> Engine:
         connect_args={
             "prepare_threshold": None,  # Disable prepared statements
             "autocommit": False,  # Explicit autocommit setting
+            "connect_timeout": 60,  # Connection timeout
         },
         isolation_level="READ_COMMITTED",  # Set explicit isolation level
         echo=False,  # Set to True for debugging SQL queries
+        # Add event listeners for better connection management
+        listeners=[
+            ('connect', lambda conn, record: conn.set_session(autocommit=False)),
+            ('checkout', lambda conn, record, proxy: None),
+            ('checkin', lambda conn, record: None),
+        ] if hasattr(create_engine, 'listeners') else None,
     )
 
 

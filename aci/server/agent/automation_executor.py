@@ -12,7 +12,7 @@ from aci.server.function_executors.function_utils import (
     FunctionDefinitionFormat,
     execute_function,
 )
-from langchain_openai.chat_models.base import BaseChatOpenAI
+from langchain_openai import ChatOpenAI
 from logging import getLogger
 import logging
 
@@ -216,13 +216,12 @@ class AutomationExecutor:
         return tools
 
     def create_agent(self):
-        model = BaseChatOpenAI(
+        model = ChatOpenAI(
             base_url=OPENROUTER_BASE_URL,
             api_key=SecretStr(OPENROUTER_API_KEY),
             model="x-ai/grok-4-fast",
             timeout=300,
             max_retries=3,
-            reasoning_effort="minimal",
         )
         agent = create_react_agent(
             model=model,
