@@ -276,11 +276,10 @@ class Browser(AppConnectorBase):
                                 extraction_type="block",
                                 instruction=extraction_instructions,
                                 overlap_rate=0.1,
-                                chunk_token_threshold=75000,
+                                chunk_token_threshold=20000,
                                 apply_chunking=True,
                                 input_format="markdown",
                                 reasoning_effort="minimal",
-                                force_json_response=True
                             )
                             
                             crawl_config = CrawlerRunConfig(
