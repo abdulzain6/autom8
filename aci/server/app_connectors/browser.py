@@ -15,6 +15,11 @@ from browser_use import Agent, BrowserSession
 from browser_use.llm import ChatOpenAI
 from steel import Steel
 from skyvern import Skyvern
+from crawl4ai import AsyncWebCrawler
+from crawl4ai.async_configs import BrowserConfig, CrawlerRunConfig, CacheMode, LLMConfig
+from crawl4ai import UndetectedAdapter
+from crawl4ai.async_crawler_strategy import AsyncPlaywrightCrawlerStrategy
+from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 logger = get_logger(__name__)
 
@@ -78,7 +83,6 @@ class Browser(AppConnectorBase):
 
     def _before_execute(self) -> None:
         pass
-
 
     def run_browser_automation(self, task: str) -> dict:
         """
@@ -144,7 +148,7 @@ class Browser(AppConnectorBase):
                         # LLM and Agent configuration
                         api_key = config.OPENROUTER_API_KEY
                         llm = ChatOpenAI(model="x-ai/grok-4-fast", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
-                        page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-20b:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL)
+                        page_extraction_llm = ChatOpenAI(model="openai/gpt-oss-20b:free", temperature=0.3, api_key=api_key, base_url=config.OPENROUTER_BASE_URL, reasoning_effort="minimal")
 
                         # 2. Create a new BrowserSession instance for this task only.
                         browser_session_for_this_agent = BrowserSession(cdp_url=cdp_url)
@@ -195,6 +199,137 @@ class Browser(AppConnectorBase):
             # Submit the entire encapsulated function to the thread pool.
             future = _browser_executor.submit(_setup_and_run_agent)
             return future.result()
+
+    def scrape_with_browser(self, url: str, extraction_instructions: Optional[str] = None) -> dict:
+        """
+        Scrapes a website using crawl4ai with Steel browser via CDP and returns markdown content.
+        Optionally uses LLM extraction strategy with custom instructions.
+        Uses semaphore locking to manage concurrent browser sessions.
+        
+        Args:
+            url (str): The URL to scrape
+            extraction_instructions (Optional[str]): LLM instructions for data extraction. If provided,
+                                                   uses GPT-OSS model to extract structured data according to instructions.
+            
+        Returns:
+            dict: Contains 'markdown' content and 'success' status, or 'error' on failure.
+                  If extraction_instructions provided, also contains 'extracted_content' with LLM results.
+        """
+        logger.info(f"Starting browser scraping for URL: {url}")
+        
+        def _setup_and_run_crawler():
+            process_id = os.getpid()
+            thread_id = threading.get_ident()
+            logger.info(f"[PID: {process_id} | Thread: {thread_id}] Starting browser scraping setup.")
+            
+            client = Steel(base_url=config.STEEL_BASE_URL)
+            session = None
+            
+            try:
+                with _browser_semaphore:
+                    # Create Steel browser session
+                    assert config.HTTP_PROXY is not None, "HTTP_PROXY must be set in config"
+                    
+                    disable_fingerprint = any(site in url for site in DISABLE_FINGERPRINT_SITES)
+                    stealth_settings = {
+                        "humanize_interactions": True,
+                        "skip_fingerprint_injection": disable_fingerprint
+                    }
+                    
+                    session = client.sessions.create(
+                        block_ads=True, 
+                        use_proxy=True, 
+                        proxy_url=config.HTTP_PROXY, 
+                        stealth_config=stealth_settings  # type: ignore
+                    )
+                    
+                    # Build CDP URL for Steel browser
+                    cdp_url = f"ws://{config.STEEL_BASE_URL.replace('http://', '').replace('https://', '')}?sessionId={session.id}"
+                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Created Steel Session ID: {session.id}")
+                    
+                    # Setup crawl4ai with Steel browser via CDP
+                    async def _run_crawler_async():
+                        undetected_adapter = UndetectedAdapter()
+                        browser_config = BrowserConfig(
+                            cdp_url=cdp_url,
+                            browser_mode="cdp",
+                            proxy=config.HTTP_PROXY or "",
+                            enable_stealth=True,
+                        )
+                        crawler_strategy = AsyncPlaywrightCrawlerStrategy(
+                            browser_config=browser_config,
+                            browser_adapter=undetected_adapter
+                        )
+
+                        # Setup crawler run config with optional LLM extraction
+                        crawl_config = None
+                        if extraction_instructions:
+                            # Setup LLM extraction strategy with GPT-OSS
+                            llm_config = LLMConfig(
+                                provider="openrouter/openai/gpt-oss-20b:free",
+                                api_token=config.OPENROUTER_API_KEY,
+                                base_url=config.OPENROUTER_BASE_URL,
+                            )
+                            
+                            llm_strategy = LLMExtractionStrategy(
+                                llm_config=llm_config,
+                                extraction_type="block",
+                                instruction=extraction_instructions,
+                                overlap_rate=0.1,
+                                apply_chunking=True,
+                                input_format="markdown",
+                                reasoning_effort="minimal",
+                            )
+                            
+                            crawl_config = CrawlerRunConfig(
+                                extraction_strategy=llm_strategy,
+                                cache_mode=CacheMode.BYPASS
+                            )
+
+                        async with AsyncWebCrawler(
+                            crawler_strategy=crawler_strategy,
+                            config=browser_config
+                        ) as crawler:
+                            # Run the crawler on the URL
+                            if crawl_config:
+                                result = await crawler.arun(url=url, config=crawl_config)
+                                return {
+                                    "markdown": getattr(result, 'markdown', None) if result else None,  # type: ignore
+                                    "extracted_content": getattr(result, 'extracted_content', None) if result else None  # type: ignore
+                                }
+                            else:
+                                result = await crawler.arun(url=url)
+                                return {
+                                    "markdown": getattr(result, 'markdown', None) if result else None,  # type: ignore
+                                    "extracted_content": None
+                                }
+                    
+                    # Submit to event loop and get result
+                    future = asyncio.run_coroutine_threadsafe(_run_crawler_async(), _event_loop_manager.loop)
+                    crawler_result = future.result(timeout=300)  # 5 minute timeout
+                    
+                    logger.info(f"[PID: {process_id} | Thread: {thread_id}] Browser scraping completed successfully.")
+                    return {
+                        "markdown": crawler_result["markdown"],
+                        "extracted_content": crawler_result["extracted_content"],
+                        "success": True
+                    }
+                    
+            except Exception as e:
+                logger.error(f"[PID: {process_id} | Thread: {thread_id}] Browser scraping failed: {e}", exc_info=True)
+                return {"markdown": None, "extracted_content": None, "error": str(e), "success": False}
+            finally:
+                # Clean up Steel session
+                if session:
+                    try:
+                        client.sessions.release(session.id)
+                        logger.info(f"[PID: {process_id} | Thread: {thread_id}] Released Steel Session ID: {session.id}")
+                    except Exception as e:
+                        logger.error(f"[PID: {process_id} | Thread: {thread_id}] Failed to release session {session.id}: {e}")
+        
+        # Submit to thread pool
+        future = _browser_executor.submit(_setup_and_run_crawler)
+        return future.result()
 
 
 

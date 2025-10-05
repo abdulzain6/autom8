@@ -19,5 +19,31 @@
       "visible": ["task"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "BROWSER__SCRAPE_WITH_BROWSER",
+    "description": "Scrapes website content using advanced crawl4ai library with Steel browser via CDP connection. Returns clean markdown content from any webpage with stealth capabilities, proxy support, and anti-detection features. Optionally supports LLM-based extraction with custom instructions using GPT-OSS model for structured data extraction.",
+    "tags": ["browser", "scraping", "crawl4ai", "markdown", "stealth", "extraction", "llm", "gpt-oss"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "The complete URL of the website to scrape. Must include protocol (http:// or https://). Example: 'https://example.com/page' or 'https://news.site.com/article/123'"
+        },
+        "extraction_instructions": {
+          "type": "string",
+          "description": "Optional LLM extraction instructions. If provided, uses GPT-OSS model to extract structured data according to your specific requirements. Example: 'Extract all product names and prices as a JSON array' or 'Summarize the main points of this article in bullet format' or 'Extract contact information including emails and phone numbers'"
+        }
+      },
+      "required": ["url"],
+      "visible": ["url", "extraction_instructions"],
+      "additionalProperties": false
+    }
   }
 ]

@@ -19,4 +19,6 @@ COPY start.sh .
 
 RUN python -m aci.voice_agent.agent download-files
 
+RUN crawl4ai-setup
+
 CMD ["uvicorn", "aci.server.main:app", "--proxy-headers", "--forwarded-allow-ips=*", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]

@@ -296,6 +296,7 @@ browser-use==0.5.7
 redis-semaphore==0.2.2
 skyvern==0.2.6
 sherlock-project==0.16.0
+crawl4ai==0.7.4
 
 # Force anthropic for browser-use
 anthropic==0.60.0
