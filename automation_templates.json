@@ -1188,6 +1188,40 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "Today's Football Matches Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/football_schedule.jpeg?raw=true",
+      "description": "Checks today's football matches and sends notifications for specific teams or leagues you're following.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Check today's football matches using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.espn.com/soccer/schedule' with extraction_instructions to find all matches scheduled for today. Look for matches involving {{ variables['Team/League Name'] }} if specified, or get all today's matches. Extract match details including teams, kick-off times, league/competition, and match status. If matches are found for the specified team/league or if no filter is specified and there are matches today, send a brief notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Football Today ⚽' and a concise summary of relevant matches with times and teams. Keep the notification short and focused on today's action only.",
+      "variable_names": [
+        "Team/League Name"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Stock Dividend Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/stock_dividend.jpeg?raw=true",
+      "description": "Checks if your stock paid dividends today and sends instant notifications with dividend amount and payment details.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Check if stock {{ variables['Stock Symbol'] }} paid dividends today using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://finance.yahoo.com/quote/{{ variables['Stock Symbol'] }}/history/?p={{ variables['Stock Symbol'] }}&filter=div' with extraction_instructions to find dividend payments. Look specifically for today's date in the dividend history table and extract dividend amount, ex-dividend date, and payment date if a dividend was paid today. If a dividend payment is found for today, send an immediate alert via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Dividend Alert: {{ variables['Stock Symbol'] }} 💰' and details including dividend amount per share and payment confirmation. If no dividend was paid today, do nothing to avoid unnecessary notifications.",
+      "variable_names": [
+        "Stock Symbol"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }

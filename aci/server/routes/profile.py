@@ -2,6 +2,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from fastapi.responses import StreamingResponse
+import magic
 
 from aci.common.db import crud
 from aci.common.logging_setup import get_logger
@@ -47,31 +48,43 @@ def update_my_profile(
 
 
 @router.post("/avatar")
-async def upload_my_avatar(
+def upload_my_avatar(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
     file: UploadFile = File(...),
 ):
     """
     Upload or update the current user's avatar.
-    Limit: 10MB max, PNG/JPG only.
+    Limit: 10MB max, PNG/JPG only (verified by file magic).
     """
     max_size = 10 * 1024 * 1024
-    allowed_types = {"image/png", "image/jpeg"}
+    allowed_mime_types = {"image/png", "image/jpeg"}
 
-    if file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only PNG and JPG images are allowed.",
-        )
-
-    content = await file.read()
+    # Read file content for size and magic checking
+    content = file.file.read()
+    
     if len(content) > max_size:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File size exceeds 10MB limit.",
         )
 
-    file.file.seek(0)  # Reset pointer for FileManager
+    # Use python-magic to detect actual file type based on file signature
+    try:
+        detected_mime = magic.from_buffer(content, mime=True)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not determine file type: {str(e)}",
+        )
+
+    if detected_mime not in allowed_mime_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Only PNG and JPG images are allowed. Detected: {detected_mime}",
+        )
+
+    # Reset file pointer to beginning for FileManager
+    file.file.seek(0)
 
     file_manager = FileManager(context.db_session)
     try:
