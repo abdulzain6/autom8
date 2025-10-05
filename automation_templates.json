@@ -961,11 +961,28 @@
       "tags": [
         "Developer Tools"
       ],
-      "goal": "Use the BROWSER app to visit ONLY 'https://github.com/trending' - do NOT visit individual repository URLs one by one. Extract all the information directly from the trending page itself. From this single page, collect information about the top 10-15 repositories including: repository name, description, programming language, current star count, and GitHub URL (these URLs are visible on the trending page, just extract them without visiting). Organize this data into a clean, readable format and use the NOTIFYME app to send an email with the subject 'GitHub Trending Today - [Current Date]'. The email should include: 1) A brief introduction about trending repos, 2) A well-formatted list of repositories with name, language, stars, and short description for each, 3) GitHub URLs for each repository, 4) A footer encouraging exploration of interesting projects. Keep the email concise but informative, highlighting the most interesting repositories. IMPORTANT: Only visit the main trending page, do not navigate to individual repository pages.",
+      "goal": "Use the BROWSER__SCRAPE_WITH_BROWSER function to scrape 'https://github.com/trending' with extraction_instructions focused on extracting trending repository data. Extract the top 10-15 repositories with details including: repository name, author/organization, description, programming language, current star count, stars gained today, number of forks, and GitHub URL. Organize this data into a comprehensive digest and use the NOTIFYME app to send an email with the subject 'GitHub Trending Today - [Current Date]'. The email should include: 1) A brief introduction about today's trending repositories, 2) A well-formatted list of repositories with complete details for each (name, language, stars, today's growth, description), 3) Clickable GitHub URLs for each repository, 4) A footer encouraging exploration of interesting projects. Highlight the most promising and innovative repositories with additional context about their potential impact.",
       "variable_names": [],
       "required_app_names": [
-        "BROWSER",
-        "NOTIFYME"
+        "BROWSER"
+      ],
+      "function_calls": [
+        {
+          "app_name": "BROWSER",
+          "function_name": "BROWSER__SCRAPE_WITH_BROWSER",
+          "parameters": {
+            "url": "https://github.com/trending",
+            "extraction_instructions": "Extract information for the top 10-15 trending repositories from GitHub's trending page. For each repository, extract: 1) Repository name and author/organization (e.g., 'microsoft/TypeScript'), 2) Repository description (the brief summary shown), 3) Programming language (if specified, with the colored dot indicator), 4) Total star count (the number next to the star icon), 5) Stars gained today (the '+X stars today' text), 6) Number of forks (if visible), 7) Full GitHub URL (construct as https://github.com/[author]/[repo-name]). Focus on the main trending repository list, typically displayed as a series of repository cards or list items. Ignore navigation elements, sidebar content, and advertisements. Parse the star counts and growth numbers carefully, maintaining proper formatting. If a repository has no language specified, note it as 'Not specified'. Return the data in a structured format that clearly separates each repository's information for easy email formatting."
+          }
+        },
+        {
+          "app_name": "NOTIFYME",
+          "function_name": "NOTIFYME__SEND_EMAIL",
+          "parameters": {
+            "subject": "GitHub Trending Today - ${current_date}",
+            "body": "🚀 **GitHub Trending Repositories - ${current_date}**\n\nHere are today's most popular repositories gaining traction in the developer community:\n\n${repository_data}\n\n---\n💡 **Why This Matters:** These trending repositories represent the latest innovations, tools, and projects that developers worldwide are finding valuable. Consider exploring projects that align with your interests or could enhance your development workflow.\n\n🔗 **Happy Coding!** \nClick any repository link above to explore the code, documentation, and community discussions.\n\n*This digest was generated automatically by your GitHub Trending automation.*"
+          }
+        }
       ],
       "is_deep": true
     },
