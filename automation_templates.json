@@ -1171,6 +1171,23 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Football Transfer Rumors Tracker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/football_transfers.jpeg?raw=true",
+      "description": "Monitors transfer rumors and news for specific football players, tracking potential moves between clubs and providing instant updates.",
+      "tags": [
+        "Sports"
+      ],
+      "goal": "Monitor football transfer rumors for specific players using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.espn.in/football/transfers-news-and-features/' with extraction_instructions focused on finding transfer news about {{ variables['Player Names'] }}. Extract player names, current clubs, rumored destinations, transfer fees, source reliability, and article headlines. Look for recent credible transfer rumors and news. Send comprehensive transfer updates via NOTIFYME__SEND_EMAIL with subject 'Transfer Alert: {{ variables['Player Names'] }} 🔄' including all relevant transfer details, source credibility, and potential move timelines. Focus on reliable sources and significant developments only.",
+      "variable_names": [
+        "Player Names"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }

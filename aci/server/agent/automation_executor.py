@@ -222,7 +222,7 @@ class AutomationExecutor:
             model="x-ai/grok-4-fast",
             timeout=300,
             max_retries=3,
-            reasoning_effort="none",
+            reasoning_effort="minimal",
         )
         agent = create_react_agent(
             model=model,
