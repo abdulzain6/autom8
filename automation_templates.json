@@ -1213,10 +1213,42 @@
       "tags": [
         "Finance"
       ],
-      "goal": "Check if stock {{ variables['Stock Symbol'] }} paid dividends today using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://finance.yahoo.com/quote/{{ variables['Stock Symbol'] }}/history/?p={{ variables['Stock Symbol'] }}&filter=div' with extraction_instructions to find dividend payments. Look specifically for today's date in the dividend history table and extract dividend amount, ex-dividend date, and payment date if a dividend was paid today. If a dividend payment is found for today, send an immediate alert via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Dividend Alert: {{ variables['Stock Symbol'] }} 💰' and details including dividend amount per share and payment confirmation. If no dividend was paid today, do nothing to avoid unnecessary notifications.",
+      "goal": "Check if stock {{ variables['Stock Symbol'] }} paid dividends today using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://dividendhistory.org/payout/{{ variables['Stock Symbol'] }}/' with extraction_instructions to find recent dividend payments. Look specifically for today's date in the dividend payment table and extract dividend amount, ex-dividend date, and payment date if a dividend was paid today. Also check the dividend announcement section for any dividends with payment dates matching today. If a dividend payment is found for today, send an immediate alert via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Dividend Alert: {{ variables['Stock Symbol'] }} 💰' and details including dividend amount per share and payment confirmation. If no dividend was paid today, do nothing to avoid unnecessary notifications.",
       "variable_names": [
         "Stock Symbol"
       ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Stock Insider Trading Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/insider_trading.png?raw=true",
+      "description": "Monitors insider trading activity for specific stocks and sends alerts when executives, directors, or major shareholders buy or sell shares today.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Check if there were insider trades for stock {{ variables['Stock Symbol'] }} today using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.quiverquant.com/stock/{{ variables['Stock Symbol'] }}/insiders/' with extraction_instructions to find recent insider trading activity. Look specifically for today's date in the insider transactions table and extract insider name, position/title, transaction type (buy/sell), number of shares, transaction value, and filing date if any insider trades occurred today. Focus on the most recent transactions table and any trades with today's date. If insider trading activity is found for today, send an immediate alert via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Insider Alert: {{ variables['Stock Symbol'] }} 📊' and details including insider name, transaction type, share count, and transaction value. If no insider trades occurred today, do nothing to avoid unnecessary notifications.",
+      "variable_names": [
+        "Stock Symbol"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Product Hunt Daily Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/product_hunt_digest.png?raw=true",
+      "description": "Daily digest of the top 5 product launches from Product Hunt with summaries, voting counts, and direct links to help you discover innovative new products.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Visit Product Hunt daily to discover the top 5 product launches using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.producthunt.com/' with extraction_instructions to find today's top 5 featured products. Extract product name, description/tagline, number of upvotes, maker/company name, product category, and Product Hunt URL for each of the top 5 launches. Focus on the main product listings that appear on the homepage with voting counts and brief descriptions. Organize this information into a comprehensive daily digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Product Hunt Daily Digest - Top 5 Launches [Current Date]' including: structured product summaries with names and taglines, upvote counts and popularity metrics, maker information and company details, direct Product Hunt links for each product, category classifications, and brief analysis of trending product types. Format as an engaging email that highlights the most innovative and interesting launches of the day for product discovery and tech trend awareness.",
+      "variable_names": [],
       "required_app_names": [
         "BROWSER",
         "NOTIFYME"

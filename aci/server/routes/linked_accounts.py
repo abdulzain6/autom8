@@ -518,6 +518,7 @@ def delete_linked_account(
 ) -> None:
     """
     Delete a linked account by its id.
+    Also deletes all automations that require this linked account.
     """
     logger.info(f"Delete linked account, linked_account_id={linked_account_id}")
     linked_account = crud.linked_accounts.get_linked_account_by_id_and_user_id(
@@ -527,9 +528,36 @@ def delete_linked_account(
         logger.error(f"Linked account not found, linked_account_id={linked_account_id}")
         raise LinkedAccountNotFound(f"linked account={linked_account_id} not found")
 
+    # Get all automations that use this linked account
+    user_automations = crud.automations.list_user_automations(
+        context.db_session, context.user.id, limit=1000, offset=0
+    )
+    
+    # Find automations that depend on this specific linked account
+    dependent_automations = []
+    for automation in user_automations:
+        for automation_linked_account in automation.linked_accounts:
+            if automation_linked_account.linked_account_id == linked_account_id:
+                dependent_automations.append(automation)
+                break
+    
+    # Delete dependent automations first
+    if dependent_automations:
+        logger.info(
+            f"Deleting {len(dependent_automations)} automations that depend on linked account {linked_account_id}"
+        )
+        for automation in dependent_automations:
+            logger.info(f"Deleting automation {automation.id} ({automation.name}) due to linked account deletion")
+            crud.automations.delete_automation(context.db_session, automation)
+    
+    # Delete the linked account
     crud.linked_accounts.delete_linked_account(context.db_session, linked_account)
 
     context.db_session.commit()
+    
+    logger.info(
+        f"Successfully deleted linked account {linked_account_id} and {len(dependent_automations)} dependent automations"
+    )
 
 
 @router.patch("/{linked_account_id}", response_model=LinkedAccountPublic)

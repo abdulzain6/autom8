@@ -39,7 +39,7 @@ def get_all_categories(
     categories = crud.apps.get_all_unique_categories(
         db_session=context.db_session,
         active_only=True,
-        configured_only=False
+        configured_only=True
     )
     
     logger.info(
