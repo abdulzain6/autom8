@@ -530,7 +530,7 @@ class Browser(AppConnectorBase):
                             browser = await p.chromium.connect_over_cdp(cdp_url)
                             context = browser.contexts[0]
                             page = context.pages[0]
-                            await page.goto(url, wait_until="networkidle")
+                            await page.goto(url, wait_until="load", timeout=60000)
 
                             # Execute the JS code directly. Playwright will raise an
                             # exception if the JS code fails, which will be caught below.
