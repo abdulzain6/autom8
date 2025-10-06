@@ -77,10 +77,17 @@
         "output_filename": {
           "type": "string",
           "description": "Optional filename to save the JSON result as an artifact. If provided, the result will be saved as a downloadable file instead of being returned directly. The '.json' extension will be added automatically if not present. Example: 'page_data' or 'extracted_content.json'"
+        },
+        "delay_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "default": 0,
+          "description": "Optional delay in seconds to wait after page load before executing JavaScript. Useful for dynamic content that needs time to load or initialize. Default is 0 (no delay). Maximum allowed is 60 seconds."
         }
       },
       "required": ["url", "js_code"],
-      "visible": ["url", "js_code", "output_filename"],
+      "visible": ["url", "js_code", "output_filename", "delay_seconds"],
       "additionalProperties": false
     }
   }

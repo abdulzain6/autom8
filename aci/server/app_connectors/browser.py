@@ -489,7 +489,7 @@ class Browser(AppConnectorBase):
         return future.result()
 
     def run_js_and_return_result(
-        self, url: str, js_code: str, output_filename: Optional[str] = None
+        self, url: str, js_code: str, output_filename: Optional[str] = None, delay_seconds: float = 0.0
     ) -> dict:
         """
         Navigates to a URL, executes JavaScript, and returns the result or saves it as an artifact.
@@ -501,6 +501,9 @@ class Browser(AppConnectorBase):
             output_filename (Optional[str]): If provided, the JSON result is saved as an
                                              artifact with this filename. If None, the
                                              raw data is returned directly.
+            delay_seconds (float): Optional delay in seconds to wait after page load
+                                 before executing JavaScript. Useful for dynamic content
+                                 that needs time to load. Default is 0.0 (no delay).
 
         Returns:
             dict: On success, returns either the artifact ID or the raw JSON result.
@@ -531,6 +534,10 @@ class Browser(AppConnectorBase):
                             context = browser.contexts[0]
                             page = context.pages[0]
                             await page.goto(url, wait_until="load", timeout=60000)
+
+                            # Optional delay for dynamic content loading
+                            if delay_seconds > 0:
+                                await asyncio.sleep(delay_seconds)
 
                             # Execute the JS code directly. Playwright will raise an
                             # exception if the JS code fails, which will be caught below.
