@@ -1285,6 +1285,52 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Celebrity Watch",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/celebrity_watch.jpeg?raw=true",
+      "description": "Daily celebrity news digest from TMZ featuring the top 5 latest entertainment stories, celebrity updates, and Hollywood buzz.",
+      "tags": [
+        "Entertainment"
+      ],
+      "goal": "Get the latest celebrity news and entertainment updates from TMZ. Use HTTP_TOOLS__GET_URL to fetch content from 'https://www.tmz.com/' and extract the top 5 most recent news stories. Parse the HTML to identify the main news articles including headlines, brief summaries, publication times, and direct article links. Focus on extracting the most recent and trending celebrity news from the homepage. Format the findings into an engaging entertainment digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Celebrity Watch - TMZ Top 5 [Current Date]' including: numbered list of top 5 news stories with headlines and brief summaries, publication timestamps for recency, direct TMZ links for each story, celebrity names mentioned, and entertainment category classification. Keep the content fresh, engaging, and focused on the hottest celebrity news and Hollywood developments.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "AI Models Leaderboard Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/ai_leaderboard.png?raw=true",
+      "description": "Weekly digest of top AI models across all LMSYS Arena leaderboards including text, vision, web development, and multimodal categories.",
+      "tags": [
+        "Technology"
+      ],
+      "goal": "Get comprehensive AI model rankings from LMSYS Arena leaderboards across all categories. STEP 1 - Text Models: Use HTTP_TOOLS__GET_URL to fetch 'https://lmarena.ai/leaderboard/text' and extract the top 10 text generation models with their rankings, model names, organization, Elo scores, and voting statistics. STEP 2 - Web Development: Fetch 'https://lmarena.ai/leaderboard/webdev' and extract top 10 web development AI models with rankings and performance metrics. STEP 3 - Vision Models: Fetch 'https://lmarena.ai/leaderboard/vision' and extract top 10 computer vision models with their rankings and capabilities. STEP 4 - Text-to-Image: Fetch 'https://lmarena.ai/leaderboard/text-to-image' and extract top 10 image generation models. STEP 5 - Image Editing: Fetch 'https://lmarena.ai/leaderboard/image-edit' and extract top 10 image editing models. STEP 6 - Text-to-Video: Fetch 'https://lmarena.ai/leaderboard/text-to-video' and extract top 10 video generation models. STEP 7 - Image-to-Video: Fetch 'https://lmarena.ai/leaderboard/image-to-video' and extract top 10 video editing models. STEP 8 - Report Generation: Create comprehensive AI leaderboard digest using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for each category with top 10 rankings, performance metrics, trending models analysis, and category comparisons. STEP 9 - Distribution: Send weekly AI models digest via NOTIFYME__SEND_ME_EMAIL with subject 'AI Models Leaderboard - Top Performers [Current Date]' including: summary of top models across all categories, notable ranking changes and emerging models, category highlights and cross-category comparisons, direct LMSYS Arena links for each leaderboard, and note that the complete professional PDF report is available for download in the app artifacts for comprehensive AI model analysis and research.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Steam Upcoming Games Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/steam_upcoming.png?raw=true",
+      "description": "Weekly digest of the most anticipated upcoming games on Steam with release dates, genres, and developer information.",
+      "tags": [
+        "Gaming"
+      ],
+      "goal": "Discover the most anticipated upcoming games on Steam. Use HTTP_TOOLS__GET_URL to fetch content from 'https://store.steampowered.com/explore/upcoming/' and extract information about upcoming games including game titles, release dates, genres, developers, publishers, and Steam store links. Parse the HTML to identify the featured upcoming games section and extract details for the top 10-15 most anticipated releases. Focus on games with confirmed release dates and high user interest. Format the findings into an engaging gaming digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Steam Upcoming Games - Must-Play Titles [Current Date]' including: curated list of upcoming games with release dates and genres, developer/publisher information, Steam store links for each game, genre breakdown and recommendations, and gaming highlights for different preferences. Keep the content focused on the most exciting upcoming releases and help gamers plan their future purchases.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }

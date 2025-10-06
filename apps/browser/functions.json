@@ -53,5 +53,35 @@
       "visible": ["url", "extraction_instructions", "output_schema"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "BROWSER__RUN_JS_AND_RETURN_RESULT",
+    "description": "Executes JavaScript code in a browser environment and returns the result. Can save the JSON result as an artifact file or return it directly. Useful for dynamic content extraction, DOM manipulation, and custom data processing that requires JavaScript execution.",
+    "tags": ["browser", "javascript", "execution", "dom", "extraction", "artifact"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "The URL to navigate to for establishing browser context and cookies before executing JavaScript. Must include protocol (http:// or https://). Example: 'https://example.com'"
+        },
+        "js_code": {
+          "type": "string",
+          "description": "The JavaScript code to execute in the browser. This code MUST return a value that will be captured and returned. Can access DOM elements, manipulate page content, or perform any valid JavaScript operations. Example: 'return document.querySelector(\"h1\").textContent;' or 'return Array.from(document.querySelectorAll(\".price\")).map(el => el.textContent);'"
+        },
+        "output_filename": {
+          "type": "string",
+          "description": "Optional filename to save the JSON result as an artifact. If provided, the result will be saved as a downloadable file instead of being returned directly. The '.json' extension will be added automatically if not present. Example: 'page_data' or 'extracted_content.json'"
+        }
+      },
+      "required": ["url", "js_code"],
+      "visible": ["url", "js_code", "output_filename"],
+      "additionalProperties": false
+    }
   }
 ]
