@@ -51,7 +51,8 @@ class Assistant(Agent):
         # Filter out restricted apps
         user_app_names = [name for name in user_app_names if name.lower() not in self._restricted_apps]
         linked_apps_str = ", ".join(user_app_names) if user_app_names else "No apps connected yet"
-        
+        self.linked_apps_str = linked_apps_str
+
         super().__init__(
             instructions=f"""
 Autom8 AI assistant. Today: {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UTC.
@@ -60,16 +61,17 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
 
 YOUR CONNECTED APPS: {linked_apps_str}
 Use execute_function with functions from these apps only. If user asks about an app not in this list, tell them it's not connected.
+If user asks "what apps do I have?", just tell them from the list above - no need to call get_linked_apps.
 
 CRITICAL - EXTREME TOOL CALL LIMITS:
 - MAXIMUM 1 tool call per response unless absolutely necessary
 - System has hard limit - too many calls = failure
-- You already know your connected apps (see above) - NO need for search_linked_apps
+- You already know your connected apps (see above) - NO need for get_linked_apps unless user explicitly asks
 - If you need function details, call get_app_info ONLY if necessary
 - Better: Try execute_function directly, it will tell you if parameters are wrong
 
 WRONG APPROACH (causes failures):
-❌ search_linked_apps → get_app_info → execute_function (3 calls!)
+❌ get_linked_apps → get_app_info → execute_function (3 calls!)
 ❌ get_app_info → execute_function (2 calls - still too many)
 
 CORRECT APPROACH:
@@ -82,6 +84,7 @@ AGENT TOOLS:
 - execute_function: Run app functions from your connected apps
 - create_automation: Create recurring/scheduled tasks
 - get_user_timezone: Get timezone for scheduling
+- get_linked_apps: Return connected apps (rarely needed - you already know them above)
 - get_app_info: ONLY if you need to know function parameters
 - display_mini_app: Show HTML tools
 
@@ -342,92 +345,9 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             raise ToolError(f"Failed to send the mini-app to the frontend: {e}")
 
     @function_tool()
-    async def search_linked_apps(self, query: str = "") -> str:
-        """
-        Search and discover apps that the user has connected to their account.
-        
-        This tool helps you find which apps are available to use with execute_function.
-        You can provide a search query to filter apps by name or description, or leave it empty to see all connected apps.
-        Limited to 5 results. Use get_app_info to get detailed function information for a specific app.
-        
-        Args:
-            query: Optional search term to filter apps (e.g., "email", "calendar", "cricket", "news")
-        
-        Returns:
-            JSON string with list of connected apps, their descriptions, and available function names.
-            Includes a message to use get_app_info for detailed function information.
-        """
-        logger.info(f"Agent searching linked apps with query: '{query}'")
-        
-        try:
-            # Get all user's linked app names
-            user_app_names = crud.apps.get_user_linked_app_names(self.db_session, self.user_id)
-            
-            # Filter out restricted apps
-            user_app_names = [
-                name for name in user_app_names if name.lower() not in self._restricted_apps
-            ]
-            
-            if not user_app_names:
-                return json.dumps({
-                    "message": "You don't have any apps connected yet. Please connect apps in your dashboard first.",
-                    "apps": []
-                })
-            
-            # Use search_apps CRUD method to get apps with limit of 5
-            # Generate embedding if query provided for semantic search
-            intent_embedding = None
-            if query:
-                from aci.common.embeddings import generate_embedding
-                from openai import OpenAI
-                from aci.server import config
-                
-                openai_client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BASE_URL)
-                intent_embedding = generate_embedding(
-                    openai_client,
-                    config.OPENAI_EMBEDDING_MODEL,
-                    config.OPENAI_EMBEDDING_DIMENSION,
-                    query,
-                )
-            
-            # Search apps using the CRUD method (limit to 5 results)
-            results = crud.apps.search_apps(
-                db_session=self.db_session,
-                user_id=self.user_id,
-                active_only=True,
-                configured_only=True,
-                app_names=user_app_names,  # Only search within user's linked apps
-                categories=None,
-                intent_embedding=intent_embedding,
-                limit=5,
-                offset=0,
-                return_automation_templates=False,
-            )
-            
-            app_list = []
-            for app, linked_account, similarity_score, _ in results:
-                # Get active function names only
-                function_names = [f.name for f in app.functions if f.active]
-                
-                app_list.append({
-                    "name": app.name,
-                    "description": app.description,
-                    "function_names": function_names
-                })
-            
-            response_data = {
-                "message": f"Found {len(app_list)} connected app(s)" + (f" matching '{query}'" if query else "") + ". Call get_app_info with the app name to get detailed function information including parameters.",
-                "apps": app_list
-            }
-            
-            if query:
-                response_data["query"] = query
-            
-            return json.dumps(response_data)
-                
-        except Exception as e:
-            logger.error(f"Error in search_linked_apps: {e}", exc_info=True)
-            return json.dumps({"error": "An error occurred while searching your connected apps."})
+    async def get_linked_apps(self) -> str:
+        """Fetch and return the names of apps linked to the user's account."""
+        return self.linked_apps_str
 
     @function_tool()
     async def get_app_info(self, app_names: list[str]) -> str:
@@ -688,169 +608,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
     @function_tool(
         raw_schema={
             "type": "function",
-            "name": "get_automation_runs",
-            "description": "Retrieves the execution history for a specific automation to see how it has performed.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "automation_id": {
-                        "type": "string",
-                        "description": "The ID of the automation to get runs for",
-                    },
-                    "limit": {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Maximum number of runs to retrieve (1-100)",
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": ["pending", "in_progress", "success", "failed"],
-                        "description": "Filter runs by status (optional)",
-                    },
-                },
-                "required": ["automation_id"],
-            },
-        }
-    )
-    async def get_automation_runs(
-        self, raw_arguments: dict[str, object], context: RunContext
-    ):
-        """
-        Retrieves the execution history for a specific automation.
-
-        This tool shows you how an automation has been performing, including:
-        - When it ran
-        - Whether it succeeded or failed
-        - Any error messages or logs
-        - Files or artifacts created during runs
-
-        Use this to troubleshoot automations or check their performance history.
-        """
-        logger.info(
-            f"[AUTOMATION_TOOL] get_automation_runs called by user {self.user_id}"
-        )
-        logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
-
-        try:
-            from aci.common.db import crud
-            from aci.common.enums import RunStatus
-
-            automation_id = str(raw_arguments["automation_id"])
-            logger.info(
-                f"[AUTOMATION_TOOL] Getting runs for automation ID: {automation_id}"
-            )
-
-            # Handle limit parameter with proper type checking
-            limit_value = raw_arguments.get("limit", 10)
-            if isinstance(limit_value, (int, float)):
-                limit = min(int(limit_value), 100)
-            else:
-                limit = 10
-
-            status_str = (
-                str(raw_arguments.get("status"))
-                if raw_arguments.get("status")
-                else None
-            )
-            logger.info(
-                f"[AUTOMATION_TOOL] Query parameters - limit: {limit}, status: {status_str}"
-            )
-
-            # Use a fresh database session to avoid transaction issues
-            with get_db_session() as fresh_db_session:
-                # Verify the automation exists and belongs to the user
-                automation = crud.automations.get_automation(
-                    fresh_db_session, automation_id
-                )
-                if not automation:
-                    logger.warning(
-                        f"[AUTOMATION_TOOL] Automation not found: {automation_id}"
-                    )
-                    return f"Error: Automation with ID '{automation_id}' not found."
-
-                if automation.user_id != self.user_id:
-                    logger.warning(
-                        f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}"
-                    )
-                    return (
-                        f"Error: You don't have access to automation '{automation_id}'."
-                    )
-
-                logger.info(
-                    f"[AUTOMATION_TOOL] Verified access to automation '{automation.name}' (ID: {automation_id})"
-                )
-
-                # Convert status string to enum if provided
-                status = None
-                if status_str:
-                    try:
-                        status = RunStatus(status_str)
-                        logger.info(f"[AUTOMATION_TOOL] Filtering by status: {status}")
-                    except ValueError:
-                        logger.error(
-                            f"[AUTOMATION_TOOL] Invalid status value: {status_str}"
-                        )
-                        return f"Error: Invalid status '{status_str}'. Valid options are: pending, in_progress, success, failed"
-
-                # Get the runs
-                runs = crud.automation_runs.list_runs_for_automation(
-                    fresh_db_session, automation_id, limit, 0, status
-                )
-            logger.info(
-                f"[AUTOMATION_TOOL] Retrieved {len(runs)} runs for automation {automation_id}"
-            )
-
-            if not runs:
-                status_filter = f" with status '{status_str}'" if status_str else ""
-                result = (
-                    f"No runs found for automation '{automation.name}'{status_filter}."
-                )
-                logger.info(f"[AUTOMATION_TOOL] No runs found - returning: {result}")
-                return result
-
-            # Format the response
-            response_lines = [f"Automation: {automation.name}"]
-            response_lines.append(f"Total runs shown: {len(runs)}")
-            response_lines.append("")
-
-            logger.info(f"[AUTOMATION_TOOL] Formatting response for {len(runs)} runs")
-
-            for i, run in enumerate(runs, 1):
-                response_lines.append(f"{i}. Run ID: {run.id}")
-                response_lines.append(f"   Status: {run.status.value}")
-                response_lines.append(
-                    f"   Started: {run.started_at.strftime('%Y-%m-%d %H:%M:%S UTC')}"
-                )
-
-                if run.finished_at:
-                    duration = (run.finished_at - run.started_at).total_seconds()
-                    response_lines.append(f"   Duration: {duration:.1f} seconds")
-
-                if run.message:
-                    # Truncate long messages
-                    message = (
-                        run.message[:200] + "..."
-                        if len(run.message) > 200
-                        else run.message
-                    )
-                    response_lines.append(f"   Message: {message}")
-
-                response_lines.append("")  # Empty line between runs
-
-            result = "\n".join(response_lines)
-            logger.info(f"[AUTOMATION_TOOL] get_automation_runs completed successfully")
-            return result
-
-        except Exception as e:
-            logger.error(
-                f"[AUTOMATION_TOOL] Error in get_automation_runs: {str(e)}",
-                exc_info=True,
-            )
-            return f"An unexpected error occurred while retrieving automation runs: {str(e)}"
-
-    @function_tool(
-        raw_schema={
-            "type": "function",
             "name": "list_user_automations",
             "description": "Lists all automations created by the user with their current status.",
             "parameters": {
@@ -902,59 +659,27 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 )
 
                 if not automations:
-                    result = "You haven't created any automations yet. Use the create_automation tool to create your first one!"
-                    logger.info(
-                        f"[AUTOMATION_TOOL] No automations found - returning: {result}"
-                    )
-                    return result
+                    return json.dumps({
+                        "message": "You haven't created any automations yet.",
+                        "automations": []
+                    })
 
-                response_lines = [f"Your Automations ({len(automations)} total):"]
-                response_lines.append("")
+                # Return simple JSON with just id, name, and schedule
+                automations_list = []
+                for automation in automations:
+                    automations_list.append({
+                        "id": automation.id,
+                        "name": automation.name,
+                        "schedule": automation.cron_schedule if automation.is_recurring else None
+                    })
 
-                logger.info(
-                    f"[AUTOMATION_TOOL] Formatting response for {len(automations)} automations"
-                )
-
-                for i, automation in enumerate(automations, 1):
-                    response_lines.append(f"{i}. {automation.name}")
-                    response_lines.append(f"   ID: {automation.id}")
-                    response_lines.append(
-                        f"   Status: {'Active' if automation.active else 'Inactive'}"
-                    )
-                    response_lines.append(
-                        f"   Type: {'Recurring' if automation.is_recurring else 'Manual'}"
-                    )
-
-                    if automation.is_recurring and automation.cron_schedule:
-                        response_lines.append(
-                            f"   Schedule: {automation.cron_schedule} (UTC)"
-                        )
-
-                    if automation.last_run_at:
-                        response_lines.append(
-                            f"   Last run: {automation.last_run_at.strftime('%Y-%m-%d %H:%M:%S UTC')}"
-                        )
-                        response_lines.append(
-                            f"   Last status: {automation.last_run_status.value}"
-                        )
-                    else:
-                        response_lines.append("   Never run")
-
-                    if automation.description:
-                        desc = (
-                            automation.description[:100] + "..."
-                            if len(automation.description) > 100
-                            else automation.description
-                        )
-                        response_lines.append(f"   Description: {desc}")
-
-                    response_lines.append("")  # Empty line between automations
-
-                result = "\n".join(response_lines)
                 logger.info(
                     f"[AUTOMATION_TOOL] list_user_automations completed successfully"
                 )
-                return result
+                return json.dumps({
+                    "message": f"Found {len(automations)} automation(s)",
+                    "automations": automations_list
+                })
 
         except Exception as e:
             logger.error(
@@ -962,112 +687,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 exc_info=True,
             )
             return f"An unexpected error occurred while retrieving your automations: {str(e)}"
-
-    @function_tool(
-        raw_schema={
-            "type": "function",
-            "name": "run_automation",
-            "description": "Manually triggers an automation to run immediately, regardless of its schedule.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "automation_id": {
-                        "type": "string",
-                        "description": "The ID of the automation to run",
-                    }
-                },
-                "required": ["automation_id"],
-            },
-        }
-    )
-    async def run_automation(
-        self, raw_arguments: dict[str, object], context: RunContext
-    ):
-        """
-        Manually triggers an automation to run immediately.
-
-        This tool allows you to run an automation outside of its scheduled time,
-        which is useful for:
-        - Testing new automations
-        - Running one-time tasks
-        - Manually triggering recurring automations
-
-        The automation will be executed asynchronously and you can check its
-        progress using the get_automation_runs tool.
-        """
-        logger.info(f"[AUTOMATION_TOOL] run_automation called by user {self.user_id}")
-        logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
-
-        try:
-            from aci.common.db import crud
-            from aci.server.tasks.tasks import execute_automation
-
-            automation_id = str(raw_arguments["automation_id"])
-            logger.info(
-                f"[AUTOMATION_TOOL] Attempting to run automation ID: {automation_id}"
-            )
-
-            # Use a fresh database session to avoid transaction issues
-            with get_db_session() as fresh_db_session:
-                # Verify the automation exists and belongs to the user
-                automation = crud.automations.get_automation(
-                    fresh_db_session, automation_id
-                )
-                if not automation:
-                    logger.warning(
-                        f"[AUTOMATION_TOOL] Automation not found: {automation_id}"
-                    )
-                    return f"Error: Automation with ID '{automation_id}' not found."
-
-                if automation.user_id != self.user_id:
-                    logger.warning(
-                        f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}"
-                    )
-                    return (
-                        f"Error: You don't have access to automation '{automation_id}'."
-                    )
-
-                if not automation.active:
-                    logger.warning(
-                        f"[AUTOMATION_TOOL] Attempt to run inactive automation: {automation_id}"
-                    )
-                    return f"Error: Automation '{automation.name}' is currently inactive. Please activate it first."
-
-                logger.info(
-                    f"[AUTOMATION_TOOL] Verified automation '{automation.name}' (ID: {automation_id}) is ready to run"
-                )
-
-                # Create a new run record
-                automation_run = crud.automation_runs.create_run(
-                    fresh_db_session, automation_id
-                )
-                logger.info(
-                    f"[AUTOMATION_TOOL] Created automation run with ID: {automation_run.id}"
-                )
-
-                # Commit the run creation to the database
-                fresh_db_session.commit()
-                logger.info(f"[AUTOMATION_TOOL] Committed run creation to database")
-
-            # Queue the automation for execution
-            execute_automation(automation_run.id)
-            logger.info(
-                f"[AUTOMATION_TOOL] Queued automation {automation_id} for execution (run ID: {automation_run.id})"
-            )
-
-            result = f"Successfully started automation '{automation.name}' (Run ID: {automation_run.id}). The automation is now running in the background. You can check its progress using the get_automation_runs tool."
-            logger.info(
-                f"[AUTOMATION_TOOL] run_automation completed successfully: {result}"
-            )
-            return result
-
-        except Exception as e:
-            logger.error(
-                f"[AUTOMATION_TOOL] Error in run_automation: {str(e)}", exc_info=True
-            )
-            return (
-                f"An unexpected error occurred while starting the automation: {str(e)}"
-            )
 
     @function_tool(
         raw_schema={
@@ -1119,6 +738,82 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
+    async def update_automation(
+        self, raw_arguments: dict[str, object], context: RunContext
+    ):
+        """
+        Updates an existing automation's settings.
+        
+        Allows modifying name, description, goal, schedule, active status, and required apps.
+        """
+        logger.info(
+            f"[AUTOMATION_TOOL] update_automation called by user {self.user_id}"
+        )
+        logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
+
+        try:
+            from aci.common.db import crud
+            from aci.common.schemas.automations import AutomationUpdate
+
+            automation_id = str(raw_arguments["automation_id"])
+            
+            # Use a fresh database session
+            with get_db_session() as fresh_db_session:
+                # Verify the automation exists and belongs to the user
+                automation = crud.automations.get_automation(
+                    fresh_db_session, automation_id
+                )
+                if not automation:
+                    return f"Error: Automation with ID '{automation_id}' not found."
+
+                if automation.user_id != self.user_id:
+                    return f"Error: You don't have access to automation '{automation_id}'."
+
+                # Build update data from provided arguments
+                update_data = {}
+                if "name" in raw_arguments:
+                    update_data["name"] = str(raw_arguments["name"])
+                if "description" in raw_arguments:
+                    update_data["description"] = str(raw_arguments["description"])
+                if "goal" in raw_arguments:
+                    update_data["goal"] = str(raw_arguments["goal"])
+                if "active" in raw_arguments:
+                    update_data["active"] = bool(raw_arguments["active"])
+                if "is_deep" in raw_arguments:
+                    update_data["is_deep"] = bool(raw_arguments["is_deep"])
+                if "is_recurring" in raw_arguments:
+                    update_data["is_recurring"] = bool(raw_arguments["is_recurring"])
+                if "cron_schedule" in raw_arguments:
+                    update_data["cron_schedule"] = str(raw_arguments["cron_schedule"])
+                if "app_names" in raw_arguments:
+                    update_data["linked_account_ids"] = []  # Handle app linking separately if needed
+
+                if not update_data:
+                    return "Error: No fields provided to update."
+
+                # Create AutomationUpdate schema
+                automation_update = AutomationUpdate(**update_data)
+                
+                # Update the automation
+                updated_automation = crud.automations.update_automation(
+                    fresh_db_session, automation_id, automation_update
+                )
+                fresh_db_session.commit()
+
+                logger.info(
+                    f"[AUTOMATION_TOOL] Successfully updated automation {automation_id}"
+                )
+                return f"Successfully updated automation '{updated_automation.name}' (ID: {automation_id})."
+
+        except ValueError as e:
+            logger.error(f"[AUTOMATION_TOOL] ValueError in update_automation: {str(e)}")
+            return f"Error updating automation: {str(e)}"
+        except Exception as e:
+            logger.error(
+                f"[AUTOMATION_TOOL] Unexpected error in update_automation: {str(e)}",
+                exc_info=True,
+            )
+            return f"An unexpected error occurred while updating the automation: {str(e)}"
 
     @function_tool(
         raw_schema={
