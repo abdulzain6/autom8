@@ -110,8 +110,27 @@ You have a special tool called `display_mini_app`. This is your most creative ab
 - Examples of GOOD automation requests: "Send me cricket scores every morning at 9 AM", "Weekly news digest", "Daily weather report"
 - Examples of BAD automation requests: "Get cricket matches", "Show me scores", "What's happening in cricket"
 - Before creating, always list existing automations to check for duplicates
-- All cron schedules use UTC time - make this clear to users
+
+**SCHEDULING WITH TIMEZONES - CRITICAL WORKFLOW:**
+When creating automations with specific times, you MUST follow this exact process:
+1. ALWAYS ask the user for their timezone first: "What timezone are you in?" (e.g., "America/New_York", "Asia/Karachi", "Europe/London")
+2. User provides time in THEIR local timezone (e.g., "9 AM my time")
+3. YOU must convert their local time to UTC before creating the automation
+4. Cron schedules in automations ALWAYS use UTC time - the system requires this
+5. Explain to user: "I'll schedule this for [LOCAL_TIME] your time, which is [UTC_TIME] UTC"
+6. Use the converted UTC time in the cron expression
+
+**EXAMPLE TIMEZONE WORKFLOW:**
+- User: "Send me cricket scores every morning at 9 AM"
+- You: "What timezone are you in?"
+- User: "I'm in Pakistan" (PKT = UTC+5)
+- You calculate: 9 AM PKT = 4 AM UTC
+- You respond: "I'll schedule cricket scores for 9 AM Pakistan time, which is 4 AM UTC"
+- You create automation with cron: "0 4 * * *" (4 AM UTC = 9 AM PKT)
+
+**MINIMUM INTERVAL:**
 - Minimum scheduling interval is 30 minutes
+- For schedules less than 30 minutes apart, inform user of this limitation
 
 **run_automation**: Manually triggers existing automations
 **update_automation**: Modifies existing automation settings
@@ -1216,241 +1235,6 @@ AUTOMATION RED FLAGS - NEVER create automation if user says:
             },
         }
     )
-    async def update_automation(
-        self, raw_arguments: dict[str, object], context: RunContext
-    ):
-        """
-        Updates an existing automation's settings.
-
-        This tool allows you to modify any aspect of an existing automation:
-        - Change the name or description
-        - Update the goal or instructions
-        - Modify the required apps
-        - Change the schedule or make it recurring/manual
-        - Activate or deactivate the automation
-
-        Only the fields you specify will be updated - all other settings remain unchanged.
-        """
-        logger.info(
-            f"[AUTOMATION_TOOL] update_automation called by user {self.user_id}"
-        )
-        logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
-
-        try:
-            from aci.common.db import crud
-            from aci.common.db.crud import linked_accounts as linked_accounts_crud
-            from aci.common.schemas.automations import AutomationUpdate
-
-            automation_id = str(raw_arguments["automation_id"])
-            logger.info(f"[AUTOMATION_TOOL] Updating automation ID: {automation_id}")
-
-            # Use a fresh database session to avoid transaction issues
-            with get_db_session() as fresh_db_session:
-                # Verify the automation exists and belongs to the user
-                automation = crud.automations.get_automation(
-                    fresh_db_session, automation_id
-                )
-                if not automation:
-                    logger.warning(
-                        f"[AUTOMATION_TOOL] Automation not found: {automation_id}"
-                    )
-                    return f"Error: Automation with ID '{automation_id}' not found."
-
-                if automation.user_id != self.user_id:
-                    logger.warning(
-                        f"[AUTOMATION_TOOL] Access denied for automation {automation_id} by user {self.user_id}"
-                    )
-                    return (
-                        f"Error: You don't have access to automation '{automation_id}'."
-                    )
-
-                logger.info(
-                    f"[AUTOMATION_TOOL] Verified access to automation '{automation.name}' (ID: {automation_id})"
-                )
-
-                # Build update data from provided arguments
-                update_data = {}
-
-                if "name" in raw_arguments and raw_arguments["name"]:
-                    update_data["name"] = str(raw_arguments["name"])
-
-                if "description" in raw_arguments and raw_arguments["description"]:
-                    update_data["description"] = str(raw_arguments["description"])
-
-                if "goal" in raw_arguments and raw_arguments["goal"]:
-                    update_data["goal"] = str(raw_arguments["goal"])
-
-                if "is_deep" in raw_arguments:
-                    update_data["is_deep"] = bool(raw_arguments["is_deep"])
-
-                if "active" in raw_arguments:
-                    update_data["active"] = bool(raw_arguments["active"])
-
-                if "is_recurring" in raw_arguments:
-                    update_data["is_recurring"] = bool(raw_arguments["is_recurring"])
-
-                if "cron_schedule" in raw_arguments and raw_arguments["cron_schedule"]:
-                    update_data["cron_schedule"] = str(raw_arguments["cron_schedule"])
-
-                # Handle app_names updates - this requires updating linked accounts
-                linked_account_ids = None
-                if "app_names" in raw_arguments and raw_arguments["app_names"]:
-                    app_names = (
-                        [str(app) for app in raw_arguments["app_names"]]
-                        if isinstance(raw_arguments["app_names"], list)
-                        else []
-                    )
-                    logger.info(
-                        f"[AUTOMATION_TOOL] Updating app requirements to: {app_names}"
-                    )
-
-                    # Get linked accounts for the new apps
-                    linked_accounts = []
-                    for app_name in app_names:
-                        linked_account = linked_accounts_crud.get_linked_account(
-                            fresh_db_session, self.user_id, app_name
-                        )
-                        if not linked_account:
-                            logger.error(
-                                f"[AUTOMATION_TOOL] Missing linked account for app: {app_name}"
-                            )
-                            return f"Error: You don't have the '{app_name}' app connected. Please connect this app first before updating the automation."
-                        linked_accounts.append(linked_account)
-
-                    linked_account_ids = [la.id for la in linked_accounts]
-                    logger.info(
-                        f"[AUTOMATION_TOOL] New linked account IDs: {linked_account_ids}"
-                    )
-
-                # Validate scheduling requirements
-                if (
-                    update_data.get("is_recurring")
-                    and not update_data.get("cron_schedule")
-                    and not automation.cron_schedule
-                ):
-                    return "Error: A cron schedule is required when setting an automation to recurring."
-
-                # If no updates provided, return error
-                if not update_data and linked_account_ids is None:
-                    return "Error: No update fields provided. Please specify at least one field to update."
-
-                # Add linked_account_ids to update data if provided
-                if linked_account_ids is not None:
-                    update_data["linked_account_ids"] = linked_account_ids
-
-                logger.info(f"[AUTOMATION_TOOL] Update data: {update_data}")
-
-                # Create the update schema
-                automation_update = AutomationUpdate(**update_data)
-
-                # Perform the update
-                updated_automation = crud.automations.update_automation(
-                    fresh_db_session, automation_id, automation_update
-                )
-
-            logger.info(
-                f"[AUTOMATION_TOOL] Successfully updated automation '{updated_automation.name}' (ID: {automation_id})"
-            )
-
-            # Build response with what was changed
-            changes = []
-            if "name" in update_data:
-                changes.append(f"name to '{update_data['name']}'")
-            if "description" in update_data:
-                changes.append("description")
-            if "goal" in update_data:
-                changes.append("goal")
-            if "app_names" in raw_arguments and raw_arguments["app_names"]:
-                app_names_raw = raw_arguments["app_names"]
-                if isinstance(app_names_raw, list):
-                    app_names = [str(app) for app in app_names_raw]
-                    changes.append(f"required apps to {app_names}")
-                else:
-                    changes.append("required apps")
-            if "is_deep" in update_data:
-                changes.append(
-                    f"processing type to {'deep' if update_data['is_deep'] else 'simple'}"
-                )
-            if "active" in update_data:
-                changes.append(
-                    f"status to {'active' if update_data['active'] else 'inactive'}"
-                )
-            if "is_recurring" in update_data:
-                changes.append(
-                    f"type to {'recurring' if update_data['is_recurring'] else 'manual'}"
-                )
-            if "cron_schedule" in update_data:
-                changes.append(f"schedule to '{update_data['cron_schedule']}'")
-
-            changes_str = ", ".join(changes)
-            result = f"Successfully updated automation '{updated_automation.name}' (ID: {automation_id}). Changed: {changes_str}."
-
-            logger.info(f"[AUTOMATION_TOOL] update_automation result: {result}")
-            return result
-
-        except ValueError as e:
-            logger.error(f"[AUTOMATION_TOOL] ValueError in update_automation: {str(e)}")
-            return f"Error updating automation: {str(e)}"
-        except Exception as e:
-            logger.error(
-                f"[AUTOMATION_TOOL] Unexpected error in update_automation: {str(e)}",
-                exc_info=True,
-            )
-            return (
-                f"An unexpected error occurred while updating the automation: {str(e)}"
-            )
-
-    @function_tool(
-        raw_schema={
-            "type": "function",
-            "name": "get_current_session_usage",
-            "description": "Shows the current voice session usage metrics including time spent and processing costs.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-            },
-        }
-    )
-    async def get_current_session_usage(
-        self, raw_arguments: dict[str, object], context: RunContext
-    ):
-        """
-        Shows the current voice session usage metrics.
-
-        This tool provides real-time information about the current session including:
-        - Session duration so far
-        - LLM tokens used
-        - Speech-to-text processing time
-        - Text-to-speech characters generated
-        """
-        try:
-            # This would need to be implemented with session state tracking
-            # For now, we can query the current month's usage
-            from aci.common.db.crud import usage as usage_crud
-
-            current_usage = usage_crud.get_current_month_usage(
-                self.db_session, self.user_id
-            )
-
-            if not current_usage:
-                return "No usage data found for this month yet."
-
-            response_lines = [
-                "Your Current Month Usage:",
-                f"Voice Agent Time: {current_usage.voice_agent_minutes:.1f} minutes",
-                f"Automation Runs: {current_usage.automation_runs_count}",
-                "",
-                "Processing Metrics:",
-                f"LLM Tokens: {current_usage.llm_tokens_used:,}",
-                f"Speech Processing: {current_usage.stt_audio_minutes:.1f} minutes",
-                f"Voice Generation: {current_usage.tts_characters_used:,} characters",
-            ]
-
-            return "\n".join(response_lines)
-
-        except Exception as e:
-            logger.error(f"Error getting session usage: {str(e)}", exc_info=True)
-            return f"Sorry, I couldn't retrieve your usage information right now."
 
     @function_tool(
         raw_schema={
