@@ -1308,10 +1308,10 @@
       "tags": [
         "Technology"
       ],
-      "goal": "Get comprehensive AI model rankings from LMSYS Arena leaderboards across all categories. STEP 1 - Text Models: Use HTTP_TOOLS__GET_URL to fetch 'https://lmarena.ai/leaderboard/text' and extract the top 10 text generation models with their rankings, model names, organization, Elo scores, and voting statistics. STEP 2 - Web Development: Fetch 'https://lmarena.ai/leaderboard/webdev' and extract top 10 web development AI models with rankings and performance metrics. STEP 3 - Vision Models: Fetch 'https://lmarena.ai/leaderboard/vision' and extract top 10 computer vision models with their rankings and capabilities. STEP 4 - Text-to-Image: Fetch 'https://lmarena.ai/leaderboard/text-to-image' and extract top 10 image generation models. STEP 5 - Image Editing: Fetch 'https://lmarena.ai/leaderboard/image-edit' and extract top 10 image editing models. STEP 6 - Text-to-Video: Fetch 'https://lmarena.ai/leaderboard/text-to-video' and extract top 10 video generation models. STEP 7 - Image-to-Video: Fetch 'https://lmarena.ai/leaderboard/image-to-video' and extract top 10 video editing models. STEP 8 - Report Generation: Create comprehensive AI leaderboard digest using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for each category with top 10 rankings, performance metrics, trending models analysis, and category comparisons. STEP 9 - Distribution: Send weekly AI models digest via NOTIFYME__SEND_ME_EMAIL with subject 'AI Models Leaderboard - Top Performers [Current Date]' including: summary of top models across all categories, notable ranking changes and emerging models, category highlights and cross-category comparisons, direct LMSYS Arena links for each leaderboard, and note that the complete professional PDF report is available for download in the app artifacts for comprehensive AI model analysis and research.",
+      "goal": "Get comprehensive AI model rankings from LMSYS Arena leaderboards across all categories. STEP 1 - Text Models: Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://lmarena.ai/leaderboard/text' with extraction_instructions: 'Extract the top 10 text generation models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and any other performance metrics shown.' STEP 2 - Web Development: Scrape 'https://lmarena.ai/leaderboard/webdev' with extraction_instructions: 'Extract the top 10 web development AI models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and performance metrics.' STEP 3 - Vision Models: Scrape 'https://lmarena.ai/leaderboard/vision' with extraction_instructions: 'Extract the top 10 computer vision models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and capabilities.' STEP 4 - Text-to-Image: Scrape 'https://lmarena.ai/leaderboard/text-to-image' with extraction_instructions: 'Extract the top 10 image generation models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and generation capabilities.' STEP 5 - Image Editing: Scrape 'https://lmarena.ai/leaderboard/image-edit' with extraction_instructions: 'Extract the top 10 image editing models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and editing capabilities.' STEP 6 - Text-to-Video: Scrape 'https://lmarena.ai/leaderboard/text-to-video' with extraction_instructions: 'Extract the top 10 video generation models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and video generation capabilities.' STEP 7 - Image-to-Video: Scrape 'https://lmarena.ai/leaderboard/image-to-video' with extraction_instructions: 'Extract the top 10 video editing models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and video editing capabilities.' STEP 8 - Report Generation: Create comprehensive AI leaderboard digest using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for each category with top 10 rankings, performance metrics, trending models analysis, and category comparisons. STEP 9 - Distribution: Send weekly AI models digest via NOTIFYME__SEND_ME_EMAIL with subject 'AI Models Leaderboard - Top Performers [Current Date]' including: summary of top models across all categories, notable ranking changes and emerging models, category highlights and cross-category comparisons, direct LMSYS Arena links for each leaderboard, and note that the complete professional PDF report is available for download in the app artifacts for comprehensive AI model analysis and research.",
       "variable_names": [],
       "required_app_names": [
-        "HTTP_TOOLS",
+        "BROWSER",
         "PDF_TOOLS",
         "NOTIFYME"
       ],
@@ -1328,6 +1328,38 @@
       "variable_names": [],
       "required_app_names": [
         "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Barchart Unusual Options Fetcher",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/barchart_options.png?raw=true",
+      "description": "Fetches the daily unusual options activity for a specified stock symbol from Barchart and saves the raw data to a JSON file artifact.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Use the `BROWSER__RUN_JS_AND_RETURN_RESULT` tool to fetch the daily unusual options activity for the `Stock Symbol` and save it to an artifact. The tool must be called with these exact parameters:\n- `url`: 'https://www.barchart.com/options/unusual-activity/stocks'\n- `output_filename`: 'unusual_options_{{ variables['Stock Symbol'] }}.json'\n- `js_code`: \"(async function() { function getXsrfToken() { const cookies = document.cookie.split(';'); for (let cookie of cookies) { cookie = cookie.trim(); if (cookie.startsWith('XSRF-TOKEN=')) { return decodeURIComponent(cookie.substring('XSRF-TOKEN='.length)); } } return null; } const token = getXsrfToken(); if (!token) { throw new Error('XSRF-TOKEN cookie not found.'); } const url = 'https://www.barchart.com/proxies/core-api/v1/options/get'; const params = new URLSearchParams(); function formatDate(date) { const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, '0'); const day = String(date.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; } const today = new Date(); const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1); const todayStr = formatDate(today); const tomorrowStr = formatDate(tomorrow); params.append('fields', 'symbol,baseSymbol,baseLastPrice,symbolType,expirationDate,strikePrice,lastPrice,priceChange,percentChange,volume,openInterest,volumeOpenInterestRatio,tradeTime'); params.append('baseSymbol', '{{ variables['Stock Symbol'] }}'); params.append('baseSymbolTypes', 'stock'); params.append('between(tradeTime,' + todayStr + ',' + tomorrowStr + ')', ''); params.append('between(volume,500,)', ''); params.append('between(openInterest,100,)', ''); params.append('in(exchange,(AMEX,NYSE,NASDAQ,INDEX-CBOE))', ''); params.append('orderBy', 'volumeOpenInterestRatio'); params.append('orderDir', 'desc'); params.append('limit', '1000'); params.append('raw', '1'); const finalUrl = `${url}?${params.toString()}`; const response = await fetch(finalUrl, { method: 'GET', headers: { 'accept': 'application/json', 'x-xsrf-token': token }, credentials: 'include' }); if (!response.ok) { throw new Error(`API request failed with status: ${response.status} ${response.statusText}`); } return await response.json(); })()\"\n**Important:** If the tool call fails with an API error (like 400 or 404), assume the `Stock Symbol` is invalid and stop the automation. If the tool succeeds but the resulting file artifact contains no data (e.g., `\"count\": 0`), this is also a final result, and the automation should stop.",
+      "variable_names": [
+        "Stock Symbol"
+      ],
+      "required_app_names": [
+        "BROWSER"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "High Short Interest Stocks Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/high_short_interest.jpg?raw=true",
+      "description": "Daily report of stocks with high short interest from HighShortInterest.com, compiled into a CSV file and emailed to you.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Generate a comprehensive report of stocks with high short interest. Use HTTP_TOOLS__GET_URL to fetch data from 'https://highshortinterest.com/all/1' and extract all stock information including ticker symbols, company names, short interest percentages, float data, and other relevant metrics. Parse the HTML table data to collect comprehensive stock short interest information. Use CSV_TOOLS to create a structured CSV file with columns for Ticker, Company_Name, Short_Interest_Percentage, Days_to_Cover, Float, and other available metrics. Save the CSV as 'high_short_interest_stocks_report.csv'. Send the report via NOTIFYME__SEND_ME_EMAIL with subject 'High Short Interest Stocks Report - [Current Date]' including: summary statistics of the top short interest stocks, key insights about heavily shorted companies, CSV file attachment for detailed analysis, and investment considerations for high short interest positions.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "CSV_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": false
