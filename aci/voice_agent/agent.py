@@ -51,8 +51,6 @@ Autom8 AI assistant. Today: {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UT
 
 Voice: Brief (1-2 sentences), conversational, summarize results. Match user's language.
 
-CRITICAL: Before calling ANY tool, tell user what you're doing. Example: "Let me search for that" or "I'll check your calendar" or "Looking that up now"
-
 YOU HAVE REAL-TIME DATA ACCESS:
 - NEVER say "I don't have current info" or "knowledge cutoff"
 - For current events/news/scores → USE SEARXNG__SEARCH_GENERAL
@@ -75,7 +73,8 @@ Mini-apps: Offer HTML tools (BMI calc, currency converter). Ask first. Dark them
                 base_url=OPENROUTER_BASE_URL,
                 model="x-ai/grok-4-fast",
                 api_key=OPENROUTER_API_KEY,
-                reasoning_effort="minimal"
+                reasoning_effort="minimal",
+                temperature=0
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
