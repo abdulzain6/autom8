@@ -51,15 +51,24 @@ Autom8 AI assistant. Today: {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UT
 
 Voice: Brief (1-2 sentences), conversational, summarize results. Match user's language.
 
+CRITICAL - MINIMIZE TOOL CALLS:
+- Make ONLY 1-2 tool calls at a time maximum
+- User waits while tools run - too many calls = bad experience
+- Chain calls only if absolutely necessary
+- Give response after each tool call before making another
+- Example: Do NOT call search_linked_apps → get_app_info → execute_function all at once
+- Better: If you know the app exists, skip search_linked_apps and go straight to execute_function
+
 YOU HAVE REAL-TIME DATA ACCESS:
 - NEVER say "I don't have current info" or "knowledge cutoff"
 - For current events/news/scores → USE SEARXNG__SEARCH_GENERAL
 - Examples: "latest news?", "who won?", "what's happening with X?" → execute_function(SEARXNG__SEARCH_GENERAL)
 
 Task Priority:
-1. Current info → SEARXNG (check connected via search_linked_apps)
-2. Immediate tasks → get_app_info → execute_function
-3. Recurring tasks ("daily"/"weekly"/"schedule") → create_automation
+1. Current info → SEARXNG (execute_function with SEARXNG__SEARCH_GENERAL)
+2. Notifications/reminders → Create automation with NOTIFYME (execute_function with NOTIFYME__SEND_ME_EMAIL or NOTIFYME__SEND_ME_NOTIFICATION)
+3. Other immediate tasks → execute_function with appropriate app
+4. Recurring tasks ("daily"/"weekly"/"schedule") → create_automation
 
 Automations timezone:
 1. Call get_user_timezone (never ask user)
@@ -1306,7 +1315,7 @@ async def entrypoint(ctx: JobContext):
         vad=ctx.proc.userdata["vad"],
         min_endpointing_delay=0.5,
         max_endpointing_delay=5.0,
-        max_tool_steps=4,
+        max_tool_steps=3,
     )
 
     logger.info(f"Registering metrics_collected callback for user {user_id}")
@@ -1327,26 +1336,15 @@ async def entrypoint(ctx: JobContext):
                 + ev.metrics.prompt_tokens
                 + ev.metrics.prompt_cached_tokens
             )
-            logger.info(
-                f"LLM metrics: +{ev.metrics.completion_tokens + ev.metrics.prompt_tokens + ev.metrics.prompt_cached_tokens} tokens (total: {session_metrics['llm_tokens']})"
-            )
         elif isinstance(ev.metrics, metrics.STTMetrics):
             session_metrics["stt_duration"] += ev.metrics.audio_duration
-            logger.info(
-                f"STT metrics: +{ev.metrics.audio_duration:.2f}s (total: {session_metrics['stt_duration']:.2f}s)"
-            )
         elif isinstance(ev.metrics, metrics.TTSMetrics):
             session_metrics["tts_characters"] += ev.metrics.characters_count
-            logger.info(
-                f"TTS metrics: +{ev.metrics.characters_count} characters (total: {session_metrics['tts_characters']})"
-            )
         elif isinstance(ev.metrics, metrics.RealtimeModelMetrics):
             session_metrics["llm_tokens"] += (
                 ev.metrics.input_tokens + ev.metrics.output_tokens
             )
-            logger.info(
-                f"Realtime model metrics: +{ev.metrics.input_tokens + ev.metrics.output_tokens} tokens (total: {session_metrics['llm_tokens']})"
-            )
+
 
     # Add shutdown callback to log usage summary
     async def log_usage():
