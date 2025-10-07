@@ -46,6 +46,38 @@ class Assistant(Agent):
         self.db_session = create_db_session(DB_FULL_URL)
         self.user_id = user_id
         
+        # Auto-create linked accounts for essential apps if they don't exist
+        essential_apps = ["SEARXNG", "NOTIFYME"]
+        for app_name in essential_apps:
+            try:
+                # Check if linked account already exists
+                existing_linked_account = crud.linked_accounts.get_linked_account(
+                    self.db_session, user_id, app_name
+                )
+                
+                if not existing_linked_account:
+                    # Get the app from database
+                    app = crud.apps.get_app(self.db_session, app_name, active_only=True)
+                    if app and app.has_default_credentials:
+                        # Create linked account with default credentials
+                        from aci.common.enums import SecurityScheme
+                        from aci.common.schemas.security_scheme import NoAuthSchemeCredentials
+                        
+                        # Use NO_AUTH security scheme with empty credentials for default apps
+                        crud.linked_accounts.create_linked_account(
+                            self.db_session,
+                            user_id,
+                            app_name,
+                            SecurityScheme.NO_AUTH,
+                            NoAuthSchemeCredentials(),
+                        )
+                        self.db_session.commit()
+                        logger.info(f"Auto-created linked account for {app_name} for user {user_id}")
+            except Exception as e:
+                logger.warning(f"Failed to auto-create linked account for {app_name}: {e}")
+                # Don't fail initialization if auto-creation fails
+                self.db_session.rollback()
+        
         # Fetch user's linked apps to inject into prompt
         user_app_names = crud.apps.get_user_linked_app_names(self.db_session, user_id)
         # Filter out restricted apps
