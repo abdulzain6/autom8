@@ -102,6 +102,9 @@ def create_automation(
         active=automation_in.active,
         is_deep=automation_in.is_deep,
     )
+    # Set last_run_at to now when creating the automation
+    new_automation.last_run_at = datetime.now(timezone.utc)
+    
     db.add(new_automation)
     db.commit()
     db.refresh(new_automation)
