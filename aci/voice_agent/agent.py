@@ -82,11 +82,17 @@ CORRECT APPROACH:
 
 AGENT TOOLS:
 - execute_function: Run app functions from your connected apps
-- create_automation: Create recurring/scheduled tasks
+- create_automation: Create recurring/scheduled tasks (check list_user_automations FIRST to avoid duplicates!)
+- list_user_automations: Check existing automations BEFORE creating new ones
+- update_automation: Modify existing automation settings
 - get_user_timezone: Get timezone for scheduling
 - get_linked_apps: Return connected apps (rarely needed - you already know them above)
 - get_app_info: ONLY if you need to know function parameters
 - display_mini_app: Show HTML tools
+
+AUTOMATION WORKFLOW:
+Before creating automation: Call list_user_automations to check if similar one exists
+If duplicate found: Suggest using existing one or updating it instead
 
 REAL-TIME DATA:
 - NEVER say "I don't have current info" or "knowledge cutoff"
@@ -358,9 +364,12 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 {"error": "You can request info for up to 3 apps at a time."}
             )
         try:
+            # Normalize app names to uppercase for case-insensitive lookup
+            normalized_app_names = [name.upper() for name in app_names]
+            
             # Use the new CRUD function to get apps with their functions pre-loaded
             apps = crud.apps.get_apps_with_functions_by_names(
-                self.db_session, app_names
+                self.db_session, normalized_app_names
             )
             if not apps:
                 return json.dumps({"error": f"No apps found with names: {app_names}"})
@@ -500,48 +509,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             logger.info(
                 f"[AUTOMATION_TOOL] Created automation schema for '{automation_data.name}'"
             )
-
-            # Check if a similar automation already exists - let the AI be smart about this
-            existing_automations = crud.automations.list_user_automations(
-                self.db_session, self.user_id, limit=20, offset=0
-            )
-            logger.info(
-                f"[AUTOMATION_TOOL] Found {len(existing_automations)} existing automations for user"
-            )
-
-            # Only check for exact name duplicates - let the AI handle similarity detection
-            automation_name_lower = automation_data.name.lower()
-            for existing in existing_automations:
-                if existing.name.lower() == automation_name_lower:
-                    logger.warning(
-                        f"[AUTOMATION_TOOL] Duplicate automation name detected: '{existing.name}' (ID: {existing.id})"
-                    )
-                    return f"Error: An automation named '{existing.name}' already exists (ID: {existing.id}). Please choose a different name or use the existing automation."
-
-            # If there are existing automations, mention them so the AI can consider them
-            if existing_automations:
-                automation_list = []
-                for existing in existing_automations[
-                    :5
-                ]:  # Show up to 5 existing automations
-                    status = "Active" if existing.active else "Inactive"
-                    automation_list.append(
-                        f"'{existing.name}' ({status}) - {existing.goal}"
-                    )
-
-                existing_info = "\n   ".join(automation_list)
-                if len(existing_automations) > 5:
-                    existing_info += (
-                        f"\n   ... and {len(existing_automations) - 5} more"
-                    )
-
-                # Let the AI know about existing automations but proceed with creation
-                logger.info(
-                    f"[AUTOMATION_TOOL] Existing automations context provided to AI"
-                )
-                print(
-                    f"Note: You have {len(existing_automations)} existing automations:\n   {existing_info}"
-                )
 
             # Get the user's linked accounts for the specified apps
             app_names = automation_data.app_names
@@ -1026,7 +993,7 @@ async def entrypoint(ctx: JobContext):
         vad=ctx.proc.userdata["vad"],
         min_endpointing_delay=0.5,
         max_endpointing_delay=5.0,
-        max_tool_steps=3,
+        max_tool_steps=7,
     )
 
     logger.info(f"Registering metrics_collected callback for user {user_id}")
