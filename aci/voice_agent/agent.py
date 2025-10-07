@@ -46,11 +46,6 @@ class Assistant(Agent):
     def __init__(self, user_id: str) -> None:
         self.db_session = create_db_session(DB_FULL_URL)
         self.user_id = user_id
-        user_app_names = crud.apps.get_user_linked_app_names(self.db_session, user_id)
-        user_app_names = [
-            name for name in user_app_names if name.lower() not in self._restricted_apps
-        ]
-
         super().__init__(
             instructions=f"""
 You are Autom8, a friendly and efficient AI voice assistant. Your goal is to help users by accomplishing tasks quickly and communicating clearly.
@@ -144,17 +139,27 @@ AUTOMATION RED FLAGS - NEVER create automation if user says:
 ---
 
 ### CRITICAL INSTRUCTIONS FOR EXTERNAL TOOLS:
+**AVAILABLE CORE TOOLS:**
+- `search_linked_apps`: Discover which apps the user has connected (use this if you're unsure what apps are available)
+- `get_app_info`: Get detailed function information for specific apps
+- `execute_function`: Execute a specific function from a connected app
+
 **MANDATORY WORKFLOW - FOLLOW THIS EXACTLY:**
 1. Determine if an external tool is needed (for simple conversation, respond directly)
-2. If a tool is needed, call `get_app_info` with the app name(s) to see available functions and their parameters
-3. Review the returned function descriptions and parameters carefully
-4. Ask the user for permission: "Would you like me to use [app] to [task]?"
-5. Once confirmed, call `execute_function` with:
+2. If unsure which apps the user has, call `search_linked_apps` with optional search query to discover available apps
+3. Once you know the app name, call `get_app_info` with the app name(s) to see available functions and their parameters
+4. Review the returned function descriptions and parameters carefully
+5. Ask the user for permission: "Would you like me to use [app] to [task]?"
+6. Once confirmed, call `execute_function` with:
    - `function_name`: The exact function name from get_app_info (e.g., "CRICBUZZ__GET_LIVE_MATCHES")
    - `parameters`: A dictionary with the required parameters
-6. Return the result to the user in a conversational, summarized way
+7. Return the result to the user in a conversational, summarized way
 
 **EXAMPLES OF CORRECT WORKFLOW:**
+- User: "What apps do I have connected?"
+  Step 1: Call search_linked_apps with empty query
+  Step 2: Return the list of connected apps conversationally
+
 - User: "Get cricket matches"
   Step 1: Call get_app_info with ["cricbuzz"]
   Step 2: Review available functions
@@ -169,6 +174,9 @@ AUTOMATION RED FLAGS - NEVER create automation if user says:
   Step 4: Collect email details
   Step 5: Call execute_function with function_name NOTIFYME__SEND_ME_EMAIL and parameters for subject and body
 
+- User: "Do I have any email apps?"
+  Step 1: Call search_linked_apps with query "email"
+  Step 2: Tell user which email-related apps they have connected
 
 **NEVER CREATE AUTOMATIONS WHEN EXECUTE_FUNCTION WORKS:**
 - If user asks for immediate information - ALWAYS use execute_function
@@ -182,9 +190,6 @@ AUTOMATION RED FLAGS - NEVER create automation if user says:
 - Do NOT create automation for immediate information requests
 - ALWAYS try execute_function workflow first
 - Only create automation if user explicitly wants recurring/scheduled tasks
-
-### Available Apps for this User:
-{', '.join(user_app_names) if user_app_names else 'No apps are currently linked.'}
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM(
@@ -432,6 +437,94 @@ AUTOMATION RED FLAGS - NEVER create automation if user says:
         except Exception as e:
             # This will catch RPC timeouts or other communication errors
             raise ToolError(f"Failed to send the mini-app to the frontend: {e}")
+
+    @function_tool()
+    async def search_linked_apps(self, query: str = "") -> str:
+        """
+        Search and discover apps that the user has connected to their account.
+        
+        This tool helps you find which apps are available to use with execute_function.
+        You can provide a search query to filter apps by name or description, or leave it empty to see all connected apps.
+        Limited to 5 results. Use get_app_info to get detailed function information for a specific app.
+        
+        Args:
+            query: Optional search term to filter apps (e.g., "email", "calendar", "cricket", "news")
+        
+        Returns:
+            JSON string with list of connected apps, their descriptions, and available function names.
+            Includes a message to use get_app_info for detailed function information.
+        """
+        logger.info(f"Agent searching linked apps with query: '{query}'")
+        
+        try:
+            # Get all user's linked app names
+            user_app_names = crud.apps.get_user_linked_app_names(self.db_session, self.user_id)
+            
+            # Filter out restricted apps
+            user_app_names = [
+                name for name in user_app_names if name.lower() not in self._restricted_apps
+            ]
+            
+            if not user_app_names:
+                return json.dumps({
+                    "message": "You don't have any apps connected yet. Please connect apps in your dashboard first.",
+                    "apps": []
+                })
+            
+            # Use search_apps CRUD method to get apps with limit of 5
+            # Generate embedding if query provided for semantic search
+            intent_embedding = None
+            if query:
+                from aci.common.embeddings import generate_embedding
+                from openai import OpenAI
+                from aci.server import config
+                
+                openai_client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BASE_URL)
+                intent_embedding = generate_embedding(
+                    openai_client,
+                    config.OPENAI_EMBEDDING_MODEL,
+                    config.OPENAI_EMBEDDING_DIMENSION,
+                    query,
+                )
+            
+            # Search apps using the CRUD method (limit to 5 results)
+            results = crud.apps.search_apps(
+                db_session=self.db_session,
+                user_id=self.user_id,
+                active_only=True,
+                configured_only=True,
+                app_names=user_app_names,  # Only search within user's linked apps
+                categories=None,
+                intent_embedding=intent_embedding,
+                limit=5,
+                offset=0,
+                return_automation_templates=False,
+            )
+            
+            app_list = []
+            for app, linked_account, similarity_score, _ in results:
+                # Get active function names only
+                function_names = [f.name for f in app.functions if f.active]
+                
+                app_list.append({
+                    "name": app.name,
+                    "description": app.description,
+                    "function_names": function_names
+                })
+            
+            response_data = {
+                "message": f"Found {len(app_list)} connected app(s)" + (f" matching '{query}'" if query else "") + ". Call get_app_info with the app name to get detailed function information including parameters.",
+                "apps": app_list
+            }
+            
+            if query:
+                response_data["query"] = query
+            
+            return json.dumps(response_data)
+                
+        except Exception as e:
+            logger.error(f"Error in search_linked_apps: {e}", exc_info=True)
+            return json.dumps({"error": "An error occurred while searching your connected apps."})
 
     @function_tool()
     async def get_app_info(self, app_names: list[str]) -> str:
