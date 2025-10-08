@@ -157,7 +157,7 @@ class Browser(AppConnectorBase):
                 worker_address = None
                 try:
                     pool = get_pool()
-                    worker_address = pool.acquire()
+                    worker_address = pool.acquire(timeout=300)
                     cdp_url = f"ws://{worker_address}"
 
                     async with async_playwright() as p:
