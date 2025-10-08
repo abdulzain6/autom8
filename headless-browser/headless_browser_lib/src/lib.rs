@@ -160,7 +160,7 @@ pub fn get_chrome_args_test() -> [&'static str; crate::conf::PERF_ARGS] {
 fn create_proxy_extension(proxy_url_str: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let proxy_url = Url::parse(proxy_url_str)?;
     let temp_dir = Builder::new().prefix("proxy_ext").tempdir()?;
-    let dir_path = temp_dir.keep()?;
+    let dir_path = temp_dir.keep().map_err(|e| e.error)?;
 
     // 1. Create manifest.json
     let manifest_content = r#"{
