@@ -1,0 +1,76 @@
+FROM ubuntu:25.04 AS rustbuilder
+
+WORKDIR /app
+
+# Get Ubuntu packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    bash curl \
+    && apt-get update
+
+COPY ../headless_browser/ ./headless_browser
+COPY ../headless_browser_lib/ ./headless_browser_lib
+COPY ../benches/ ./benches
+COPY ../Cargo.* .
+
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup update stable
+
+RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
+
+FROM ubuntu:25.04 AS chromebuilder
+
+ARG VERSION=latest
+
+COPY ../scripts/build-unpatched.sh .
+COPY ../local.conf /etc/fonts/local.conf
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    tini curl npm
+
+RUN ./build-unpatched.sh
+
+FROM ubuntu:25.04
+
+ARG VERSION=latest
+
+COPY ../local.conf /etc/fonts/local.conf
+
+# https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/registry/nativeDeps.ts#L37
+# https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/chameleon/updatable/apt-clone/raspberrypi/var/lib/apt-clone/installed.pkgs;l=472?q=libwebp6&sq=
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    libasound2t64 tini curl ca-certificates libfreetype6 \
+    libnspr4 libnss3 libexpat1 libgbm1 libfontconfig1 glib2.0 libatk1.0-0 \
+    fonts-liberation fonts-noto-color-emoji libatspi2.0-0 \
+    libc6 libcairo2 libcups2 libdbus-1-3 \
+    libgcc1 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libpango-1.0-0 \
+    libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libevdev2 \
+    libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 \
+    fonts-liberation libatk-bridge2.0-0 libdrm2 libjpeg-turbo8 fonts-unifont libwebpdemux2 \
+    fonts-ipafont-gothic xfonts-cyrillic xfonts-scalable libxml2 libepoxy0 bzip2 libatomic1 libgl1 libgles2 libopengl0 
+
+# Add Chrome as a user
+RUN mkdir -p /usr/src/app \
+    && useradd -m chrome \
+    && chown -R chrome:chrome /usr/src/app
+
+EXPOSE 9222 6000 9223
+
+USER root
+
+COPY --from=rustbuilder /root/.cargo/bin/headless_browser /usr/local/bin/headless_browser
+COPY --from=chromebuilder /out/latest/headless-shell /out/latest/headless-shell/
+COPY ../scripts/docker-entrypoint.sh /
+
+RUN chmod +x /docker-entrypoint.sh
+
+ENV REMOTE_ADDRESS=0.0.0.0
+ENV LAUNCH=init
+ENV DEFAULT_PORT=9223
+ENV DEFAULT_PORT_SERVER=6000
+ENV DEFAULT_LAUNCH_NAME=/out/latest/headless-shell/headless-shell
+# ENV HOSTNAME_OVERRIDE=127.0.0.1
+
+ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
