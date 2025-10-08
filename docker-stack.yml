@@ -154,7 +154,6 @@ services:
     networks:
       - services_network # Connect to the internal network for the pool manager
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6000/health || exit 1"]
       interval: 15s
       retries: 5
       start_period: 30s
