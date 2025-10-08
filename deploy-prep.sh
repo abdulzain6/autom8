@@ -43,7 +43,11 @@ for name in "${!images[@]}"; do
     echo -e "${YELLOW}Processing image: ${name}${NC}"
 
     echo " > Building from context: ./${context}"
-    sudo docker build -t "${full_image_name}" "./${context}"
+    if [ "$name" = "headless-browser" ]; then
+        sudo docker build -t "${full_image_name}" --file "./${context}/docker/Dockerfile" "./${context}"
+    else
+        sudo docker build -t "${full_image_name}" "./${context}"
+    fi
 
     echo " > Pushing to ${LOCAL_REGISTRY}..."
     sudo docker push "${full_image_name}"
