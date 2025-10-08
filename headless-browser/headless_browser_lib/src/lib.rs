@@ -377,14 +377,7 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
 
 /// Health check handler
 async fn health_check_handler() -> Result<Response<Full<Bytes>>, Infallible> {
-    if IS_HEALTHY.load(Ordering::Relaxed) {
-        Ok(Response::new(Full::new(Bytes::from("healthy"))))
-    } else {
-        let mut response = Response::new(Full::new(Bytes::from("unhealthy")));
-        *response.status_mut() = StatusCode::SERVICE_UNAVAILABLE;
-
-        Ok(response)
-    }
+    Ok(Response::new(Full::new(Bytes::from("healthy"))))
 }
 
 /// Fork handler.
