@@ -159,46 +159,91 @@ pub fn get_chrome_args_test() -> [&'static str; crate::conf::PERF_ARGS] {
 
 fn create_proxy_extension(proxy_url_str: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let proxy_url = Url::parse(proxy_url_str)?;
+
+    // Extract components
+    let scheme = proxy_url.scheme();
+    let host = proxy_url.host_str().unwrap_or_default();
+    let port = proxy_url.port().unwrap_or(match scheme {
+        "https" => 443,
+        _ => 80,
+    });
+    let username = proxy_url.username();
+    let password = proxy_url.password().unwrap_or_default();
+
+    // Print all values for verification
+    println!("[Rust] Parsed proxy URL:");
+    println!("  Scheme  : {}", scheme);
+    println!("  Host    : {}", host);
+    println!("  Port    : {}", port);
+    println!("  Username: {}", username);
+    println!("  Password: {}", password);
+
     let temp_dir = Builder::new().prefix("proxy_ext").tempdir()?;
     let dir_path = temp_dir.keep();
 
-    // 1. Create manifest.json
+    // Create manifest.json
     let manifest_content = r#"{
-        "manifest_version": 3, "name": "Dynamic Proxy", "version": "1.0",
-        "permissions": ["proxy", "webRequest", "webRequestAuthProvider"],
+        "manifest_version": 3,
+        "name": "Dynamic Proxy",
+        "version": "1.0",
+        "permissions": ["proxy", "webRequest", "webRequestAuthProvider", "storage"],
         "background": { "service_worker": "background.js" }
     }"#;
     fs::write(dir_path.join("manifest.json"), manifest_content)?;
 
-    // 2. Create background.js with injected details
+    // Create background.js with logs
     let background_js_content = format!(
         r#"
+        console.log('[Proxy Extension] Initializing proxy extension...');
+
         const config = {{
-            mode: "fixed_servers",
+            mode: 'fixed_servers',
             rules: {{
                 singleProxy: {{
-                    scheme: "{}",
-                    host: "{}",
+                    scheme: '{}',
+                    host: '{}',
                     port: {}
                 }},
-                bypassList: ["<local>"]
+                bypassList: ['<local>']
             }}
         }};
-        chrome.proxy.settings.set({{ value: config, scope: "regular" }}, function() {{}});
+
+        chrome.proxy.settings.set({{ value: config, scope: 'regular' }}, function() {{
+            console.log('[Proxy Extension] Proxy config applied:', config);
+        }});
+
         function onAuthRequired(details, callback) {{
-            callback({{ authCredentials: {{ username: "{}", password: "{}" }} }});
+            console.log('[Proxy Extension] Auth required for URL:', details.url);
+            const username = '{}';
+            const password = '{}';
+            if (username && password) {{
+                console.log('[Proxy Extension] Providing credentials for auth.');
+                callback({{ authCredentials: {{ username, password }} }});
+            }} else {{
+                console.log('[Proxy Extension] No credentials provided.');
+                callback();
+            }}
         }}
+
         chrome.webRequest.onAuthRequired.addListener(
-            onAuthRequired, {{ urls: ["<all_urls>"] }}, ['asyncBlocking']
+            onAuthRequired,
+            {{ urls: ['<all_urls>'] }},
+            ['asyncBlocking']
         );
+
+        setTimeout(() => console.log('[Proxy Extension] Ready to navigate'), 500);
+
+        console.log('[Proxy Extension] Background script loaded.');
         "#,
-        proxy_url.scheme(),
-        proxy_url.host_str().unwrap_or_default(),
-        proxy_url.port().unwrap_or(80),
-        proxy_url.username(),
-        proxy_url.password().unwrap_or_default()
+        scheme,
+        host,
+        port,
+        username,
+        password
     );
+
     fs::write(dir_path.join("background.js"), background_js_content)?;
+    println!("[Rust] Proxy extension created at {:?}", dir_path);
 
     Ok(dir_path)
 }
