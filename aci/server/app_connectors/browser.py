@@ -168,7 +168,7 @@ class Browser(AppConnectorBase):
                 try:
                     pool = get_pool()
                     worker_address = pool.acquire(timeout=300)
-                    cdp_url = f"ws://{worker_address}"
+                    cdp_url = self._get_cdp_url_from_worker(worker_address)
 
                     async with async_playwright() as p:
                         # 1️⃣ Connect to existing CDP browser

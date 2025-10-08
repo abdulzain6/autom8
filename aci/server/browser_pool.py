@@ -52,7 +52,7 @@ class ResilientBrowserPool:
     def _discover_workers(self) -> set[str]:
         """Dynamically finds worker IPs using synchronous DNS service discovery."""
         discovered_addresses = set()
-        dns_name = f"{self._service_name}"
+        dns_name = f"tasks.{self._service_name}"
         try:
             # Synchronous DNS lookup
             resolved_hosts = socket.getaddrinfo(
