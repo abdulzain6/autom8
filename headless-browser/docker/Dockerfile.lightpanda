@@ -40,13 +40,14 @@ USER appuser
 
 EXPOSE 6000 9222
 
-# --- CRITICAL CONFIGURATION ---
-# Set the default browser to be Lightpanda
+
 ENV CHROME_PATH=/usr/local/bin/lightpanda-x86_64-linux
 ENV LIGHT_PANDA=true
-
-# Tell the server to auto-start one instance
 ENV CHROME_INIT=true
+ENV REMOTE_ADDRESS=0.0.0.0
+ENV LAUNCH=init
+ENV DEFAULT_PORT=9223
+ENV DEFAULT_PORT_SERVER=6000
 
 # The entrypoint is your Rust server, which will manage Lightpanda
 ENTRYPOINT ["/usr/local/bin/headless_browser"]
