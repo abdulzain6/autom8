@@ -58,6 +58,7 @@ class ResilientBrowserPool:
             resolved_hosts = socket.getaddrinfo(
                 dns_name, 6000, family=socket.AF_INET, type=socket.SOCK_STREAM
             )
+            logger.info(f"DNS discovery: Found {len(resolved_hosts)} hosts for '{dns_name}'.")
             for host in resolved_hosts:
                 ip = host[4][0]
                 discovered_addresses.add(f"http://{ip}:6000")

@@ -108,6 +108,16 @@ class Browser(AppConnectorBase):
             version_resp = session.get(f"{worker_address}/json/version", timeout=15)
             version_resp.raise_for_status()
             ws_url = version_resp.json()["webSocketDebuggerUrl"]
+            
+            logger.info(f"CDP URL from worker {worker_address}: {ws_url}")
+            # Clean the ws_url if it's malformed (e.g., ws://http//ip:port)
+            if ws_url.startswith("ws://http//"):
+                ws_url = "ws://" + ws_url[11:]  # Remove "ws://http//"
+            
+            # The proxy listens on 9222, so ensure the port is correct
+            if ":6000" in ws_url:
+                ws_url = ws_url.replace(":6000", ":9222")
+            
             return ws_url
 
     def _shutdown_worker_browsers(self, worker_address: str):
