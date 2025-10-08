@@ -110,8 +110,10 @@ class Browser(AppConnectorBase):
             ws_url = version_resp.json()["webSocketDebuggerUrl"]
 
             ws_url = ws_url.replace("0.0.0.0", config.BROWSER_SERVICE_NAME)
-                        
+
             logger.info(f"CDP URL from worker {worker_address}: {ws_url}")
+
+            time.sleep(4)
 
             return ws_url
 
