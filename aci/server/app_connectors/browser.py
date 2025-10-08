@@ -7,6 +7,7 @@ import threading
 import time
 import json
 import jsonschema
+from playwright_stealth import stealth_async
 import requests
 from sqlalchemy.orm import Session
 from jsonschema import ValidationError
@@ -19,6 +20,7 @@ from aci.server import config
 from aci.server.app_connectors.base import AppConnectorBase
 from browser_use import Agent, BrowserSession
 from browser_use.llm import ChatOpenAI
+from playwright.async_api import Browser as PlaywrightBrowser
 from skyvern import Skyvern
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.async_configs import BrowserConfig, CrawlerRunConfig, CacheMode, LLMConfig
@@ -148,95 +150,79 @@ class Browser(AppConnectorBase):
             # Small delay to prevent connection conflicts when semaphore is released
             time.sleep(1)
             return result
-        else:
-            # Use browser-use with Steel
-            # This nested function encapsulates the entire lifecycle of a single browser task.
-            # It's what will be executed by a thread from the thread pool.
-            def _setup_and_run_agent():
-                pool = get_pool()
+        
+
+        def _setup_and_run_agent():
+            async def _run_agent():
                 worker_address = None
-                
                 try:
-                    worker_address = pool.acquire() 
-                    cdp_url = self._get_cdp_url_from_worker(worker_address)      
+                    pool = get_pool()
+                    worker_address = pool.acquire()
+                    cdp_url = f"ws://{worker_address}"
 
-                    assert (
-                        config.HTTP_PROXY is not None
-                    ), "HTTP_PROXY must be set in config"
+                    async with async_playwright() as p:
+                        # 1️⃣ Connect to existing CDP browser
+                        browser = await p.chromium.connect_over_cdp(cdp_url)
+                        contexts = browser.contexts
+                        context = contexts[0] if contexts else await browser.new_context()
 
-                    # LLM and Agent configuration
-                    api_key = config.OPENROUTER_API_KEY
-                    llm = ChatOpenAI(
-                        model="x-ai/grok-4-fast",
-                        temperature=0.3,
-                        api_key=api_key,
-                        base_url=config.OPENROUTER_BASE_URL,
-                    )
-                    page_extraction_llm = ChatOpenAI(
-                        model="openai/gpt-oss-120b",
-                        temperature=0.3,
-                        api_key=config.DEEPINFRA_API_KEY,
-                        base_url=config.DEEPINFRA_BASE_URL,
-                        reasoning_effort="minimal",
-                    )
+                        page = await context.new_page()
+                        # 2️⃣ Apply stealth
+                        await stealth_async(page)
+                        logger.info(f"Connected to CDP browser with stealth. Proxy={config.HTTP_PROXY}")
 
-                    # 2. Create a new BrowserSession instance for this task only.
-                    browser_session_for_this_agent = BrowserSession(cdp_url=cdp_url)
-                    logger.info(
-                        f"Created unique BrowserSession object ID: {id(browser_session_for_this_agent)}"
-                    )
 
-                    # 3. Create a new Agent instance tied to the unique session.
-                    agent = Agent(
-                        task=task,
-                        llm=llm,
-                        browser_session=browser_session_for_this_agent,
-                        flash_mode=True,
-                        extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
-                        use_thinking=False,
-                        use_vision=False,
-                        display_files_in_done_text=True,
-                        images_per_step=1,
-                        page_extraction_llm=page_extraction_llm,
-                    )
+                        if not config.HTTP_PROXY:
+                            raise ValueError("HTTP_PROXY must be set in config for CDP workers")
 
-                    agent.settings.use_vision = True
+                        # 4️⃣ Init LLMs
+                        llm = ChatOpenAI(
+                            model="x-ai/grok-4-fast",
+                            temperature=0.3,
+                            api_key=config.OPENROUTER_API_KEY,
+                            base_url=config.OPENROUTER_BASE_URL,
+                        )
+                        page_extraction_llm = ChatOpenAI(
+                            model="openai/gpt-oss-120b",
+                            temperature=0.3,
+                            api_key=config.DEEPINFRA_API_KEY,
+                            base_url=config.DEEPINFRA_BASE_URL,
+                            reasoning_effort="minimal",
+                        )
+                        browser_session_for_this_agent = BrowserSession(browser=browser)
 
-                    logger.info(
-                        f"Created unique Agent object ID: {id(agent)}"
-                    )
-
-                    # The async part of the task
-                    async def _run_agent_async():
-                        result = await agent.run(max_steps=7)
-                        return result.final_result() if result else None
-
-                    # Wrapper to include the timeout
-                    async def _run_with_timeout():
-                        return await asyncio.wait_for(
-                            _run_agent_async(), timeout=300
+                        # 5️⃣ Run the Agent
+                        agent = Agent(
+                            task=task,
+                            llm=llm,
+                            browser_session=browser_session_for_this_agent,
+                            flash_mode=True,
+                            extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
+                            use_thinking=False,
+                            use_vision=True,
+                            display_files_in_done_text=True,
+                            images_per_step=1,
+                            page_extraction_llm=page_extraction_llm,
                         )
 
-                    result = asyncio.run(_run_with_timeout())
+                        result = await asyncio.wait_for(agent.run(max_steps=7), timeout=300)
+                        logger.info("Task completed successfully.")
+                        await browser.close()
 
-                    logger.info(
-                        f"Task finished successfully."
-                    )
-                    return {"result": result, "success": True}
+                        return {"result": result.final_result() if result else None, "success": True}
 
                 except Exception as e:
-                    logger.error(
-                        f"Browser automation failed: {e}",
-                        exc_info=True,
-                    )
-                    raise RuntimeError(f"Browser automation failed: {str(e)}")
+                    logger.error(f"Browser automation failed: {e}", exc_info=True)
+                    return {"result": None, "error": str(e), "success": False}
                 finally:
                     if worker_address:
                         self._shutdown_worker_browsers(worker_address)
                         pool.release(worker_address)
-            # Submit the entire encapsulated function to the thread pool.
-            future = _browser_executor.submit(_setup_and_run_agent)
-            return future.result()
+
+            return asyncio.run(_run_agent())
+
+        future = _browser_executor.submit(_setup_and_run_agent)
+        return future.result()
 
     def scrape_with_browser(
         self, url: str, extraction_instructions: str, output_schema: dict
@@ -475,6 +461,8 @@ class Browser(AppConnectorBase):
                         browser = await p.chromium.connect_over_cdp(cdp_url)
                         context = browser.contexts[0]
                         page = context.pages[0]
+
+                        await stealth_async(page)
                         await page.goto(url, wait_until="load", timeout=60000)
 
                         # Optional delay for dynamic content loading

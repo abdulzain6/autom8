@@ -44,7 +44,7 @@ for name in "${!images[@]}"; do
 
     echo " > Building from context: ./${context}"
     if [ "$name" = "headless-browser" ]; then
-        sudo docker build -t "${full_image_name}" --file "./${context}/docker/Dockerfile" "./${context}"
+        sudo docker build -t "${full_image_name}" --file "./${context}/docker/Dockerfile.lightpanda" "./${context}"
     else
         sudo docker build -t "${full_image_name}" "./${context}"
     fi

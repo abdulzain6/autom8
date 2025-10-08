@@ -154,87 +154,142 @@ pub fn get_chrome_args_test() -> [&'static str; crate::conf::PERF_ARGS] {
     *crate::conf::CHROME_ARGS
 }
 
-/// Fork a chrome process.
+fn create_proxy_extension(proxy_url_str: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let proxy_url = Url::parse(proxy_url_str)?;
+    let temp_dir = Builder::new().prefix("proxy_ext").tempdir()?;
+    let dir_path = temp_dir.into_path(); // Keep the directory alive
+
+    // 1. Create manifest.json
+    let manifest_content = r#"{
+        "manifest_version": 3, "name": "Dynamic Proxy", "version": "1.0",
+        "permissions": ["proxy", "webRequest", "webRequestAuthProvider"],
+        "background": { "service_worker": "background.js" }
+    }"#;
+    fs::write(dir_path.join("manifest.json"), manifest_content)?;
+
+    // 2. Create background.js with injected details
+    let background_js_content = format!(
+        r#"
+        const config = {{
+            mode: "fixed_servers",
+            rules: {{
+                singleProxy: {{
+                    scheme: "{}",
+                    host: "{}",
+                    port: {}
+                }},
+                bypassList: ["<local>"]
+            }}
+        }};
+        chrome.proxy.settings.set({{ value: config, scope: "regular" }}, function() {{}});
+        function onAuthRequired(details, callback) {{
+            callback({{ authCredentials: {{ username: "{}", password: "{}" }} }});
+        }}
+        chrome.webRequest.onAuthRequired.addListener(
+            onAuthRequired, {{ urls: ["<all_urls>"] }}, ['asyncBlocking']
+        );
+        "#,
+        proxy_url.scheme(),
+        proxy_url.host_str().unwrap_or_default(),
+        proxy_url.port().unwrap_or(80),
+        proxy_url.username(),
+        proxy_url.password().unwrap_or_default()
+    );
+    fs::write(dir_path.join("background.js"), background_js_content)?;
+
+    Ok(dir_path)
+}
+
+
 pub fn fork(port: Option<u32>) -> String {
-    let chrome_args = get_env_args("CHROME_ARGS");
+    let custom_chrome_args = get_env_args("CHROME_ARGS");
+    // --- Use a single, unified proxy environment variable ---
+    let proxy_url = std::env::var("PROXY_URL").ok();
+    let mut extension_path: Option<PathBuf> = None;
 
     let id = if !*LIGHT_PANDA {
+        // --- CHROME FORK LOGIC ---
+        // Generate a dynamic proxy extension if PROXY_URL is provided
+        if let Some(url) = &proxy_url {
+            if !url.is_empty() {
+                match create_proxy_extension(url) {
+                    Ok(path) => {
+                        tracing::info!("Created temporary proxy extension at: {:?}", path);
+                        extension_path = Some(path);
+                    }
+                    Err(e) => {
+                        tracing::error!("Failed to create proxy extension: {}", e);
+                    }
+                }
+            }
+        }
+
         let mut command = Command::new(&*CHROME_PATH);
+        let mut final_args: Vec<String> = CHROME_ARGS.iter().map(|s| s.to_string()).collect();
 
-        let cmd = if *crate::conf::TEST_NO_ARGS {
-            let mut chrome_args = get_chrome_args_test().map(|e| e.to_string());
-            if !CHROME_ADDRESS.is_empty() {
-                chrome_args[0] =
-                    format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
-            }
-            if let Some(port) = port {
-                chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
-            }
-            command.args(&chrome_args)
-        } else {
-            let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
+        if !CHROME_ADDRESS.is_empty() {
+            final_args[0] = format!("--remote-debugging-address={}", &*CHROME_ADDRESS);
+        }
+        if let Some(port) = port {
+            final_args[1] = format!("--remote-debugging-port={}", port);
+        }
 
-            if !CHROME_ADDRESS.is_empty() {
-                chrome_args[0] =
-                    format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
-            }
+        // Load the dynamically created extension if it exists
+        if let Some(path) = &extension_path {
+            final_args.push(format!("--load-extension={}", path.display()));
+        }
 
-            if let Some(port) = port {
-                chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
-            }
+        final_args.extend(custom_chrome_args);
+        
+        let cmd = command.args(&final_args);
+        tracing::info!("Spawning Chrome with args: {:?}", final_args);
 
-            command.args(&chrome_args)
+        let id = match cmd.spawn() {
+            Ok(child) => child.id(),
+            Err(e) => {
+                tracing::error!("{} command didn't start {:?}", &*CHROME_PATH, e); 0
+            }
         };
+        id
+    } else {
+        let mut command = Command::new(&*CHROME_PATH);
+        let panda_args = LIGHTPANDA_ARGS.map(|s| s.to_string());
+        
+        // Base args for Lightpanda: serve, host, and port
+        let mut final_args: Vec<String> = vec![
+            "serve".to_string(),
+            "--host".to_string(), panda_args[0].replace("--host=", ""),
+            "--port".to_string(), panda_args[1].replace("--port=", "")
+        ];
 
-        let cmd = if !chrome_args.is_empty() {
-            cmd.args(chrome_args)
-        } else {
-            cmd
-        };
+        if let Some(proxy) = proxy_url {
+            if !proxy.is_empty() {
+                final_args.push("--http_proxy".to_string());
+                final_args.push(proxy);
+            }
+        }
+        
+        let cmd = command.args(&final_args);
+        tracing::info!("Spawning Lightpanda with args: {:?}", final_args);
 
         let id = match cmd.spawn() {
             Ok(child) => {
-                let cid = child.id();
-                tracing::info!("Chrome PID: {}", cid);
-                cid
+                tracing::info!("Lightpanda PID: {}", child.id());
+                child.id()
             }
             Err(e) => {
-                tracing::error!("{} command didn't start {:?}", &*CHROME_PATH, e);
+                tracing::error!("lightpanda command didn't start: {:?}", e);
                 0
             }
         };
 
         id
-    } else {
-        let panda_args = LIGHTPANDA_ARGS.map(|e| e.to_string());
-        let mut command = Command::new(&*CHROME_PATH);
-
-        let host = panda_args[0].replace("--host=", "");
-        let port = panda_args[1].replace("--port=", "");
-        let cmd = command.args(["--port", &port, "--host", &host]);
-
-        let cmd = if !chrome_args.is_empty() {
-            cmd.args(chrome_args)
-        } else {
-            cmd
-        };
-
-        let id = if let Ok(child) = cmd.spawn() {
-            let cid = child.id();
-
-            tracing::info!("Chrome PID: {}", cid);
-
-            cid
-        } else {
-            tracing::error!("chrome command didn't start");
-            0
-        };
-
-        id
     };
 
-    CHROME_INSTANCES.insert(id.into());
-
+    if id > 0 {
+        CHROME_INSTANCES.insert(id.into());
+    }
+    
     id.to_string()
 }
 

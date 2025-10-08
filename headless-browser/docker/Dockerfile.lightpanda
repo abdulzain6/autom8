@@ -1,122 +1,91 @@
-FROM ubuntu:25.04 AS pandabuilder
+# STAGE 1: Build the Lightpanda binary using its official method
+FROM debian:stable AS lightpanda_builder
 
-ARG ZIG=0.13.0
+# Use ARGs to define versions, making updates easier
+ARG ZIG=0.15.1
 ARG ZIG_MINISIG=RWSGOq2NVecA2UPNdBUZykf1CCb147pkmdtYxgb3Ti+JO/wCYvhbAb/U
-ARG OS=linux
-ARG ARCH=x86_64
-ARG V8=11.1.134
-ARG ZIG_V8=v0.1.11
+ARG V8=14.0.365.4
+ARG ZIG_V8=v0.1.33
+ARG TARGETPLATFORM
 
+# Install build dependencies for Debian
 RUN apt-get update -yq && \
-    apt-get install -yq xz-utils \
-        python3 ca-certificates git \
-        pkg-config libglib2.0-dev \
-        gperf libexpat1-dev \
-        cmake clang \
-        curl git
+    apt-get install -yq --no-install-recommends \
+        xz-utils python3 ca-certificates git \
+        pkg-config libglib2.0-dev gperf \
+        libexpat1-dev cmake clang curl
 
-# install minisig
-RUN curl -L -O https://github.com/jedisct1/minisign/releases/download/0.11/minisign-0.11-linux.tar.gz && \
-    tar xvzf minisign-0.11-linux.tar.gz
+# Install Zig (using the correct, newer version)
+RUN set -ex; \
+    case $TARGETPLATFORM in \
+      "linux/arm64") ARCH="aarch64" ;; \
+      *) ARCH="x86_64" ;; \
+    esac; \
+    curl --fail -L -O https://ziglang.org/download/${ZIG}/zig-linux-${ARCH}-${ZIG}.tar.xz; \
+    tar xvf zig-linux-${ARCH}-${ZIG}.tar.xz; \
+    mv zig-linux-${ARCH}-${ZIG} /usr/local/lib; \
+    ln -s /usr/local/lib/zig-linux-${ARCH}-${ZIG}/zig /usr/local/bin/zig
 
-# install zig
-RUN curl -O https://ziglang.org/download/${ZIG}/zig-linux-x86_64-${ZIG}.tar.xz && \
-    curl -O https://ziglang.org/download/${ZIG}/zig-linux-x86_64-${ZIG}.tar.xz.minisig
-
-RUN minisign-linux/x86_64/minisign -Vm zig-linux-x86_64-${ZIG}.tar.xz -P ${ZIG_MINISIG}
-
-# clean minisg
-RUN rm -fr minisign-0.11-linux.tar.gz minisign-linux
-
-# install zig
-RUN tar xvf zig-linux-x86_64-${ZIG}.tar.xz && \
-    mv zig-linux-x86_64-${ZIG} /usr/local/lib && \
-    ln -s /usr/local/lib/zig-linux-x86_64-${ZIG}/zig /usr/local/bin/zig
-
-# clean up zig install
-RUN rm -fr zig-linux-x86_64-${ZIG}.tar.xz zig-linux-x86_64-${ZIG}.tar.xz.minisig
-
-# force use of http instead of ssh with github
-RUN cat <<EOF > /root/.gitconfig
-[url "https://github.com/"]
-    insteadOf="git@github.com:"
-EOF
-
-# clone lightpanda
-RUN git clone git@github.com:lightpanda-io/browser.git
-
+# Clone Lightpanda using HTTPS (works in Docker)
+RUN git clone https://github.com/lightpanda-io/browser.git
 WORKDIR /browser
 
-# install deps
-RUN git submodule init && \
-    git submodule update --recursive
+# Install dependencies using the Makefile
+RUN git submodule init && git submodule update --recursive
+RUN make install-libiconv && make install-netsurf && make install-mimalloc
 
-RUN cd vendor/zig-js-runtime && \
-    git submodule init && \
-    git submodule update --recursive
+# Download and install V8 to the correct path expected by the Makefile
+RUN set -ex; \
+    case $TARGETPLATFORM in \
+      "linux/arm64") ARCH="aarch64" ;; \
+      *) ARCH="x86_64" ;; \
+    esac; \
+    curl --fail -L -o libc_v8.a https://github.com/lightpanda-io/zig-v8-fork/releases/download/${ZIG_V8}/libc_v8_${V8}_linux_${ARCH}.a; \
+    mkdir -p v8/out/linux/release/obj/zig/; \
+    mv libc_v8.a v8/out/linux/release/obj/zig/libc_v8.a
 
-RUN make install-libiconv && \
-    make install-netsurf && \
-    make install-mimalloc
-
-# download and install v8
-RUN curl -L -o libc_v8.a https://github.com/lightpanda-io/zig-v8-fork/releases/download/${ZIG_V8}/libc_v8_${V8}_${OS}_${ARCH}.a && \
-    mkdir -p vendor/zig-js-runtime/vendor/v8/${ARCH}-${OS}/release && \
-    mv libc_v8.a vendor/zig-js-runtime/vendor/v8/${ARCH}-${OS}/release/libc_v8.a
-
-# build release
+# Build the final Lightpanda binary
 RUN make build
 
-FROM ubuntu:25.04 AS rustbuilder
+# STAGE 2: Build the headless_browser Rust server
+FROM rust:1-slim AS rust_server_builder
 
 WORKDIR /app
 
-# Get Ubuntu packages
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl
+# Copy only the necessary files to build the Rust server
+COPY ./headless_browser ./headless_browser
+COPY ./headless_browser_lib ./headless_browser_lib
+COPY ./Cargo.toml ./Cargo.toml
+COPY ./Cargo.lock ./Cargo.lock
 
-COPY ../headless_browser/ ./headless_browser
-COPY ../headless_browser_lib/ ./headless_browser_lib
-COPY ../benches/ ./benches
-COPY ../Cargo.* .
+# Build the release binary
+RUN cargo build --release --package headless_browser
 
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-RUN rustup update stable
-RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
+# STAGE 3: Create the final, small production image
+FROM debian:stable-slim
 
-FROM ubuntu:25.04
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini \
+    ca-certificates \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ARG VERSION=latest
+# Copy the compiled Lightpanda binary from the first stage
+COPY --from=lightpanda_builder /browser/zig-out/bin/lightpanda /usr/local/bin/lightpanda
 
-COPY local.conf /etc/fonts/local.conf
+# Copy the compiled Rust server binary from the second stage
+COPY --from=rust_server_builder /app/target/release/headless_browser /usr/local/bin/headless_browser
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    tini curl sudo
+# Set up a non-root user for security
+RUN useradd -m appuser
+USER appuser
 
-# Add Chrome as a user
-RUN mkdir -p /usr/src/app \
-    && useradd -m chrome \
-    && chown -R chrome:chrome /usr/src/app
+EXPOSE 6000 9222
 
-EXPOSE 9222 6000 9223
+# Configure the Rust server to use Lightpanda
+ENV CHROME_PATH=/usr/local/bin/lightpanda
+ENV LIGHT_PANDA=true
+ENV CHROME_INIT=true # Tell the server to auto-start one instance
 
-# USER root
-
-COPY --from=rustbuilder /root/.cargo/bin/headless_browser /usr/local/bin/headless_browser
-COPY --from=pandabuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=pandabuilder /browser/zig-out/bin/lightpanda /bin/lightpanda
-COPY ../scripts/docker-entrypoint.sh /
-
-RUN chmod +x /docker-entrypoint.sh
-
-ENV REMOTE_ADDRESS=0.0.0.0
-ENV LAUNCH=init
-ENV DEFAULT_PORT=9223
-ENV DEFAULT_PORT_SERVER=6000
-# ENV HOSTNAME_OVERRIDE=127.0.0.1
-ENV DEFAULT_LAUNCH_NAME=/bin/lightpanda
-
-ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
+# The entrypoint is now your Rust server, which will manage Lightpanda
+ENTRYPOINT ["/usr/local/bin/headless_browser"]

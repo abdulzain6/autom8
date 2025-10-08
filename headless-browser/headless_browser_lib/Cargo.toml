@@ -24,6 +24,8 @@ rand = "0.9"
 num_cpus = "1"
 sysinfo = "0.35"
 dashmap = "6"
+url = "2.5.0"
+tempfile = "3.10.1"
 
 [features]
 testing = []
