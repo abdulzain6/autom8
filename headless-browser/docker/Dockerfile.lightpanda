@@ -54,6 +54,9 @@ WORKDIR /app
 # Copy the Rust server source code
 COPY ./headless_browser ./headless_browser
 COPY ./headless_browser_lib ./headless_browser_lib
+# --- FIX: Copy the missing 'benches' workspace member ---
+COPY ./benches ./benches
+# --- END FIX ---
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./Cargo.lock ./Cargo.lock
 
@@ -87,7 +90,6 @@ EXPOSE 6000 9222
 ENV CHROME_PATH=/usr/local/bin/lightpanda
 ENV LIGHT_PANDA=true
 
-# --- FIX: Moved comment to its own line ---
 # Tell the server to auto-start one instance
 ENV CHROME_INIT=true
 
