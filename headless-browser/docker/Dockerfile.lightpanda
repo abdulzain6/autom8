@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy the pre-compiled Lightpanda binary from the first stage
-COPY --from=pandabase /bin/lightpanda /usr/local/bin/lightpanda
+COPY --from=pandabase /bin/lightpanda /usr/local/bin/lightpanda-x86_64-linux
 
 # Copy the compiled Rust server binary from the second stage
 COPY --from=rust_server_builder /app/target/release/headless_browser /usr/local/bin/headless_browser
@@ -42,7 +42,7 @@ EXPOSE 6000 9222
 
 # --- CRITICAL CONFIGURATION ---
 # Set the default browser to be Lightpanda
-ENV CHROME_PATH=/usr/local/bin/lightpanda
+ENV CHROME_PATH=/usr/local/bin/lightpanda-x86_64-linux
 ENV LIGHT_PANDA=true
 
 # Tell the server to auto-start one instance
