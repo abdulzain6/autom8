@@ -34,27 +34,6 @@ from aci.server.file_management import FileManager
 
 logger = get_logger(__name__)
 
-
-class EventLoopManager:
-    """Manages a single asyncio event loop running in a background thread."""
-
-    def __init__(self):
-        self._loop = asyncio.new_event_loop()
-        self._thread = threading.Thread(target=self._loop.run_forever, daemon=True)
-        self._thread.start()
-        atexit.register(self.stop_loop)
-
-    def stop_loop(self):
-        self._loop.call_soon_threadsafe(self._loop.stop)
-
-    @property
-    def loop(self):
-        return self._loop
-
-
-# Global thread pool for browser automation to avoid thread creation overhead
-_event_loop_manager = EventLoopManager()
-
 # Use the standard ThreadPoolExecutor for blocking tasks if needed, but not for asyncio.
 _browser_executor = concurrent.futures.ThreadPoolExecutor(
     max_workers=config.BROWSER_MAX_WORKERS, thread_name_prefix="browser-automation"
@@ -118,18 +97,16 @@ class Browser(AppConnectorBase):
                 )
                 return {"result": task_result.output, "success": True}
 
-            async def _run_skyvern():
+            async def _run_skyvern_with_timeout():
                 try:
-                    return await _run_skyvern_task()
+                    # Wrap the task with a 5-minute timeout
+                    return await asyncio.wait_for(_run_skyvern_task(), timeout=300)
                 except Exception as e:
                     logger.error(f"Skyvern task failed: {e}", exc_info=True)
                     return {"result": None, "error": str(e), "success": False}
 
             with _browser_semaphore:
-                future = asyncio.run_coroutine_threadsafe(
-                    _run_skyvern(), _event_loop_manager.loop
-                )
-                result = future.result(timeout=300)
+                result = asyncio.run(_run_skyvern_with_timeout())
 
             # Small delay to prevent connection conflicts when semaphore is released
             time.sleep(1)
@@ -196,7 +173,6 @@ class Browser(AppConnectorBase):
                         )
 
                         # 3. Create a new Agent instance tied to the unique session.
-                        # NOTE: Set use_vision=False as the Groq model doesn't support it.
                         agent = Agent(
                             task=task,
                             llm=llm,
@@ -204,7 +180,7 @@ class Browser(AppConnectorBase):
                             flash_mode=True,
                             extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
                             use_thinking=False,
-                            use_vision=False,  # Corrected based on logs
+                            use_vision=False,
                             display_files_in_done_text=True,
                             images_per_step=1,
                             page_extraction_llm=page_extraction_llm,
@@ -219,12 +195,12 @@ class Browser(AppConnectorBase):
                         async def _run_agent_async():
                             result = await agent.run(max_steps=7)
                             return result.final_result() if result else None
+                        
+                        # Wrapper to include the timeout
+                        async def _run_with_timeout():
+                            return await asyncio.wait_for(_run_agent_async(), timeout=300)
 
-                        # 4. Safely submit the async task to the shared event loop.
-                        future = asyncio.run_coroutine_threadsafe(
-                            _run_agent_async(), _event_loop_manager.loop
-                        )
-                        result = future.result(timeout=300)  # 5 minute timeout
+                        result = asyncio.run(_run_with_timeout())
 
                         logger.info(
                             f"[PID: {process_id} | Thread: {thread_id}] Task finished successfully."
@@ -255,7 +231,7 @@ class Browser(AppConnectorBase):
             # Submit the entire encapsulated function to the thread pool.
             future = _browser_executor.submit(_setup_and_run_agent)
             return future.result()
-
+    
     def scrape_with_browser(
         self, url: str, extraction_instructions: str, output_schema: dict
     ) -> dict:
@@ -442,10 +418,7 @@ class Browser(AppConnectorBase):
                                 }
 
                     # Submit to event loop and get result
-                    future = asyncio.run_coroutine_threadsafe(
-                        _run_crawler_async(), _event_loop_manager.loop
-                    )
-                    crawler_result = future.result(timeout=300)  # 5 minute timeout
+                    crawler_result = asyncio.run(_run_crawler_async())
 
                     logger.info(
                         f"[PID: {process_id} | Thread: {thread_id}] Browser scraping completed successfully."
@@ -544,11 +517,7 @@ class Browser(AppConnectorBase):
                             result = await page.evaluate(js_code)
                             return result
 
-                    future = asyncio.run_coroutine_threadsafe(
-                        _run_js_in_browser(), _event_loop_manager.loop
-                    )
-                    result = future.result(timeout=120)
-
+                    result = asyncio.run(_run_js_in_browser())
                     # If a filename is provided, save the result as an artifact
                     if output_filename is not None:
                         filename = output_filename
