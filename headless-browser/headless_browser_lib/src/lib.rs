@@ -8,7 +8,10 @@ mod modify;
 pub mod proxy;
 /// Chrome renderer configuration.
 mod render_conf;
-
+use std::fs;
+use std::path::PathBuf;
+use tempfile::Builder;
+use url::Url;
 use conf::{
     CACHEABLE, CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEBUG_JSON,
     DEFAULT_PORT, DEFAULT_PORT_SERVER, ENDPOINT, HOST_NAME, IS_HEALTHY, LAST_CACHE,

@@ -120,7 +120,7 @@ class Browser(AppConnectorBase):
 
     def run_browser_automation(self, task: str) -> dict:
         """
-        Runs a browser automation task concurrently and safely.
+        Runs a brower automation task concurrently and safely.
         """
         logger.info(f"Submitting browser task to executor: {task[:100]}...")
 
