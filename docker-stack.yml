@@ -150,9 +150,7 @@ services:
           memory: 2G       # Guarantees the observed 1GiB of memory
 
   headless-browser:
-    build:
-      context: ./headless-browser # Assumes the repo is cloned here
-      dockerfile: docker/Dockerfile # Path to the Dockerfile inside the context
+    image: localhost:5000/headless-browser:latest
     networks:
       - services_network # Connect to the internal network for the pool manager
     healthcheck:

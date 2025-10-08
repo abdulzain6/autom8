@@ -27,6 +27,7 @@ images=(
     ["aci-app"]="aci"
     ["code-executor"]="code_executor"
     ["cycletls-server"]="cycletls-server"
+    ["headless-browser"]="headless-browser"
 )
 
 # --- Helper for colored output ---
