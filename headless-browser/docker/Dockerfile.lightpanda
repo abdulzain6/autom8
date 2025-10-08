@@ -1,7 +1,8 @@
-# STAGE 1: Build the Lightpanda binary using its official method
-FROM debian:stable AS lightpanda_builder
+# STAGE 1: Build Lightpanda from source
+# Using Debian as the base, which is proven to work for the Lightpanda build process.
+FROM debian:stable AS pandabuilder
 
-# Use ARGs to define versions, making updates easier
+# Use the exact, known-good versions of build tools required by Lightpanda
 ARG ZIG=0.15.1
 ARG ZIG_MINISIG=RWSGOq2NVecA2UPNdBUZykf1CCb147pkmdtYxgb3Ti+JO/wCYvhbAb/U
 ARG V8=14.0.365.4
@@ -9,83 +10,87 @@ ARG ZIG_V8=v0.1.33
 ARG TARGETPLATFORM
 
 # Install build dependencies for Debian
-RUN apt-get update -yq && \
-    apt-get install -yq --no-install-recommends \
-        xz-utils python3 ca-certificates git \
-        pkg-config libglib2.0-dev gperf \
-        libexpat1-dev cmake clang curl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xz-utils python3 ca-certificates git pkg-config libglib2.0-dev \
+    gperf libexpat1-dev cmake clang curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Zig (using the correct, newer version)
-RUN set -ex; \
-    case $TARGETPLATFORM in \
-      "linux/arm64") ARCH="aarch64" ;; \
-      *) ARCH="x86_64" ;; \
-    esac; \
-    curl --fail -L -O https://ziglang.org/download/${ZIG}/zig-linux-${ARCH}-${ZIG}.tar.xz; \
-    tar xvf zig-linux-${ARCH}-${ZIG}.tar.xz; \
-    mv zig-linux-${ARCH}-${ZIG} /usr/local/lib; \
+# Install Zig (modern, safer way)
+RUN case $TARGETPLATFORM in \
+    "linux/arm64") ARCH="aarch64" ;; \
+    *) ARCH="x86_64" ;; \
+    esac && \
+    curl --fail -L -O https://ziglang.org/download/${ZIG}/zig-linux-${ARCH}-${ZIG}.tar.xz && \
+    tar xvf zig-linux-${ARCH}-${ZIG}.tar.xz && \
+    mv zig-linux-${ARCH}-${ZIG} /usr/local/lib/ && \
     ln -s /usr/local/lib/zig-linux-${ARCH}-${ZIG}/zig /usr/local/bin/zig
 
-# Clone Lightpanda using HTTPS (works in Docker)
+# Clone Lightpanda using the public HTTPS URL
 RUN git clone https://github.com/lightpanda-io/browser.git
 WORKDIR /browser
 
-# Install dependencies using the Makefile
+# Install Lightpanda's internal dependencies
 RUN git submodule init && git submodule update --recursive
 RUN make install-libiconv && make install-netsurf && make install-mimalloc
 
-# Download and install V8 to the correct path expected by the Makefile
-RUN set -ex; \
-    case $TARGETPLATFORM in \
-      "linux/arm64") ARCH="aarch64" ;; \
-      *) ARCH="x86_64" ;; \
-    esac; \
-    curl --fail -L -o libc_v8.a https://github.com/lightpanda-io/zig-v8-fork/releases/download/${ZIG_V8}/libc_v8_${V8}_linux_${ARCH}.a; \
-    mkdir -p v8/out/linux/release/obj/zig/; \
+# Download and place the pre-compiled V8 library in the correct path for the build script
+RUN case $TARGETPLATFORM in \
+    "linux/arm64") ARCH="aarch64" ;; \
+    *) ARCH="x86_64" ;; \
+    esac && \
+    curl --fail -L -o libc_v8.a https://github.com/lightpanda-io/zig-v8-fork/releases/download/${ZIG_V8}/libc_v8_${V8}_linux_${ARCH}.a && \
+    mkdir -p v8/out/linux/release/obj/zig/ && \
     mv libc_v8.a v8/out/linux/release/obj/zig/libc_v8.a
 
-# Build the final Lightpanda binary
+# Build the Lightpanda release binary
 RUN make build
+
 
 # STAGE 2: Build the headless_browser Rust server
 FROM rust:1-slim AS rust_server_builder
 
 WORKDIR /app
 
-# Copy only the necessary files to build the Rust server
+# Copy the Rust server source code
 COPY ./headless_browser ./headless_browser
 COPY ./headless_browser_lib ./headless_browser_lib
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./Cargo.lock ./Cargo.lock
 
-# Build the release binary
+# Build the release binary for the server
 RUN cargo build --release --package headless_browser
+
 
 # STAGE 3: Create the final, small production image
 FROM debian:stable-slim
 
-# Install only runtime dependencies
+# Install Tini for proper process management and ca-certificates for HTTPS
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tini \
     ca-certificates \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy the compiled Lightpanda binary from the first stage
-COPY --from=lightpanda_builder /browser/zig-out/bin/lightpanda /usr/local/bin/lightpanda
+COPY --from=pandabuilder /browser/zig-out/bin/lightpanda /usr/local/bin/lightpanda
 
 # Copy the compiled Rust server binary from the second stage
 COPY --from=rust_server_builder /app/target/release/headless_browser /usr/local/bin/headless_browser
 
-# Set up a non-root user for security
+# Set up a non-root user for better security
 RUN useradd -m appuser
 USER appuser
 
 EXPOSE 6000 9222
 
-# Configure the Rust server to use Lightpanda
+# --- CRITICAL CONFIGURATION ---
+# Set the default browser to be Lightpanda
 ENV CHROME_PATH=/usr/local/bin/lightpanda
 ENV LIGHT_PANDA=true
-ENV CHROME_INIT=true # Tell the server to auto-start one instance
+
+# --- FIX: Moved comment to its own line ---
+# Tell the server to auto-start one instance
+ENV CHROME_INIT=true
 
 # The entrypoint is now your Rust server, which will manage Lightpanda
 ENTRYPOINT ["/usr/local/bin/headless_browser"]
+

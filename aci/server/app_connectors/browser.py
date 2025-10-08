@@ -114,7 +114,7 @@ class Browser(AppConnectorBase):
         """Helper to shut down all browsers on a specific worker."""
         try:
             requests.post(f"{worker_address}/shutdown", timeout=15)
-            logger.info(f"Successfully shut down browsers on worker {worker_address}")
+            logger.info(f"Successfully shut down browser on worker {worker_address}")
         except requests.RequestException as e:
             logger.error(f"Failed to shut down browsers on {worker_address}: {e}")
 
