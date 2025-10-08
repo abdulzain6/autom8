@@ -8,6 +8,7 @@ ARG ZIG_MINISIG=RWSGOq2NVecA2UPNdBUZykf1CCb147pkmdtYxgb3Ti+JO/wCYvhbAb/U
 ARG V8=14.0.365.4
 ARG ZIG_V8=v0.1.33
 ARG TARGETPLATFORM
+ARG MINISIG=0.12
 
 # Install build dependencies for Debian
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -15,12 +16,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gperf libexpat1-dev cmake clang curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Zig (modern, safer way)
+# Install minisig for security verification
+RUN curl --fail -L -O https://github.com/jedisct1/minisign/releases/download/${MINISIG}/minisign-${MINISIG}-linux.tar.gz && \
+    tar xvzf minisign-${MINISIG}-linux.tar.gz
+
+# --- FIX: Corrected Zig download URL and restored signature check ---
+# Install Zig using the official, verified method
 RUN case $TARGETPLATFORM in \
     "linux/arm64") ARCH="aarch64" ;; \
     *) ARCH="x86_64" ;; \
     esac && \
     curl --fail -L -O https://ziglang.org/download/${ZIG}/zig-linux-${ARCH}-${ZIG}.tar.xz && \
+    curl --fail -L -O https://ziglang.org/download/${ZIG}/zig-linux-${ARCH}-${ZIG}.tar.xz.minisig && \
+    minisign-linux/${ARCH}/minisign -Vm zig-linux-${ARCH}-${ZIG}.tar.xz -P ${ZIG_MINISIG} && \
     tar xvf zig-linux-${ARCH}-${ZIG}.tar.xz && \
     mv zig-linux-${ARCH}-${ZIG} /usr/local/lib/ && \
     ln -s /usr/local/lib/zig-linux-${ARCH}-${ZIG}/zig /usr/local/bin/zig
@@ -54,9 +62,7 @@ WORKDIR /app
 # Copy the Rust server source code
 COPY ./headless_browser ./headless_browser
 COPY ./headless_browser_lib ./headless_browser_lib
-# --- FIX: Copy the missing 'benches' workspace member ---
 COPY ./benches ./benches
-# --- END FIX ---
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./Cargo.lock ./Cargo.lock
 
