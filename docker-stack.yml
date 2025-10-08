@@ -138,7 +138,7 @@ services:
     networks:
       - services_network
     deploy:
-      replicas: 1
+      replicas: 0
       restart_policy:
         condition: on-failure
       resources:
@@ -148,6 +148,30 @@ services:
         reservations:
           cpus: '1.5'      # Guarantees 1 full core for the task
           memory: 2G       # Guarantees the observed 1GiB of memory
+
+  headless-browser:
+    build:
+      context: ./headless-browser # Assumes the repo is cloned here
+      dockerfile: docker/Dockerfile # Path to the Dockerfile inside the context
+    networks:
+      - services_network # Connect to the internal network for the pool manager
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6000/health || exit 1"]
+      interval: 15s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    deploy:
+      replicas: 2 # Start with 2 replicas, you can scale this number
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
 
   skyvern:
     image: public.ecr.aws/skyvern/skyvern:latest

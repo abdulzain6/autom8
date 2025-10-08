@@ -108,3 +108,5 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH = check_and_get_env_variable("SERVER_FIREBASE_
 SKYVERN_BASE_URL = check_and_get_env_variable("SERVER_SKYVERN_BASE_URL")
 SKYVERN_API_KEY = check_and_get_env_variable("SERVER_SKYVERN_API_KEY")
 USE_SKYVERN = os.getenv("SERVER_USE_SKYVERN", "false").lower() == "true"
+BROWSER_POOL_REFRESH_INTERVAL = int(os.getenv("SERVER_BROWSER_POOL_REFRESH_INTERVAL", "30"))
+BROWSER_SERVICE_NAME = os.getenv("SERVER_BROWSER_SERVICE_NAME", "headless-browser")
