@@ -23,7 +23,7 @@ from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from aci.common.enums import FunctionDefinitionFormat
 from aci.common.schemas.function import OpenAIFunctionDefinition
-from aci.server.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL
+from aci.server.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL, TOGETHER_API_KEY, TOGETHER_BASE_URL
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     execute_function,
@@ -135,14 +135,6 @@ class Assistant(Agent):
         linked_apps_str = ", ".join(user_app_names) if user_app_names else "No apps connected yet"
         self.linked_apps_str = linked_apps_str
 
-        # Create OpenAI client with custom httpx client for longer timeout
-        http_client = httpx.AsyncClient(timeout=httpx.Timeout(120.0))  # 2 minute timeout
-        openai_client = AsyncOpenAI(
-            base_url=DEEPINFRA_BASE_URL,
-            api_key=DEEPINFRA_API_KEY,
-            http_client=http_client,
-        )
-
         super().__init__(
             instructions=f"""
 Autom8 AI assistant. Today: {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UTC.
@@ -193,9 +185,9 @@ Timezone: Call get_user_timezone, convert to UTC, explain conversion.
 Voice: Brief (1-2 sentences), conversational, summarize results. Match user's language.
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
-            llm=openai.LLM(
-                client=openai_client,
+            llm=openai.LLM.with_together(
                 model="moonshotai/Kimi-K2-Instruct-0905",
+                api_key=TOGETHER_API_KEY,
                 reasoning_effort="none", # type: ignore
                 temperature=0,
             ),
