@@ -30,6 +30,7 @@ from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from playwright.async_api import async_playwright
 from aci.server.browser_pool import ResilientBrowserPool
 from aci.server.file_management import FileManager
+from redis import Redis as SyncRedis
 
 
 logger = get_logger(__name__)
@@ -44,7 +45,9 @@ def get_pool() -> ResilientBrowserPool:
     with _pool_lock:
         if _pool is None:
             # Assumes config has BROWSER_SERVICE_NAME and BROWSER_POOL_REFRESH_INTERVAL
+            redis_client = SyncRedis.from_url(config.REDIS_URL)
             _pool = ResilientBrowserPool(
+                redis_client=redis_client,
                 service_name=config.BROWSER_SERVICE_NAME,
                 refresh_interval=config.BROWSER_POOL_REFRESH_INTERVAL,
             )
@@ -164,7 +167,9 @@ class Browser(AppConnectorBase):
                 worker_address = None
                 try:
                     pool = get_pool()
-                    worker_address = pool.acquire(timeout=300)
+                    worker_address = pool.acquire(timeout=600)
+                    if worker_address is None:
+                        raise RuntimeError("Failed to acquire browser worker within timeout")
                     cdp_url = self._get_cdp_url_from_worker(worker_address)
 
                     async with async_playwright() as p:
@@ -212,7 +217,7 @@ class Browser(AppConnectorBase):
                             page_extraction_llm=page_extraction_llm,
                         )
 
-                        result = await asyncio.wait_for(agent.run(max_steps=7), timeout=300)
+                        result = await asyncio.wait_for(agent.run(max_steps=7), timeout=600)
                         logger.info("Task completed successfully.")
                         await browser.close()
 
@@ -282,7 +287,9 @@ class Browser(AppConnectorBase):
             pool = get_pool()
             worker_address = None
             try:
-                worker_address = pool.acquire(timeout=300)
+                worker_address = pool.acquire(timeout=600)
+                if worker_address is None:
+                    raise RuntimeError("Failed to acquire browser worker within timeout")
                 cdp_url = self._get_cdp_url_from_worker(worker_address)
                 # Setup crawl4ai with Steel browser via CDP
                 async def _run_crawler_async():
@@ -460,7 +467,10 @@ class Browser(AppConnectorBase):
             pool = get_pool()
             worker_address = None
             try:
-                worker_address = pool.acquire(timeout=300)
+                worker_address = pool.acquire(timeout=600)
+                if worker_address is None:
+                    raise RuntimeError("Failed to acquire browser worker within timeout")
+                
                 cdp_url = self._get_cdp_url_from_worker(worker_address)
 
                 async def _run_js_in_browser():
