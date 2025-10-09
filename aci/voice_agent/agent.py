@@ -188,7 +188,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             llm=openai.LLM.with_together(
                 model="moonshotai/Kimi-K2-Instruct-0905",
                 api_key=TOGETHER_API_KEY,
-                reasoning_effort="none", # type: ignore
+                reasoning_effort="low", # type: ignore
                 temperature=0,
             ),
             tts=openai.TTS(
