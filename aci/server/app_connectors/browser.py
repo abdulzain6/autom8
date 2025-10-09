@@ -206,7 +206,7 @@ class Browser(AppConnectorBase):
                             flash_mode=True,
                             extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
                             use_thinking=False,
-                            use_vision=True,
+                            use_vision=False, # Change later if needed
                             display_files_in_done_text=True,
                             images_per_step=1,
                             page_extraction_llm=page_extraction_llm,
