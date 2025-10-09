@@ -164,11 +164,12 @@ services:
     image: localhost:5000/local-proxy:latest
     networks:
       - services_network # Connect to the internal network for the pool manager
+    env_file:
+      - .env
     environment:
       - PROXY_BIND_ADDRESS=0.0.0.0
       - PROXY_PORT=3000
       - PROXY_INTERNAL_BYPASS=headless-browser
-      - UPSTREAM_PROXY=${UPSTREAM_PROXY:-}
     deploy:
       replicas: 1 # Start with 2 replicas, you can scale this number
       restart_policy:
