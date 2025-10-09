@@ -187,7 +187,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 base_url=DEEPINFRA_BASE_URL,
                 model="moonshotai/Kimi-K2-Instruct-0905",
                 api_key=DEEPINFRA_API_KEY,
-                reasoning_effort="minimal",
+                reasoning_effort="none",
                 temperature=0
             ),
             tts=openai.TTS(

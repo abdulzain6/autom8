@@ -315,7 +315,7 @@ class Browser(AppConnectorBase):
                         "chunk_token_threshold": 10000,
                         "apply_chunking": True,
                         "input_format": "markdown",
-                        "reasoning_effort": "minimal",
+                        "reasoning_effort": "none",
                     }
 
                     logger.info(
