@@ -39,6 +39,54 @@ from aci.common.db.crud import usage as usage_crud
 logger = logging.getLogger("voice-agent")
 
 
+def validate_html(html_content: str) -> None:
+    """
+    Validates that the provided HTML content is well-formed.
+    
+    Args:
+        html_content: The HTML string to validate
+        
+    Raises:
+        ToolError: If the HTML is malformed or invalid
+    """
+    from html.parser import HTMLParser
+    from html import unescape
+    
+    class HTMLValidator(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.errors = []
+            
+        def error(self, message):
+            self.errors.append(message)
+    
+    # Unescape HTML entities first
+    try:
+        unescaped_html = unescape(html_content)
+    except Exception as e:
+        raise ToolError(f"Invalid HTML entities: {str(e)}")
+    
+    # Parse the HTML
+    validator = HTMLValidator()
+    try:
+        validator.feed(unescaped_html)
+        validator.close()
+    except Exception as e:
+        raise ToolError(f"HTML parsing error: {str(e)}")
+    
+    # Check for any parsing errors
+    if validator.errors:
+        raise ToolError(f"HTML validation errors: {'; '.join(validator.errors)}")
+    
+    # Basic checks
+    if not html_content.strip():
+        raise ToolError("HTML content cannot be empty")
+    
+    # Check for basic HTML structure (at least one tag)
+    if '<' not in html_content or '>' not in html_content:
+        raise ToolError("HTML content must contain at least one HTML tag")
+
+
 class Assistant(Agent):
     _restricted_apps = {"browser"}
 
@@ -356,6 +404,10 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             A confirmation message indicating that the app was sent successfully.
         """
         try:
+            # Validate HTML content
+            html_content = str(raw_arguments["html_content"])
+            validate_html(html_content)
+            
             room = get_job_context().room
             participant_identity = next(iter(room.remote_participants))
 
@@ -366,7 +418,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 payload=json.dumps(
                     {
                         "title": raw_arguments.get("app_title", "Mini App"),
-                        "html": raw_arguments["html_content"],
+                        "html": html_content,
                     }
                 ),
                 response_timeout=10,
