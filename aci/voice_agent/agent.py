@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
 import httpx
+from openai import OpenAI, AsyncOpenAI
 import json
 import logging
 from time import time
@@ -134,6 +135,14 @@ class Assistant(Agent):
         linked_apps_str = ", ".join(user_app_names) if user_app_names else "No apps connected yet"
         self.linked_apps_str = linked_apps_str
 
+        # Create OpenAI client with custom httpx client for longer timeout
+        http_client = httpx.AsyncClient(timeout=httpx.Timeout(120.0))  # 2 minute timeout
+        openai_client = AsyncOpenAI(
+            base_url=DEEPINFRA_BASE_URL,
+            api_key=DEEPINFRA_API_KEY,
+            http_client=http_client,
+        )
+
         super().__init__(
             instructions=f"""
 Autom8 AI assistant. Today: {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UTC.
@@ -185,12 +194,10 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM(
-                base_url=DEEPINFRA_BASE_URL,
+                client=openai_client,
                 model="moonshotai/Kimi-K2-Instruct-0905",
-                api_key=DEEPINFRA_API_KEY,
-                reasoning_effort="none",
+                reasoning_effort="none", # type: ignore
                 temperature=0,
-                timeout=httpx.Timeout(60.0),  # Increase timeout to 60 seconds
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
