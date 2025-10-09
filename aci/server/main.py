@@ -22,7 +22,8 @@ from aci.server.routes import (
     automations,
     fcm_tokens,
     activity,
-    usage
+    usage,
+    plans
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi_cache import FastAPICache
@@ -176,4 +177,9 @@ app.include_router(
     usage.router,
     prefix=config.ROUTER_PREFIX_USAGE,
     tags=[config.ROUTER_PREFIX_USAGE.split("/")[-1]],
+)
+app.include_router(
+    plans.router,
+    prefix=config.ROUTER_PREFIX_PLANS,
+    tags=[config.ROUTER_PREFIX_PLANS.split("/")[-1]],
 )

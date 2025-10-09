@@ -75,3 +75,14 @@ class DeviceType(StrEnum):
     ANDROID = "android"
     WEB = "web"
     UNKNOWN = "unknown"
+
+
+class PlanDuration(StrEnum):
+    """
+    Subscription plan duration types
+    """
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
+    YEARLY = "yearly"
+    LIFETIME = "lifetime"
