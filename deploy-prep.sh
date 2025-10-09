@@ -28,6 +28,7 @@ images=(
     ["code-executor"]="code_executor"
     ["cycletls-server"]="cycletls-server"
     ["headless-browser"]="headless-browser"
+    ["local-proxy"]="local-proxy"
 )
 
 # --- Helper for colored output ---

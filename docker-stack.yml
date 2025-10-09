@@ -153,10 +153,24 @@ services:
     image: localhost:5000/headless-browser:latest
     networks:
       - services_network # Connect to the internal network for the pool manager
-    env_file:
-      - .env
+    environment:
+      - LOCAL_PROXY_URL=http://local-proxy:3000
     deploy:
       replicas: 2 # Start with 2 replicas, you can scale this number
+      restart_policy:
+        condition: on-failure
+
+  local-proxy:
+    image: localhost:5000/local-proxy:latest
+    networks:
+      - services_network # Connect to the internal network for the pool manager
+    environment:
+      - PROXY_BIND_ADDRESS=0.0.0.0
+      - PROXY_PORT=3000
+      - PROXY_INTERNAL_BYPASS=headless-browser
+      - UPSTREAM_PROXY=${UPSTREAM_PROXY:-}
+    deploy:
+      replicas: 1 # Start with 2 replicas, you can scale this number
       restart_policy:
         condition: on-failure
 

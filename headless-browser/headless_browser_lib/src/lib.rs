@@ -8,10 +8,6 @@ mod modify;
 pub mod proxy;
 /// Chrome renderer configuration.
 mod render_conf;
-use std::fs;
-use std::path::PathBuf;
-use tempfile::Builder;
-use url::Url;
 use conf::{
     CACHEABLE, CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEBUG_JSON,
     DEFAULT_PORT, DEFAULT_PORT_SERVER, ENDPOINT, HOST_NAME, IS_HEALTHY, LAST_CACHE,
@@ -156,121 +152,14 @@ fn get_env_args(env_key: &str) -> Vec<String> {
 pub fn get_chrome_args_test() -> [&'static str; crate::conf::PERF_ARGS] {
     *crate::conf::CHROME_ARGS
 }
-fn create_proxy_extension(proxy_url_str: &str) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    let proxy_url = Url::parse(proxy_url_str)?;
-
-    // Extract components
-    let scheme = proxy_url.scheme();
-    let host = proxy_url.host_str().unwrap_or_default();
-    let port = proxy_url.port().unwrap_or(match scheme {
-        "https" => 443,
-        _ => 80,
-    });
-    let username = proxy_url.username();
-    let password = proxy_url.password().unwrap_or_default();
-
-    // Print all values for verification
-    println!("[Rust] Parsed proxy URL:");
-    println!("  Scheme  : {}", scheme);
-    println!("  Host    : {}", host);
-    println!("  Port    : {}", port);
-    println!("  Username: {}", username);
-    println!("  Password: {}", password);
-
-    let temp_dir = Builder::new().prefix("proxy_ext").tempdir()?;
-    let dir_path = temp_dir.into_path();  // Use into_path() to keep the directory
-
-    // Create manifest.json
-    let manifest_content = r#"{
-        "manifest_version": 3,
-        "name": "Dynamic Proxy",
-        "version": "1.0",
-        "permissions": ["proxy", "webRequest", "webRequestAuthProvider", "storage"],
-        "background": { "service_worker": "background.js" }
-    }"#;
-    fs::write(dir_path.join("manifest.json"), manifest_content)?;
-
-    // Create background.js with logs and corrected listener
-    let background_js_content = format!(
-        r#"
-        console.log('[Proxy Extension] Initializing proxy extension...');
-
-        const config = {{
-            mode: 'fixed_servers',
-            rules: {{
-                singleProxy: {{
-                    scheme: '{}',
-                    host: '{}',
-                    port: {}
-                }},
-                bypassList: ['<local>']
-            }}
-        }};
-
-        chrome.proxy.settings.set({{ value: config, scope: 'regular' }}, function() {{
-            console.log('[Proxy Extension] Proxy config applied:', config);
-        }});
-
-        function onAuthRequired(details, callback) {{
-            console.log('[Proxy Extension] Auth required for URL:', details.url);
-            const username = '{}';
-            const password = '{}';
-            if (username && password) {{
-                console.log('[Proxy Extension] Providing credentials for auth.');
-                callback({{ authCredentials: {{ username, password }} }});
-            }} else {{
-                console.log('[Proxy Extension] No credentials provided.');
-                callback();
-            }}
-        }}
-
-        chrome.webRequest.onAuthRequired.addListener(
-            onAuthRequired,
-            {{ urls: ['<all_urls>'] }},
-            []
-        );
-
-        setTimeout(() => console.log('[Proxy Extension] Ready to navigate'), 500);
-
-        console.log('[Proxy Extension] Background script loaded.');
-        "#,
-        scheme,
-        host,
-        port,
-        username,
-        password
-    );
-
-    fs::write(dir_path.join("background.js"), background_js_content)?;
-    println!("[Rust] Proxy extension created at {:?}", dir_path);
-
-    Ok(dir_path)
-}
-
 
 pub fn fork(port: Option<u32>) -> String {
     let custom_chrome_args = get_env_args("CHROME_ARGS");
     // --- Use a single, unified proxy environment variable ---
     let proxy_url = std::env::var("PROXY_URL").ok();
-    let mut extension_path: Option<PathBuf> = None;
 
     let id = if !*LIGHT_PANDA {
         // --- CHROME FORK LOGIC ---
-        // Generate a dynamic proxy extension if PROXY_URL is provided
-        if let Some(url) = &proxy_url {
-            if !url.is_empty() {
-                match create_proxy_extension(url) {
-                    Ok(path) => {
-                        tracing::info!("Created temporary proxy extension at: {:?}", path);
-                        extension_path = Some(path);
-                    }
-                    Err(e) => {
-                        tracing::error!("Failed to create proxy extension: {}", e);
-                    }
-                }
-            }
-        }
-
         let mut command = Command::new(&*CHROME_PATH);
         let mut final_args: Vec<String> = CHROME_ARGS.iter().map(|s| s.to_string()).collect();
 
@@ -281,9 +170,13 @@ pub fn fork(port: Option<u32>) -> String {
             final_args[1] = format!("--remote-debugging-port={}", port);
         }
 
-        // Load the dynamically created extension if it exists
-        if let Some(path) = &extension_path {
-            final_args.push(format!("--load-extension={}", path.display()));
+        // Add local proxy arg if PROXY_URL is provided (full URL from LOCAL_PROXY_URL env)
+        if let Some(upstream) = &proxy_url {
+            if !upstream.is_empty() {
+                let local_proxy_url = std::env::var("LOCAL_PROXY_URL").unwrap_or_else(|_| "http://127.0.0.1:3000".to_string());
+                final_args.push(format!("--proxy-server={}", local_proxy_url));
+                tracing::info!("Added local proxy arg: --proxy-server={}", local_proxy_url);
+            }
         }
 
         final_args.extend(custom_chrome_args);
