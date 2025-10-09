@@ -21,7 +21,7 @@ from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from aci.common.enums import FunctionDefinitionFormat
 from aci.common.schemas.function import OpenAIFunctionDefinition
-from aci.server.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL
+from aci.server.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     execute_function,
@@ -136,9 +136,9 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM(
-                base_url=OPENROUTER_BASE_URL,
-                model="x-ai/grok-4-fast",
-                api_key=OPENROUTER_API_KEY,
+                base_url=DEEPINFRA_BASE_URL,
+                model="moonshotai/Kimi-K2-Instruct-0905",
+                api_key=DEEPINFRA_API_KEY,
                 reasoning_effort="minimal",
                 temperature=0
             ),

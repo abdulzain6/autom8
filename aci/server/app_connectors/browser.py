@@ -184,10 +184,10 @@ class Browser(AppConnectorBase):
 
                         # 4️⃣ Init LLMs
                         llm = ChatOpenAI(
-                            model="x-ai/grok-4-fast",
+                            model="moonshotai/Kimi-K2-Instruct-0905",
                             temperature=0.3,
-                            api_key=config.OPENROUTER_API_KEY,
-                            base_url=config.OPENROUTER_BASE_URL,
+                            api_key=config.DEEPINFRA_API_KEY,
+                            base_url=config.DEEPINFRA_BASE_URL,
                         )
                         page_extraction_llm = ChatOpenAI(
                             model="openai/gpt-oss-120b",
