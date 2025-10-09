@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
+import httpx
 import json
 import logging
 from time import time
@@ -188,7 +189,8 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 model="moonshotai/Kimi-K2-Instruct-0905",
                 api_key=DEEPINFRA_API_KEY,
                 reasoning_effort="none",
-                temperature=0
+                temperature=0,
+                timeout=httpx.Timeout(60.0),  # Increase timeout to 60 seconds
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
