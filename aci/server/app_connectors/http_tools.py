@@ -21,8 +21,8 @@ MAX_CONTENT_LENGTH = 50000  # 50K characters max for LLM processing
 DEFAULT_TRIM_LENGTH = 10000  # Default trim length
 REQUEST_TIMEOUT = 30  # 30 second timeout
 
-# Known Docker Swarm services that should be allowed
-ALLOWED_DOCKER_SERVICES = {
+# Known Docker Swarm services that should be explicitly BLOCKED
+DISALLOWED_DOCKER_SERVICES = {
     'caddy', 'server', 'huey_worker', 'livekit', 'voice_agent',
     'gotenberg', 'code-executor', 'searxng', 'cycletls-server',
     'steel-browser-api', 'headless-browser', 'local-proxy',
@@ -147,11 +147,17 @@ class HttpTools(AppConnectorBase):
             if hostname_lower in internal_hostnames:
                 raise ValueError("Access to internal services is not allowed")
                 
-            # Allow known Docker Swarm services
-            if hostname_lower in ALLOWED_DOCKER_SERVICES:
-                logger.info(f"Allowing access to known Docker service: {hostname_lower}")
-                return  # Skip further validation for known services
+            # Block known Docker services
+            if hostname_lower in DISALLOWED_DOCKER_SERVICES:
+                raise ValueError(f"Access to Docker service '{hostname_lower}' is not allowed")
                 
+            # For all hostnames, restrict to standard HTTP/HTTPS ports only
+            if parsed.port is not None:
+                if parsed.scheme.lower() == "http" and parsed.port != 80:
+                    raise ValueError(f"HTTP access only allowed on port 80, got port {parsed.port}")
+                elif parsed.scheme.lower() == "https" and parsed.port != 443:
+                    raise ValueError(f"HTTPS access only allowed on port 443, got port {parsed.port}")
+            
             # Additional check: DNS resolution for suspicious hostnames
             # Be suspicious of hostnames with no dots (might be localhost-like) or very short names
             is_suspicious_hostname = (

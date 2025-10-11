@@ -77,14 +77,13 @@ DISABLE_FINGERPRINT_SITES = [
     "www.tankiforum.com",
 ]
 
-# Known Docker Swarm services that should be allowed
-ALLOWED_DOCKER_SERVICES = {
+# Known Docker Swarm services that should be explicitly BLOCKED
+DISALLOWED_DOCKER_SERVICES = {
     'caddy', 'server', 'huey_worker', 'livekit', 'voice_agent',
     'gotenberg', 'code-executor', 'searxng', 'cycletls-server',
     'steel-browser-api', 'headless-browser', 'local-proxy',
     'skyvern', 'skyvern-ui', 'postgres', 'redis'
 }
-
 
 class Browser(AppConnectorBase):
     """
@@ -197,11 +196,17 @@ class Browser(AppConnectorBase):
             if hostname_lower in internal_hostnames:
                 raise ValueError("Access to internal services is not allowed")
                 
-            # Allow known Docker Swarm services
-            if hostname_lower in ALLOWED_DOCKER_SERVICES:
-                logger.info(f"Allowing access to known Docker service: {hostname_lower}")
-                return  # Skip further validation for known services
+            # Block known Docker services
+            if hostname_lower in DISALLOWED_DOCKER_SERVICES:
+                raise ValueError(f"Access to Docker service '{hostname_lower}' is not allowed")
                 
+            # For all hostnames, restrict to standard HTTP/HTTPS ports only
+            if parsed.port is not None:
+                if parsed.scheme.lower() == "http" and parsed.port != 80:
+                    raise ValueError(f"HTTP access only allowed on port 80, got port {parsed.port}")
+                elif parsed.scheme.lower() == "https" and parsed.port != 443:
+                    raise ValueError(f"HTTPS access only allowed on port 443, got port {parsed.port}")
+            
             # Additional check: DNS resolution for suspicious hostnames
             # Be suspicious of hostnames with no dots (might be localhost-like) or very short names
             is_suspicious_hostname = (
@@ -476,7 +481,18 @@ class Browser(AppConnectorBase):
                             llm=llm,
                             browser_session=browser_session_for_this_agent,
                             flash_mode=True,
-                            extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
+                            extend_system_message="""Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.
+
+SECURITY VALIDATION RULES:
+- ALWAYS validate URLs before navigating to them
+- BLOCK any URLs that are localhost, private IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x), or internal services
+- BLOCK dangerous schemes like file://, javascript:, data:, or custom protocols
+- BLOCK suspicious patterns like encoded payloads or unusual characters
+- ONLY navigate to HTTP/HTTPS URLs pointing to legitimate public websites
+- If a URL fails security validation, explain the security concern and stop the task
+- Be extremely conservative with any URL-based operations - when in doubt, reject
+- Never attempt to access internal network resources or localhost services
+- Report any security violations immediately and end the task""",
                             use_thinking=False,
                             use_vision=False,  # Change later if needed
                             display_files_in_done_text=True,
@@ -964,6 +980,3 @@ class Browser(AppConnectorBase):
 
         future = _browser_executor.submit(_setup_and_take_screenshot)
         return future.result()
-
-
-atexit.register(_browser_executor.shutdown, wait=True)
