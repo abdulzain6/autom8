@@ -2,7 +2,10 @@ import json
 import requests
 import io
 import os
+import re
+import socket
 from typing import List, Dict, Any
+from urllib.parse import urlparse
 from aci.common.db.sql_models import LinkedAccount, Artifact
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
@@ -13,6 +16,14 @@ from aci.server.file_management import FileManager
 from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
+
+# Known Docker Swarm services that should be allowed
+ALLOWED_DOCKER_SERVICES = {
+    'caddy', 'server', 'huey_worker', 'livekit', 'voice_agent',
+    'gotenberg', 'code-executor', 'searxng', 'cycletls-server',
+    'steel-browser-api', 'headless-browser', 'local-proxy',
+    'skyvern', 'skyvern-ui', 'postgres', 'redis'
+}
 
 
 class PdfTools(AppConnectorBase):
@@ -39,6 +50,186 @@ class PdfTools(AppConnectorBase):
 
     def _before_execute(self) -> None:
         return super()._before_execute()
+
+    def _validate_url_security(self, url: str) -> None:
+        """
+        Validates URLs for security to prevent attacks on local files and internal services.
+
+        Args:
+            url (str): The URL to validate
+
+        Raises:
+            ValueError: If the URL is deemed unsafe
+        """
+        if not url or not isinstance(url, str):
+            raise ValueError("URL must be a non-empty string")
+
+        try:
+            parsed = urlparse(url)
+        except Exception as e:
+            raise ValueError(f"Invalid URL format: {str(e)}")
+
+        # Block file:// scheme (local file access)
+        if parsed.scheme.lower() == "file":
+            raise ValueError("Access to local files (file://) is not allowed")
+
+        # Block other dangerous schemes
+        dangerous_schemes = {"ftp", "ftps", "data", "javascript", "vbscript", "blob"}
+        if parsed.scheme.lower() in dangerous_schemes:
+            raise ValueError(f"Dangerous URL scheme not allowed: {parsed.scheme}")
+
+        # Block localhost and internal IP addresses
+        if parsed.hostname:
+            hostname_lower = parsed.hostname.lower()
+
+            # Block localhost variations
+            localhost_patterns = [
+                "localhost",
+                "127.0.0.1",
+                "127.0.0.0/8",
+                "::1",
+                "0:0:0:0:0:0:0:1",
+            ]
+
+            for pattern in localhost_patterns:
+                if hostname_lower == pattern or hostname_lower.startswith(pattern):
+                    raise ValueError(
+                        "Access to localhost/internal services is not allowed"
+                    )
+
+            # Block private IP ranges
+            private_ip_patterns = [
+                r"^10\.",  # 10.0.0.0/8
+                r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",  # 172.16.0.0/12
+                r"^192\.168\.",  # 192.168.0.0/16
+                r"^169\.254\.",  # Link-local
+                r"^fc00:",  # IPv6 private
+                r"^fe80:",  # IPv6 link-local
+                r"^::1$",  # IPv6 localhost
+            ]
+
+            for pattern in private_ip_patterns:
+                if re.match(pattern, hostname_lower):
+                    raise ValueError(
+                        "Access to private/internal IP addresses is not allowed"
+                    )
+
+            # Block common internal service hostnames
+            internal_hostnames = [
+                "internal",
+                "api.internal",
+                "service.internal",
+                "db",
+                "database",
+                "redis",
+                "postgres",
+                "mysql",
+                "elasticsearch",
+                "kibana",
+                "grafana",
+                "prometheus",
+                "jenkins",
+                "gitlab",
+                "github.internal",
+                "docker.internal",
+                "kubernetes.internal",
+            ]
+
+            if hostname_lower in internal_hostnames:
+                raise ValueError("Access to internal services is not allowed")
+                
+            # Allow known Docker Swarm services
+            if hostname_lower in ALLOWED_DOCKER_SERVICES:
+                logger.info(f"Allowing access to known Docker service: {hostname_lower}")
+                return  # Skip further validation for known services
+                
+            # Additional check: DNS resolution for suspicious hostnames
+            # Be suspicious of hostnames with no dots (might be localhost-like) or very short names
+            is_suspicious_hostname = (
+                '.' not in hostname_lower or  # No dots at all (localhost, server, etc.)
+                len(hostname_lower.split('.')[0]) <= 2  # Very short first part (db, api, etc.)
+            )
+            
+            if is_suspicious_hostname and len(hostname_lower) > 0:
+                if self._check_dns_for_internal_ip(hostname_lower):
+                    raise ValueError("Access to internal services is not allowed (detected via DNS resolution)")
+
+        # Additional security checks
+        # Block URLs with suspicious patterns
+        suspicious_patterns = [
+            r"\.\.",  # Directory traversal
+            r"%2e%2e",  # URL encoded ..
+            r"%2f%2f",  # URL encoded //
+            r"\\",  # Backslashes
+        ]
+
+        for pattern in suspicious_patterns:
+            if re.search(pattern, url, re.IGNORECASE):
+                raise ValueError(
+                    "URL contains suspicious patterns that are not allowed"
+                )
+
+    def _check_dns_for_internal_ip(self, hostname: str) -> bool:
+        """
+        Performs DNS resolution to check if a hostname resolves to internal/private IP addresses.
+        
+        Args:
+            hostname (str): The hostname to check
+            
+        Returns:
+            bool: True if the hostname resolves to internal/private IPs, False otherwise
+        """
+        try:
+            # Set a short timeout for DNS resolution to avoid blocking
+            socket.setdefaulttimeout(2.0)
+            
+            # Try to resolve both IPv4 and IPv6
+            try:
+                ipv4_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
+                ipv4_addresses = [info[4][0] for info in ipv4_info]
+            except socket.gaierror:
+                ipv4_addresses = []
+                
+            try:
+                ipv6_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+                ipv6_addresses = [info[4][0] for info in ipv6_info]
+            except socket.gaierror:
+                ipv6_addresses = []
+                
+            all_addresses = ipv4_addresses + ipv6_addresses
+            
+            if not all_addresses:
+                # If we can't resolve, assume it's safe (fail open for DNS issues)
+                logger.warning(f"DNS resolution failed for {hostname}, allowing access")
+                return False
+                
+            # Check if any resolved IP is in private ranges
+            private_ip_patterns = [
+                r"^10\.",  # 10.0.0.0/8
+                r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",  # 172.16.0.0/12
+                r"^192\.168\.",  # 192.168.0.0/16
+                r"^169\.254\.",  # Link-local
+                r"^127\.",  # Loopback
+                r"^fc00:",  # IPv6 private
+                r"^fe80:",  # IPv6 link-local
+                r"^::1$",  # IPv6 localhost
+            ]
+            
+            for ip in all_addresses:
+                ip_str = str(ip).lower()
+                for pattern in private_ip_patterns:
+                    if re.match(pattern, ip_str):
+                        logger.warning(f"Hostname {hostname} resolves to internal IP {ip}, blocking access")
+                        return True
+                        
+            logger.info(f"Hostname {hostname} resolves to public IPs: {all_addresses[:3]}...")
+            return False
+            
+        except Exception as e:
+            # If DNS resolution fails for any reason, log and allow access
+            # This prevents blocking legitimate sites due to DNS issues
+            logger.warning(f"DNS check failed for {hostname}: {e}, allowing access")
+            return False
 
     def _process_response_and_save_artifact(
         self,
@@ -112,6 +303,12 @@ class PdfTools(AppConnectorBase):
             output_filename: The desired filename for the output artifact.
             **kwargs: Optional Gotenberg parameters (e.g., `paperWidth`, `landscape`, `waitDelay='5s'`, `waitForExpression='window.ready'`).
         """
+        # Security check: validate URL security
+        try:
+            self._validate_url_security(url)
+        except ValueError as e:
+            return {"error": f"URL security validation failed: {str(e)}"}
+        
         endpoint = f"{self.base_url}/forms/chromium/convert/url"
         
         # Prepare the payload for multipart/form-data encoding

@@ -3,11 +3,14 @@ import asyncio
 import concurrent.futures
 import io
 import os
+import socket
 import threading
 import time
 import json
 import jsonschema
 import requests
+import re
+from urllib.parse import urlparse
 from patchright.async_api import async_playwright
 from playwright_stealth import stealth_async
 from sqlalchemy.orm import Session
@@ -74,6 +77,14 @@ DISABLE_FINGERPRINT_SITES = [
     "www.tankiforum.com",
 ]
 
+# Known Docker Swarm services that should be allowed
+ALLOWED_DOCKER_SERVICES = {
+    'caddy', 'server', 'huey_worker', 'livekit', 'voice_agent',
+    'gotenberg', 'code-executor', 'searxng', 'cycletls-server',
+    'steel-browser-api', 'headless-browser', 'local-proxy',
+    'skyvern', 'skyvern-ui', 'postgres', 'redis'
+}
+
 
 class Browser(AppConnectorBase):
     """
@@ -98,6 +109,233 @@ class Browser(AppConnectorBase):
 
     def _before_execute(self) -> None:
         pass
+
+    def _validate_url_security(self, url: str) -> None:
+        """
+        Validates URLs for security to prevent attacks on local files and internal services.
+
+        Args:
+            url (str): The URL to validate
+
+        Raises:
+            ValueError: If the URL is deemed unsafe
+        """
+        if not url or not isinstance(url, str):
+            raise ValueError("URL must be a non-empty string")
+
+        try:
+            parsed = urlparse(url)
+        except Exception as e:
+            raise ValueError(f"Invalid URL format: {str(e)}")
+
+        # Block file:// scheme (local file access)
+        if parsed.scheme.lower() == "file":
+            raise ValueError("Access to local files (file://) is not allowed")
+
+        # Block other dangerous schemes
+        dangerous_schemes = {"ftp", "ftps", "data", "javascript", "vbscript", "blob"}
+        if parsed.scheme.lower() in dangerous_schemes:
+            raise ValueError(f"Dangerous URL scheme not allowed: {parsed.scheme}")
+
+        # Block localhost and internal IP addresses
+        if parsed.hostname:
+            hostname_lower = parsed.hostname.lower()
+
+            # Block localhost variations
+            localhost_patterns = [
+                "localhost",
+                "127.0.0.1",
+                "127.0.0.0/8",
+                "::1",
+                "0:0:0:0:0:0:0:1",
+            ]
+
+            for pattern in localhost_patterns:
+                if hostname_lower == pattern or hostname_lower.startswith(pattern):
+                    raise ValueError(
+                        "Access to localhost/internal services is not allowed"
+                    )
+
+            # Block private IP ranges
+            private_ip_patterns = [
+                r"^10\.",  # 10.0.0.0/8
+                r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",  # 172.16.0.0/12
+                r"^192\.168\.",  # 192.168.0.0/16
+                r"^169\.254\.",  # Link-local
+                r"^fc00:",  # IPv6 private
+                r"^fe80:",  # IPv6 link-local
+                r"^::1$",  # IPv6 localhost
+            ]
+
+            for pattern in private_ip_patterns:
+                if re.match(pattern, hostname_lower):
+                    raise ValueError(
+                        "Access to private/internal IP addresses is not allowed"
+                    )
+
+            # Block common internal service hostnames
+            internal_hostnames = [
+                "internal",
+                "api.internal",
+                "service.internal",
+                "db",
+                "database",
+                "redis",
+                "postgres",
+                "mysql",
+                "elasticsearch",
+                "kibana",
+                "grafana",
+                "prometheus",
+                "jenkins",
+                "gitlab",
+                "github.internal",
+                "docker.internal",
+                "kubernetes.internal",
+            ]
+
+            if hostname_lower in internal_hostnames:
+                raise ValueError("Access to internal services is not allowed")
+                
+            # Allow known Docker Swarm services
+            if hostname_lower in ALLOWED_DOCKER_SERVICES:
+                logger.info(f"Allowing access to known Docker service: {hostname_lower}")
+                return  # Skip further validation for known services
+                
+            # Additional check: DNS resolution for suspicious hostnames
+            # Be suspicious of hostnames with no dots (might be localhost-like) or very short names
+            is_suspicious_hostname = (
+                '.' not in hostname_lower or  # No dots at all (localhost, server, etc.)
+                len(hostname_lower.split('.')[0]) <= 2  # Very short first part (db, api, etc.)
+            )
+            
+            if is_suspicious_hostname and len(hostname_lower) > 0:
+                if self._check_dns_for_internal_ip(hostname_lower):
+                    raise ValueError("Access to internal services is not allowed (detected via DNS resolution)")
+
+        # Additional security checks
+        # Block URLs with suspicious patterns
+        suspicious_patterns = [
+            r"\.\.",  # Directory traversal
+            r"%2e%2e",  # URL encoded ..
+            r"%2f%2f",  # URL encoded //
+            r"\\",  # Backslashes
+        ]
+
+        for pattern in suspicious_patterns:
+            if re.search(pattern, url, re.IGNORECASE):
+                raise ValueError(
+                    "URL contains suspicious patterns that are not allowed"
+                )
+
+    def _validate_filename_security(self, filename: str) -> None:
+        """
+        Validates filenames to prevent path traversal and other attacks.
+
+        Args:
+            filename (str): The filename to validate
+
+        Raises:
+            ValueError: If the filename is deemed unsafe
+        """
+        if not filename or not isinstance(filename, str):
+            raise ValueError("Filename must be a non-empty string")
+
+        # Remove any path separators and check for traversal
+        if ".." in filename or "/" in filename or "\\" in filename:
+            raise ValueError(
+                "Filename contains path traversal characters that are not allowed"
+            )
+
+        # Check for other suspicious characters
+        suspicious_chars = ["<", ">", ":", "*", "?", '"', "|"]
+        for char in suspicious_chars:
+            if char in filename:
+                raise ValueError(
+                    f"Filename contains suspicious character '{char}' that is not allowed"
+                )
+
+        # Check file extension is reasonable
+        allowed_extensions = {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+            ".pdf",
+            ".json",
+            ".txt",
+            ".csv",
+            ".html",
+        }
+        if "." in filename:
+            ext = filename[filename.rfind(".") :].lower()
+            if ext not in allowed_extensions:
+                raise ValueError(f"File extension '{ext}' is not allowed")
+        elif not filename.lower().endswith(".png"):  # Default for screenshots
+            # Allow filenames without extension for some cases
+            pass
+
+    def _check_dns_for_internal_ip(self, hostname: str) -> bool:
+        """
+        Performs DNS resolution to check if a hostname resolves to internal/private IP addresses.
+        
+        Args:
+            hostname (str): The hostname to check
+            
+        Returns:
+            bool: True if the hostname resolves to internal/private IPs, False otherwise
+        """
+        try:
+            # Set a short timeout for DNS resolution to avoid blocking
+            socket.setdefaulttimeout(2.0)
+            
+            # Try to resolve both IPv4 and IPv6
+            try:
+                ipv4_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
+                ipv4_addresses = [info[4][0] for info in ipv4_info]
+            except socket.gaierror:
+                ipv4_addresses = []
+                
+            try:
+                ipv6_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+                ipv6_addresses = [info[4][0] for info in ipv6_info]
+            except socket.gaierror:
+                ipv6_addresses = []
+                
+            all_addresses = ipv4_addresses + ipv6_addresses
+            
+            if not all_addresses:
+                # If we can't resolve, assume it's safe (fail open for DNS issues)
+                logger.warning(f"DNS resolution failed for {hostname}, allowing access")
+                return False
+                
+            # Check if any resolved IP is in private ranges
+            private_ip_patterns = [
+                r"^10\.",  # 10.0.0.0/8
+                r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",  # 172.16.0.0/12
+                r"^192\.168\.",  # 192.168.0.0/16
+                r"^169\.254\.",  # Link-local
+                r"^127\.",  # Loopback
+                r"^fc00:",  # IPv6 private
+                r"^fe80:",  # IPv6 link-local
+                r"^::1$",  # IPv6 localhost
+            ]
+            
+            for ip in all_addresses:
+                ip_str = str(ip).lower()
+                for pattern in private_ip_patterns:
+                    if re.match(pattern, ip_str):
+                        logger.warning(f"Hostname {hostname} resolves to internal IP {ip}, blocking access")
+                        return True
+                        
+            logger.info(f"Hostname {hostname} resolves to public IPs: {all_addresses[:3]}...")
+            return False
+            
+        except Exception as e:
+            # If DNS resolution fails for any reason, log and allow access
+            # This prevents blocking legitimate sites due to DNS issues
+            logger.warning(f"DNS check failed for {hostname}: {e}, allowing access")
+            return False
 
     def _get_cdp_url_from_worker(self, worker_address: str) -> str:
         """Helper to fork and get CDP URL from a worker."""
@@ -131,6 +369,30 @@ class Browser(AppConnectorBase):
         """
         Runs a brower automation task concurrently and safely.
         """
+        # Basic security validation for task string
+        if not task or not isinstance(task, str):
+            raise ValueError("Task must be a non-empty string")
+
+        # Check for obviously dangerous patterns in task
+        dangerous_patterns = [
+            r"file://",  # File URLs
+            r"localhost[:/]",  # Localhost references
+            r"127\.0\.0\.1",  # Local IP
+            r"10\.\d+\.\d+\.\d+",  # Private IP range 10.x.x.x
+            r"172\.(1[6-9]|2\d|3[01])\.\d+\.\d+",  # Private IP range 172.16-31.x.x
+            r"192\.168\.\d+\.\d+",  # Private IP range 192.168.x.x
+            r"internal\.|\.internal",  # Internal domains
+            r"docker\.internal",  # Docker internal
+            r"kubernetes\.internal",  # Kubernetes internal
+        ]
+
+        task_lower = task.lower()
+        for pattern in dangerous_patterns:
+            if re.search(pattern, task_lower):
+                raise ValueError(
+                    f"Task contains potentially dangerous content that is not allowed: {pattern}"
+                )
+
         logger.info(f"Submitting browser task to executor: {task[:100]}...")
 
         if config.USE_SKYVERN:
@@ -159,7 +421,6 @@ class Browser(AppConnectorBase):
             # Small delay to prevent connection conflicts when semaphore is released
             time.sleep(1)
             return result
-        
 
         def _setup_and_run_agent():
             async def _run_agent():
@@ -168,23 +429,30 @@ class Browser(AppConnectorBase):
                     pool = get_pool()
                     worker_address = pool.acquire(timeout=600)
                     if worker_address is None:
-                        raise RuntimeError("Failed to acquire browser worker within timeout")
+                        raise RuntimeError(
+                            "Failed to acquire browser worker within timeout"
+                        )
                     cdp_url = self._get_cdp_url_from_worker(worker_address)
 
                     async with async_playwright() as p:
                         # 1️⃣ Connect to existing CDP browser
                         browser = await p.chromium.connect_over_cdp(cdp_url)
                         contexts = browser.contexts
-                        context = contexts[0] if contexts else await browser.new_context()
+                        context = (
+                            contexts[0] if contexts else await browser.new_context()
+                        )
 
                         page = await context.new_page()
                         # 2️⃣ Apply stealth
-                        await stealth_async(page) # type: ignore
-                        logger.info(f"Connected to CDP browser with stealth. Proxy={config.HTTP_PROXY}")
-
+                        await stealth_async(page)  # type: ignore
+                        logger.info(
+                            f"Connected to CDP browser with stealth. Proxy={config.HTTP_PROXY}"
+                        )
 
                         if not config.HTTP_PROXY:
-                            raise ValueError("HTTP_PROXY must be set in config for CDP workers")
+                            raise ValueError(
+                                "HTTP_PROXY must be set in config for CDP workers"
+                            )
 
                         # 4️⃣ Init LLMs
                         llm = ChatOpenAI(
@@ -210,17 +478,22 @@ class Browser(AppConnectorBase):
                             flash_mode=True,
                             extend_system_message="Be super quick and use as few actions as possible. If you encounter a captcha, report 'captcha encountered' and end.",
                             use_thinking=False,
-                            use_vision=False, # Change later if needed
+                            use_vision=False,  # Change later if needed
                             display_files_in_done_text=True,
                             images_per_step=1,
                             page_extraction_llm=page_extraction_llm,
                         )
 
-                        result = await asyncio.wait_for(agent.run(max_steps=7), timeout=600)
+                        result = await asyncio.wait_for(
+                            agent.run(max_steps=7), timeout=600
+                        )
                         logger.info("Task completed successfully.")
                         await browser.close()
 
-                        return {"result": result.final_result() if result else None, "success": True}
+                        return {
+                            "result": result.final_result() if result else None,
+                            "success": True,
+                        }
 
                 except Exception as e:
                     logger.error(f"Browser automation failed: {e}", exc_info=True)
@@ -256,6 +529,9 @@ class Browser(AppConnectorBase):
                   On validation failure, includes 'validation_errors' with details.
                   On scraping failure, includes 'error' with error message.
         """
+        # Validate URL security before proceeding
+        self._validate_url_security(url)
+
         logger.info(f"Starting browser scraping for URL: {url}")
 
         # Validate the output schema before proceeding
@@ -288,8 +564,11 @@ class Browser(AppConnectorBase):
             try:
                 worker_address = pool.acquire(timeout=600)
                 if worker_address is None:
-                    raise RuntimeError("Failed to acquire browser worker within timeout")
+                    raise RuntimeError(
+                        "Failed to acquire browser worker within timeout"
+                    )
                 cdp_url = self._get_cdp_url_from_worker(worker_address)
+
                 # Setup crawl4ai with Steel browser via CDP
                 async def _run_crawler_async():
                     undetected_adapter = UndetectedAdapter()
@@ -341,9 +620,7 @@ class Browser(AppConnectorBase):
                         crawler_strategy=crawler_strategy, config=browser_config
                     ) as crawler:
                         # Run the crawler with LLM extraction
-                        result: Any = await crawler.arun(
-                            url=url, config=crawl_config
-                        )
+                        result: Any = await crawler.arun(url=url, config=crawl_config)
 
                         logger.info(
                             f"[PID: {process_id} | Thread: {thread_id}] Crawler run completed. Result: {result.markdown}"
@@ -454,6 +731,36 @@ class Browser(AppConnectorBase):
         Returns:
             dict: On success, returns either the artifact ID or the raw JSON result.
         """
+        # Validate URL security before proceeding
+        self._validate_url_security(url)
+
+        # Basic JavaScript security validation
+        if not js_code or not isinstance(js_code, str):
+            raise ValueError("JavaScript code must be a non-empty string")
+
+        # Check for dangerous JavaScript patterns
+        dangerous_js_patterns = [
+            r"import\s*\(",  # Dynamic imports
+            r"require\s*\(",  # Node.js require
+            r"process\.",  # Node.js process access
+            r"__dirname",  # Node.js directory access
+            r"__filename",  # Node.js filename access
+            r"child_process",  # Child process execution
+            r"fs\.",  # File system access
+            r"exec\s*\(",  # Command execution
+            r"eval\s*\(",  # Code evaluation
+            r"Function\s*\(",  # Function constructor
+            r'setTimeout\s*\(\s*["\'][^"\']*["\']\s*,',  # setTimeout with string code
+            r'setInterval\s*\(\s*["\'][^"\']*["\']\s*,',  # setInterval with string code
+        ]
+
+        js_code_lower = js_code.lower()
+        for pattern in dangerous_js_patterns:
+            if re.search(pattern, js_code_lower):
+                raise ValueError(
+                    f"JavaScript code contains potentially dangerous patterns that are not allowed: {pattern}"
+                )
+
         logger.info(f"Submitting JS execution task for URL: {url}")
 
         def _setup_and_run_js():
@@ -468,8 +775,10 @@ class Browser(AppConnectorBase):
             try:
                 worker_address = pool.acquire(timeout=600)
                 if worker_address is None:
-                    raise RuntimeError("Failed to acquire browser worker within timeout")
-                
+                    raise RuntimeError(
+                        "Failed to acquire browser worker within timeout"
+                    )
+
                 cdp_url = self._get_cdp_url_from_worker(worker_address)
 
                 async def _run_js_in_browser():
@@ -478,7 +787,7 @@ class Browser(AppConnectorBase):
                         context = browser.contexts[0]
                         page = context.pages[0]
 
-                        await stealth_async(page) # type: ignore
+                        await stealth_async(page)  # type: ignore
                         await page.goto(url, wait_until="load", timeout=60000)
 
                         # Optional delay for dynamic content loading
@@ -493,6 +802,8 @@ class Browser(AppConnectorBase):
                 result = asyncio.run(_run_js_in_browser())
                 # If a filename is provided, save the result as an artifact
                 if output_filename is not None:
+                    # Validate filename security before proceeding
+                    self._validate_filename_security(output_filename)
                     filename = output_filename
                     if not filename.lower().endswith(".json"):
                         filename = filename + ".json"
@@ -568,6 +879,9 @@ class Browser(AppConnectorBase):
         Returns:
             dict: Contains the artifact ID of the saved screenshot.
         """
+        # Validate URL security before proceeding
+        self._validate_url_security(url)
+
         logger.info(f"Taking screenshot of URL: {url}")
 
         def _setup_and_take_screenshot():
@@ -582,8 +896,10 @@ class Browser(AppConnectorBase):
             try:
                 worker_address = pool.acquire(timeout=600)
                 if worker_address is None:
-                    raise RuntimeError("Failed to acquire browser worker within timeout")
-                
+                    raise RuntimeError(
+                        "Failed to acquire browser worker within timeout"
+                    )
+
                 cdp_url = self._get_cdp_url_from_worker(worker_address)
 
                 async def _take_screenshot_async():
@@ -592,7 +908,7 @@ class Browser(AppConnectorBase):
                         context = browser.contexts[0]
                         page = context.pages[0]
 
-                        await stealth_async(page) # type: ignore
+                        await stealth_async(page)  # type: ignore
                         await page.goto(url, wait_until="load", timeout=60000)
 
                         # Optional delay for dynamic content loading
@@ -606,6 +922,8 @@ class Browser(AppConnectorBase):
                 screenshot_data = asyncio.run(_take_screenshot_async())
 
                 # Save screenshot as artifact
+                # Validate filename security before proceeding
+                self._validate_filename_security(output_filename)
                 filename = output_filename
                 if not filename.lower().endswith(".png"):
                     filename = filename + ".png"

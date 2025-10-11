@@ -57,24 +57,45 @@ class AutomationExecutor:
             ),
             (f'You must accomplish the following goal:\n"{self.automation.goal}"'),
             (
+                "### CRITICAL SAFETY & SECURITY RULES\n"
+                "**ALWAYS VERIFY BEFORE ACTION**: Never execute potentially dangerous operations without explicit confirmation in the goal.\n"
+                "**URL SECURITY**: Block any URLs that appear suspicious, internal, or dangerous (localhost, private IPs, file://, etc.).\n"
+                "**DATA PROTECTION**: Never delete, overwrite, or modify user data without clear instructions.\n"
+                "**TOOL LIMITS**: Respect all tool restrictions and usage limits strictly.\n"
+                "**VALIDATION FIRST**: Always validate inputs and check for errors before proceeding with complex operations.\n"
+                "**CONSERVATIVE APPROACH**: When in doubt, ask for clarification rather than making assumptions.\n"
+                "**ERROR HANDLING**: If any step fails, stop and report the issue rather than continuing blindly."
+            ),
+            (
                 "### Detailed Task Instructions & Rules\n"
-                "1.  **Efficiency First**: Use the MINIMUM number of tool calls necessary to complete the task. Each tool call has overhead, so be strategic.\n"
-                "2.  **Plan Concisely**: Think through the task but avoid over-planning. Execute tools when you have enough information.\n"
-                "3.  **Tool Adherence**: You may ONLY use the tools provided in the tool list. Do not invent tools.\n"
-                "4.  **Artifact Chaining**: If a task requires multiple steps (e.g., create a file, then edit it), you MUST use the `artifact_id` from the first step as an input to the second.\n"
-                "5.  **Crucial Rule on Artifacts**: You MUST NOT invent, guess, or hallucinate `artifact_id`s. An `artifact_id` can ONLY be used if it was explicitly present in the output of a previous tool call.\n"
-                "6.  **Consolidate Operations**: When possible, combine multiple operations into single tool calls rather than making separate calls.\n"
-                "7.  **Browser Tool Restriction**: The BROWSER__RUN_BROWSER_AUTOMATION tool can only be used once per automation run. Plan your browser interactions accordingly.\n"
-                "8.  **Final Answer Formatting**: Your final answer MUST use the `AutomationResult` schema. The `automation_output` field is critical: it must be a **plain, human-readable string** that summarizes the outcome for a non-technical user. It should **NOT** be a JSON string or a raw data dump. Think of it as the final report you'd give to a person."
+                "1.  **Safety First**: Before any potentially destructive operation, verify it's explicitly requested and safe.\n"
+                "2.  **Efficiency with Caution**: Use the MINIMUM number of tool calls necessary, but prioritize safety over speed.\n"
+                "3.  **Plan Carefully**: Think through ALL potential risks and failure points before executing.\n"
+                "4.  **Tool Adherence**: You may ONLY use the tools provided. Do not invent tools or workarounds.\n"
+                "5.  **Artifact Validation**: NEVER use artifact_ids that weren't explicitly returned by previous tool calls.\n"
+                "6.  **Input Validation**: Always validate that your inputs are reasonable and safe before calling tools.\n"
+                "7.  **Browser Tool Restriction**: The BROWSER__RUN_BROWSER_AUTOMATION tool can only be used once per automation run. Plan carefully.\n"
+                "8.  **Error Recovery**: If a tool fails, analyze the error and determine if it's safe to retry or continue.\n"
+                "9.  **Final Answer Formatting**: Your final answer MUST use the `AutomationResult` schema with a clear, human-readable summary."
+            ),
+            (
+                "### Security Validation Checklist\n"
+                "- [ ] URLs: Check for localhost, private IPs, suspicious domains, file:// schemes\n"
+                "- [ ] File Operations: Verify file paths are safe and don't traverse directories\n"
+                "- [ ] Data Operations: Confirm destructive actions are explicitly requested\n"
+                "- [ ] Tool Limits: Respect browser tool restrictions and other limits\n"
+                "- [ ] Input Sanity: Ensure parameters are reasonable and well-formed\n"
+                "- [ ] Error Handling: Plan for potential failures and have recovery strategies"
             ),
             (
                 # --- UPDATED EXEMPLAR ---
                 "### Exemplar\n"
                 '**User Goal**: "Generate a picture of a lion and resize it for a profile picture."\n\n'
-                "**Your Plan**:\n"
-                "1.  Use the `image_generation_tool` with the prompt \"a majestic lion\". This will return an artifact with ID 'artifact-123'.\n"
-                "2.  Use the `image_resizing_tool`, providing the `artifact_id` 'artifact-123' from the previous step. This will return a new artifact with ID 'artifact-456'.\n"
-                "3.  The goal is now complete. I will format my final answer using the `AutomationResult` schema.\n\n"
+                "**Your Safe Plan**:\n"
+                "1.  Validate the image generation request is safe and appropriate.\n"
+                "2.  Use the `image_generation_tool` with the prompt \"a majestic lion\". Verify the response contains a valid artifact_id.\n"
+                "3.  Use the `image_resizing_tool` with the validated `artifact_id` from step 2.\n"
+                "4.  Confirm the final result before reporting success.\n\n"
                 "**Good `automation_output` Example:**\n"
                 "\"I successfully generated an image of a lion and resized it to be suitable for a profile picture. The final image is available with artifact ID 'artifact-456'.\"\n\n"
                 "**Bad `automation_output` Example (Do NOT do this):**\n"
@@ -82,10 +103,11 @@ class AutomationExecutor:
             ),
             (
                 "### Performance Guidelines\n"
-                "- **Be Concise**: Keep your reasoning brief and action-oriented.\n"
-                "- **Tool Response Awareness**: Tool responses are automatically trimmed to reduce overhead. Focus on key data and artifact IDs.\n"
-                "- **Batch Operations**: When possible, request multiple related items in a single tool call rather than making separate calls.\n"
-                "- **Success Criteria**: Complete the task with the minimum viable set of actions that achieve the goal."
+                "- **Be Conservative**: Prioritize safety and correctness over speed.\n"
+                "- **Validate Everything**: Check tool responses for errors and validate artifact_ids.\n"
+                "- **Fail Safely**: Stop execution if anything seems unsafe or unclear.\n"
+                "- **Clear Communication**: Explain what you're doing and why at each step.\n"
+                "- **Success Criteria**: Complete the task safely with validated results."
             ),
         ]
         self.system_prompt = "\n\n---\n\n".join(prompt_components)

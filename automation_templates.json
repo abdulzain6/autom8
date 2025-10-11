@@ -1349,6 +1349,42 @@
       "is_deep": false
     },
     {
+      "name": "Windy Weather Screenshot",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/windy_weather_screenshot.png?raw=true",
+      "description": "Takes a screenshot of Windy.com weather map for any city by first geocoding the location to coordinates.",
+      "tags": [
+        "Environment"
+      ],
+      "goal": "Take a weather screenshot for any city using Windy.com. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Windy: Construct the URL https://www.windy.com/?{latitude},{longitude},9 using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Windy URL, set full_page=true, delay_seconds=5, and output_filename='windy_weather_{{ variables['City'] }}_{{ variables['Country'] }}.png'. STEP 4 - Notification: Send completion notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Weather Screenshot Ready 🌤️' and message 'Windy weather map screenshot for {{ variables['City'] }}, {{ variables['Country'] }} is now available in app artifacts.'",
+      "variable_names": [
+        "City",
+        "Country"
+      ],
+      "required_app_names": [
+        "GEO_TOOLS",
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Crypto Fear & Greed Index Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/crypto_fear_greed.png?raw=true",
+      "description": "Monitors the crypto market's fear and greed index and sends concise notifications about current market sentiment levels.",
+      "tags": [
+        "Crypto",
+        "Market Sentiment",
+        "Fear & Greed Index"
+      ],
+      "goal": "Monitor the crypto fear and greed index from Alternative.me. Use HTTP_TOOLS__GET_URL to fetch content from 'https://alternative.me/crypto/fear-and-greed-index/' and extract the current fear and greed index value (number between 0-100), the current sentiment label (Extreme Fear, Fear, Neutral, Greed, Extreme Greed), and the last updated timestamp from the HTML content. Send a concise mobile notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Crypto Fear & Greed Index 📈' and a short message like 'Current: {value} - {sentiment} (Updated: {time})'. Keep the notification brief and informative.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
       "name": "High Short Interest Stocks Report",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/high_short_interest.jpg?raw=true",
       "description": "Daily report of stocks with high short interest from HighShortInterest.com, compiled into a CSV file and emailed to you.",

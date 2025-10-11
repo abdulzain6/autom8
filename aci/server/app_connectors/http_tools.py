@@ -1,6 +1,7 @@
 import re
 import time
 import random
+import socket
 from typing import Optional, Dict, Any, List
 from urllib.parse import urlparse, urljoin
 from aci.common.db.sql_models import LinkedAccount
@@ -20,22 +21,12 @@ MAX_CONTENT_LENGTH = 50000  # 50K characters max for LLM processing
 DEFAULT_TRIM_LENGTH = 10000  # Default trim length
 REQUEST_TIMEOUT = 30  # 30 second timeout
 
-# Internal/localhost IP ranges and service names to block
-INTERNAL_HOSTS = {
-    "localhost", "127.0.0.1", "0.0.0.0", "::1",
-    "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
-    "169.254.0.0/16", "fc00::/7", "fe80::/10"
-}
-
-# Common internal service names to block
-INTERNAL_SERVICE_NAMES = {
-    "internal_service", "api", "server", "backend", "service",
-    "db", "database", "redis", "postgres", "mysql", "mongo",
-    "elasticsearch", "kibana", "grafana", "prometheus",
-    "caddy", "nginx", "apache", "traefik",
-    "gotenberg", "searxng", "livekit", "voice_agent",
-    "huey_worker", "cycletls-server", "steel-browser-api",
-    "skyvern", "skyvern-ui", "code-executor"
+# Known Docker Swarm services that should be allowed
+ALLOWED_DOCKER_SERVICES = {
+    'caddy', 'server', 'huey_worker', 'livekit', 'voice_agent',
+    'gotenberg', 'code-executor', 'searxng', 'cycletls-server',
+    'steel-browser-api', 'headless-browser', 'local-proxy',
+    'skyvern', 'skyvern-ui', 'postgres', 'redis'
 }
 
 class HttpTools(AppConnectorBase):
@@ -69,40 +60,193 @@ class HttpTools(AppConnectorBase):
     def _before_execute(self) -> None:
         pass
 
+    def _validate_url_security(self, url: str) -> None:
+        """
+        Validates URLs for security to prevent attacks on local files and internal services.
+
+        Args:
+            url (str): The URL to validate
+
+        Raises:
+            ValueError: If the URL is deemed unsafe
+        """
+        if not url or not isinstance(url, str):
+            raise ValueError("URL must be a non-empty string")
+
+        try:
+            parsed = urlparse(url)
+        except Exception as e:
+            raise ValueError(f"Invalid URL format: {str(e)}")
+
+        # Block file:// scheme (local file access)
+        if parsed.scheme.lower() == "file":
+            raise ValueError("Access to local files (file://) is not allowed")
+
+        # Block other dangerous schemes
+        dangerous_schemes = {"ftp", "ftps", "data", "javascript", "vbscript", "blob"}
+        if parsed.scheme.lower() in dangerous_schemes:
+            raise ValueError(f"Dangerous URL scheme not allowed: {parsed.scheme}")
+
+        # Block localhost and internal IP addresses
+        if parsed.hostname:
+            hostname_lower = parsed.hostname.lower()
+
+            # Block localhost variations
+            localhost_patterns = [
+                "localhost",
+                "127.0.0.1",
+                "127.0.0.0/8",
+                "::1",
+                "0:0:0:0:0:0:0:1",
+            ]
+
+            for pattern in localhost_patterns:
+                if hostname_lower == pattern or hostname_lower.startswith(pattern):
+                    raise ValueError(
+                        "Access to localhost/internal services is not allowed"
+                    )
+
+            # Block private IP ranges
+            private_ip_patterns = [
+                r"^10\.",  # 10.0.0.0/8
+                r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",  # 172.16.0.0/12
+                r"^192\.168\.",  # 192.168.0.0/16
+                r"^169\.254\.",  # Link-local
+                r"^fc00:",  # IPv6 private
+                r"^fe80:",  # IPv6 link-local
+                r"^::1$",  # IPv6 localhost
+            ]
+
+            for pattern in private_ip_patterns:
+                if re.match(pattern, hostname_lower):
+                    raise ValueError(
+                        "Access to private/internal IP addresses is not allowed"
+                    )
+
+            # Block common internal service hostnames
+            internal_hostnames = [
+                "internal",
+                "api.internal",
+                "service.internal",
+                "db",
+                "database",
+                "redis",
+                "postgres",
+                "mysql",
+                "elasticsearch",
+                "kibana",
+                "grafana",
+                "prometheus",
+                "jenkins",
+                "gitlab",
+                "github.internal",
+                "docker.internal",
+                "kubernetes.internal",
+            ]
+
+            if hostname_lower in internal_hostnames:
+                raise ValueError("Access to internal services is not allowed")
+                
+            # Allow known Docker Swarm services
+            if hostname_lower in ALLOWED_DOCKER_SERVICES:
+                logger.info(f"Allowing access to known Docker service: {hostname_lower}")
+                return  # Skip further validation for known services
+                
+            # Additional check: DNS resolution for suspicious hostnames
+            # Be suspicious of hostnames with no dots (might be localhost-like) or very short names
+            is_suspicious_hostname = (
+                '.' not in hostname_lower or  # No dots at all (localhost, server, etc.)
+                len(hostname_lower.split('.')[0]) <= 2  # Very short first part (db, api, etc.)
+            )
+            
+            if is_suspicious_hostname and len(hostname_lower) > 0:
+                if self._check_dns_for_internal_ip(hostname_lower):
+                    raise ValueError("Access to internal services is not allowed (detected via DNS resolution)")
+
+        # Additional security checks
+        # Block URLs with suspicious patterns
+        suspicious_patterns = [
+            r"\.\.",  # Directory traversal
+            r"%2e%2e",  # URL encoded ..
+            r"%2f%2f",  # URL encoded //
+            r"\\",  # Backslashes
+        ]
+
+        for pattern in suspicious_patterns:
+            if re.search(pattern, url, re.IGNORECASE):
+                raise ValueError(
+                    "URL contains suspicious patterns that are not allowed"
+                )
+
+    def _check_dns_for_internal_ip(self, hostname: str) -> bool:
+        """
+        Performs DNS resolution to check if a hostname resolves to internal/private IP addresses.
+        
+        Args:
+            hostname (str): The hostname to check
+            
+        Returns:
+            bool: True if the hostname resolves to internal/private IPs, False otherwise
+        """
+        try:
+            # Set a short timeout for DNS resolution to avoid blocking
+            socket.setdefaulttimeout(2.0)
+            
+            # Try to resolve both IPv4 and IPv6
+            try:
+                ipv4_info = socket.getaddrinfo(hostname, None, socket.AF_INET)
+                ipv4_addresses = [info[4][0] for info in ipv4_info]
+            except socket.gaierror:
+                ipv4_addresses = []
+                
+            try:
+                ipv6_info = socket.getaddrinfo(hostname, None, socket.AF_INET6)
+                ipv6_addresses = [info[4][0] for info in ipv6_info]
+            except socket.gaierror:
+                ipv6_addresses = []
+                
+            all_addresses = ipv4_addresses + ipv6_addresses
+            
+            if not all_addresses:
+                # If we can't resolve, assume it's safe (fail open for DNS issues)
+                logger.warning(f"DNS resolution failed for {hostname}, allowing access")
+                return False
+                
+            # Check if any resolved IP is in private ranges
+            private_ip_patterns = [
+                r"^10\.",  # 10.0.0.0/8
+                r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",  # 172.16.0.0/12
+                r"^192\.168\.",  # 192.168.0.0/16
+                r"^169\.254\.",  # Link-local
+                r"^127\.",  # Loopback
+                r"^fc00:",  # IPv6 private
+                r"^fe80:",  # IPv6 link-local
+                r"^::1$",  # IPv6 localhost
+            ]
+            
+            for ip in all_addresses:
+                ip_str = str(ip).lower()
+                for pattern in private_ip_patterns:
+                    if re.match(pattern, ip_str):
+                        logger.warning(f"Hostname {hostname} resolves to internal IP {ip}, blocking access")
+                        return True
+                        
+            logger.info(f"Hostname {hostname} resolves to public IPs: {all_addresses[:3]}...")
+            return False
+            
+        except Exception as e:
+            # If DNS resolution fails for any reason, log and allow access
+            # This prevents blocking legitimate sites due to DNS issues
+            logger.warning(f"DNS check failed for {hostname}: {e}, allowing access")
+            return False
+
     def _is_internal_url(self, url: str) -> bool:
         """Check if URL points to internal/localhost addresses or service names."""
         try:
-            parsed = urlparse(url)
-            hostname = parsed.hostname
-            if not hostname:
-                return True
-            
-            # Check for localhost variants
-            if hostname.lower() in {"localhost", "127.0.0.1", "0.0.0.0", "::1"}:
-                return True
-            
-            # Check for internal service names (e.g., internal_service, api, server)
-            hostname_lower = hostname.lower()
-            if any(service in hostname_lower for service in INTERNAL_SERVICE_NAMES):
-                return True
-            
-            # Check for private IP ranges (simplified)
-            if (
-                hostname.startswith("10.") or 
-                hostname.startswith("192.168.") or 
-                hostname.startswith("172.16.") or
-                hostname.startswith("172.17.") or
-                hostname.startswith("172.18.") or
-                hostname.startswith("172.19.") or
-                hostname.startswith("172.2") or
-                hostname.startswith("172.30.") or
-                hostname.startswith("172.31.")
-            ):
-                return True
-                
-            return False
-        except Exception:
-            return True  # If we can't parse, assume it's unsafe
+            self._validate_url_security(url)
+            return False  # If validation passes, it's not internal
+        except ValueError:
+            return True  # If validation fails, it's considered internal/unsafe
 
     def _extract_links(self, html_content: str, base_url: str) -> List[Dict[str, str]]:
         """Extract links from HTML content."""
@@ -168,11 +312,13 @@ class HttpTools(AppConnectorBase):
         """
         self._before_execute()
         
-        # Security check: block internal URLs
-        if self._is_internal_url(url):
+        # Security check: validate URL security
+        try:
+            self._validate_url_security(url)
+        except ValueError as e:
             return {
                 "success": False,
-                "error": "Cannot access internal/localhost URLs for security reasons."
+                "error": f"URL security validation failed: {str(e)}"
             }
         
         # Ensure max_length is reasonable
