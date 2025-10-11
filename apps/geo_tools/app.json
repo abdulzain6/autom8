@@ -1,0 +1,17 @@
+{
+  "name": "GEO_TOOLS",
+  "display_name": "Geo Tools",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/geo-tools.png",
+  "provider": "Internal",
+  "version": "1.0.0",
+  "description": "Geocoding utilities for converting city and country names to geographic coordinates.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Productivity"
+  ],
+  "visibility": "public",
+  "active": true
+}

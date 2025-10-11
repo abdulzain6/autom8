@@ -549,5 +549,103 @@ class Browser(AppConnectorBase):
         future = _browser_executor.submit(_setup_and_run_js)
         return future.result()
 
+    def take_screenshot(
+        self,
+        url: str,
+        output_filename: str,
+        full_page: bool = False,
+        delay_seconds: float = 0.0,
+    ) -> dict:
+        """
+        Takes a screenshot of a webpage and saves it as an artifact.
+
+        Args:
+            url (str): The URL of the webpage to screenshot.
+            output_filename (str): The desired filename for the screenshot artifact.
+            full_page (bool): Whether to capture the full page or just the viewport.
+            delay_seconds (float): Optional delay in seconds to wait after page load.
+
+        Returns:
+            dict: Contains the artifact ID of the saved screenshot.
+        """
+        logger.info(f"Taking screenshot of URL: {url}")
+
+        def _setup_and_take_screenshot():
+            process_id = os.getpid()
+            thread_id = threading.get_ident()
+            logger.info(
+                f"[PID: {process_id} | Thread: {thread_id}] Starting screenshot setup."
+            )
+
+            pool = get_pool()
+            worker_address = None
+            try:
+                worker_address = pool.acquire(timeout=600)
+                if worker_address is None:
+                    raise RuntimeError("Failed to acquire browser worker within timeout")
+                
+                cdp_url = self._get_cdp_url_from_worker(worker_address)
+
+                async def _take_screenshot_async():
+                    async with async_playwright() as p:
+                        browser = await p.chromium.connect_over_cdp(cdp_url)
+                        context = browser.contexts[0]
+                        page = context.pages[0]
+
+                        await stealth_async(page) # type: ignore
+                        await page.goto(url, wait_until="load", timeout=60000)
+
+                        # Optional delay for dynamic content loading
+                        if delay_seconds > 0:
+                            await asyncio.sleep(delay_seconds)
+
+                        # Take screenshot
+                        screenshot_bytes = await page.screenshot(full_page=full_page)
+                        return screenshot_bytes
+
+                screenshot_data = asyncio.run(_take_screenshot_async())
+
+                # Save screenshot as artifact
+                filename = output_filename
+                if not filename.lower().endswith(".png"):
+                    filename = filename + ".png"
+
+                db: Optional[Session] = None
+                try:
+                    db = create_db_session(config.DB_FULL_URL)
+                    file_manager = FileManager(db)
+
+                    file_buffer = io.BytesIO(screenshot_data)
+                    file_buffer.seek(0)
+
+                    new_artifact_id = file_manager.upload_artifact(
+                        file_object=file_buffer,
+                        filename=filename,
+                        ttl_seconds=24 * 3600 * 7,  # 7 days
+                        user_id=self.user_id,
+                        run_id=self.run_id,
+                    )
+                    logger.info(
+                        f"Screenshot successfully saved to artifact {new_artifact_id}."
+                    )
+                    return {"success": True, "artifact_id": new_artifact_id}
+                finally:
+                    if db:
+                        db.close()
+
+            except Exception as e:
+                logger.error(
+                    f"[PID: {process_id} | Thread: {thread_id}] Screenshot failed: {e}",
+                    exc_info=True,
+                )
+                raise RuntimeError(f"Screenshot capture failed: {str(e)}")
+            finally:
+                if worker_address:
+                    self._shutdown_worker_browsers(worker_address)
+                    pool.release(worker_address)
+
+        future = _browser_executor.submit(_setup_and_take_screenshot)
+        return future.result()
+
 
 atexit.register(_browser_executor.shutdown, wait=True)

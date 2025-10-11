@@ -90,5 +90,43 @@
       "visible": ["url", "js_code", "output_filename", "delay_seconds"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "BROWSER__TAKE_SCREENSHOT",
+    "description": "Takes a screenshot of a webpage and saves it as an artifact. Useful for visual documentation, debugging, or capturing the current state of a web page.",
+    "tags": ["browser", "screenshot", "visual", "capture", "artifact"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "The complete URL of the webpage to screenshot. Must include protocol (http:// or https://). Example: 'https://example.com'"
+        },
+        "output_filename": {
+          "type": "string",
+          "description": "The desired filename for the screenshot artifact. The '.png' extension will be added automatically if not present. Example: 'page_screenshot' or 'homepage.png'"
+        },
+        "full_page": {
+          "type": "boolean",
+          "description": "Whether to capture the full page height or just the viewport. Default is false (viewport only).",
+          "default": false
+        },
+        "delay_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "default": 0,
+          "description": "Optional delay in seconds to wait after page load before taking the screenshot. Useful for dynamic content that needs time to load or initialize. Default is 0 (no delay). Maximum allowed is 60 seconds."
+        }
+      },
+      "required": ["url", "output_filename"],
+      "visible": ["url", "output_filename", "full_page", "delay_seconds"],
+      "additionalProperties": false
+    }
   }
 ]

@@ -1,0 +1,27 @@
+[
+  {
+    "name": "GEO_TOOLS__GET_COORDINATES",
+    "description": "Converts a city and country name into geographic coordinates (latitude, longitude) using geocoding services.",
+    "tags": ["geocoding", "coordinates", "latitude", "longitude", "location", "geography"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "The name of the city to geocode. Example: 'New York', 'London', 'Tokyo'"
+        },
+        "country": {
+          "type": "string",
+          "description": "The name of the country. Example: 'United States', 'United Kingdom', 'Japan'"
+        }
+      },
+      "required": ["city", "country"],
+      "visible": ["city", "country"],
+      "additionalProperties": false
+    }
+  }
+]
