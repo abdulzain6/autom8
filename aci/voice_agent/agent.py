@@ -932,6 +932,94 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 f"Failed to get timezone information from the frontend: {e}"
             )
 
+    @function_tool(
+        raw_schema={
+            "type": "function",
+            "name": "get_automation_by_id",
+            "description": "Retrieves detailed information about a specific automation by its ID.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "automation_id": {
+                        "type": "string",
+                        "description": "The ID of the automation to retrieve",
+                    },
+                },
+                "required": ["automation_id"],
+            },
+        }
+    )
+    async def get_automation_by_id(
+        self, raw_arguments: dict[str, object], context: RunContext
+    ):
+        """
+        Retrieves detailed information about a specific automation by its ID.
+        
+        This tool returns the full automation object as JSON, including all
+        settings, linked accounts, and current status.
+        """
+        logger.info(
+            f"[AUTOMATION_TOOL] get_automation_by_id called by user {self.user_id}"
+        )
+        logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
+
+        try:
+            from aci.common.db import crud
+
+            automation_id = str(raw_arguments["automation_id"])
+            
+            # Use a fresh database session
+            with get_db_session() as fresh_db_session:
+                # Verify the automation exists and belongs to the user
+                automation = crud.automations.get_automation(
+                    fresh_db_session, automation_id
+                )
+                if not automation:
+                    return json.dumps({
+                        "success": False,
+                        "error": f"Automation with ID '{automation_id}' not found."
+                    })
+
+                if automation.user_id != self.user_id:
+                    return json.dumps({
+                        "success": False,
+                        "error": f"You don't have access to automation '{automation_id}'."
+                    })
+
+                # Return the full automation object as JSON
+                automation_data = {
+                    "id": automation.id,
+                    "name": automation.name,
+                    "description": automation.description,
+                    "goal": automation.goal,
+                    "is_deep": automation.is_deep,
+                    "active": automation.active,
+                    "is_recurring": automation.is_recurring,
+                    "cron_schedule": automation.cron_schedule,
+                    "created_at": automation.created_at.isoformat() if automation.created_at else None,
+                    "updated_at": automation.updated_at.isoformat() if automation.updated_at else None,
+                    "last_run_at": automation.last_run_at.isoformat() if automation.last_run_at else None,
+                    "linked_account_ids": [la.id for la in automation.linked_accounts] if automation.linked_accounts else []
+                }
+
+                logger.info(
+                    f"[AUTOMATION_TOOL] Successfully retrieved automation {automation_id}"
+                )
+                return json.dumps({
+                    "success": True,
+                    "automation": automation_data
+                })
+
+        except Exception as e:
+            logger.error(
+                f"[AUTOMATION_TOOL] Error in get_automation_by_id: {str(e)}",
+                exc_info=True,
+            )
+            return json.dumps({
+                "success": False,
+                "error": f"An unexpected error occurred while retrieving the automation: {str(e)}"
+            })
+
 
 def prewarm(proc: JobProcess):
     proc.userdata["vad"] = silero.VAD.load()
