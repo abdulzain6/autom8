@@ -1372,9 +1372,7 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/crypto_fear_greed.png?raw=true",
       "description": "Monitors the crypto market's fear and greed index and sends concise notifications about current market sentiment levels.",
       "tags": [
-        "Crypto",
-        "Market Sentiment",
-        "Fear & Greed Index"
+        "Finance"
       ],
       "goal": "Monitor the crypto fear and greed index from Alternative.me. Use HTTP_TOOLS__GET_URL to fetch content from 'https://alternative.me/crypto/fear-and-greed-index/' and extract the current fear and greed index value (number between 0-100), the current sentiment label (Extreme Fear, Fear, Neutral, Greed, Extreme Greed), and the last updated timestamp from the HTML content. Send a concise mobile notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Crypto Fear & Greed Index 📈' and a short message like 'Current: {value} - {sentiment} (Updated: {time})'. Keep the notification brief and informative.",
       "variable_names": [],
@@ -1396,6 +1394,23 @@
       "required_app_names": [
         "HTTP_TOOLS",
         "CSV_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "FlightRadar24 Flight Screenshot",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/flight_radar.png?raw=true",
+      "description": "Takes a screenshot of a specific flight's FlightRadar24 page showing real-time flight tracking and status.",
+      "tags": [
+        "Transportation"
+      ],
+      "goal": "Take a screenshot of a specific flight's FlightRadar24 page. Visit https://www.flightradar24.com/{{ variables['Flight Code'] }}. Use BROWSER__TAKE_SCREENSHOT with full_page=true, delay_seconds=5, js_script=\"document.getElementById('didomi-notice-agree-button')?.click();\", and output_filename='flightradar24_{{ variables['Flight Code'] }}_screenshot.png'. Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'FlightRadar24 Screenshot Ready ✈️' and message 'Screenshot of flight {{ variables['Flight Code'] }} is now available in app artifacts.'",
+      "variable_names": [
+        "Flight Code"
+      ],
+      "required_app_names": [
+        "BROWSER",
         "NOTIFYME"
       ],
       "is_deep": false

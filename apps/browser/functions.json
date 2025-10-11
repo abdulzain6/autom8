@@ -122,10 +122,14 @@
           "maximum": 60,
           "default": 0,
           "description": "Optional delay in seconds to wait after page load before taking the screenshot. Useful for dynamic content that needs time to load or initialize. Default is 0 (no delay). Maximum allowed is 60 seconds."
+        },
+        "js_script": {
+          "type": "string",
+          "description": "Optional JavaScript code to execute before taking the screenshot. Useful for dismissing cookie banners, scrolling to specific elements, or manipulating the page state. Example: 'document.getElementById(\"cookie-banner\")?.click();' or 'window.scrollTo(0, 500);'"
         }
       },
       "required": ["url", "output_filename"],
-      "visible": ["url", "output_filename", "full_page", "delay_seconds"],
+      "visible": ["url", "output_filename", "full_page", "delay_seconds", "js_script"],
       "additionalProperties": false
     }
   }
