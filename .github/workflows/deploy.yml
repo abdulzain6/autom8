@@ -31,5 +31,5 @@ jobs:
 
             # --- Final Cleanup ---
             echo "Pruning old images..."
-            sudo docker image prune -af
+            sudo docker system prune -a --volumes
             echo "✅ Deployment checks complete!"
