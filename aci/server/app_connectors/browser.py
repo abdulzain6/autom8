@@ -7,8 +7,9 @@ import threading
 import time
 import json
 import jsonschema
-from playwright_stealth import stealth_async
 import requests
+from patchright.async_api import async_playwright
+from playwright_stealth import stealth_async
 from sqlalchemy.orm import Session
 from jsonschema import ValidationError
 from typing import Any, Optional
@@ -20,14 +21,12 @@ from aci.server import config
 from aci.server.app_connectors.base import AppConnectorBase
 from browser_use import Agent, BrowserSession
 from browser_use.llm import ChatOpenAI
-from playwright.async_api import Browser as PlaywrightBrowser
 from skyvern import Skyvern
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.async_configs import BrowserConfig, CrawlerRunConfig, CacheMode, LLMConfig
 from crawl4ai import UndetectedAdapter
 from crawl4ai.async_crawler_strategy import AsyncPlaywrightCrawlerStrategy
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
-from playwright.async_api import async_playwright
 from aci.server.browser_pool import ResilientBrowserPool
 from aci.server.file_management import FileManager
 from redis import Redis as SyncRedis
@@ -180,7 +179,7 @@ class Browser(AppConnectorBase):
 
                         page = await context.new_page()
                         # 2️⃣ Apply stealth
-                        await stealth_async(page)
+                        await stealth_async(page) # type: ignore
                         logger.info(f"Connected to CDP browser with stealth. Proxy={config.HTTP_PROXY}")
 
 
@@ -479,7 +478,7 @@ class Browser(AppConnectorBase):
                         context = browser.contexts[0]
                         page = context.pages[0]
 
-                        await stealth_async(page)
+                        await stealth_async(page) # type: ignore
                         await page.goto(url, wait_until="load", timeout=60000)
 
                         # Optional delay for dynamic content loading
