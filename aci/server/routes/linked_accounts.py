@@ -548,7 +548,7 @@ def delete_linked_account(
         )
         for automation in dependent_automations:
             logger.info(f"Deleting automation {automation.id} ({automation.name}) due to linked account deletion")
-            crud.automations.delete_automation(context.db_session, automation)
+            crud.automations.delete_automation(context.db_session, automation.id)
     
     # Delete the linked account
     crud.linked_accounts.delete_linked_account(context.db_session, linked_account)

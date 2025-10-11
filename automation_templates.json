@@ -1414,6 +1414,24 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Google Maps Traffic Screenshot",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/google_maps_traffic.png?raw=true",
+      "description": "Takes a traffic view screenshot of Google Maps for any latitude and longitude coordinates.",
+      "tags": [
+        "Transportation"
+      ],
+      "goal": "Take a traffic screenshot of Google Maps for the specified coordinates. Visit https://www.google.com/maps/@{{ variables['Latitude'] }},{{ variables['Longitude'] }},17z/data=!5m1!1e1. Use BROWSER__TAKE_SCREENSHOT with full_page=false, delay_seconds=5, js_script=\"document.querySelector('[aria-label*=\"Accept all\"]')?.click();\", js_delay_seconds=3, and output_filename='traffic_{{ variables['Latitude'] }}_{{ variables['Longitude'] }}_screenshot.png'. Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Traffic Screenshot Ready 🚗' and message 'Google Maps traffic screenshot for coordinates {{ variables['Latitude'] }}, {{ variables['Longitude'] }} is now available in app artifacts.'",
+      "variable_names": [
+        "Latitude",
+        "Longitude"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }
