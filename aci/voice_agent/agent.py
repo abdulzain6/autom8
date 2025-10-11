@@ -1087,7 +1087,7 @@ async def entrypoint(ctx: JobContext):
         vad=ctx.proc.userdata["vad"],
         min_endpointing_delay=0.5,
         max_endpointing_delay=5.0,
-        max_tool_steps=7,
+        max_tool_steps=15,
     )
 
     logger.info(f"Registering metrics_collected callback for user {user_id}")
