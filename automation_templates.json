@@ -1405,7 +1405,7 @@
       "tags": [
         "Transportation"
       ],
-      "goal": "Take a screenshot of a specific flight's FlightRadar24 page. Visit https://www.flightradar24.com/{{ variables['Flight Code'] }}. Use BROWSER__TAKE_SCREENSHOT with full_page=true, delay_seconds=5, js_script=\"document.getElementById('didomi-notice-agree-button')?.click();\", and output_filename='flightradar24_{{ variables['Flight Code'] }}_screenshot.png'. Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'FlightRadar24 Screenshot Ready ✈️' and message 'Screenshot of flight {{ variables['Flight Code'] }} is now available in app artifacts.'",
+      "goal": "Take a screenshot of a specific flight's FlightRadar24 page. Visit https://www.flightradar24.com/{{ variables['Flight Code'] }}. Use BROWSER__TAKE_SCREENSHOT with full_page=true, delay_seconds=5, js_script=\"document.getElementById('didomi-notice-agree-button')?.click();\", js_delay_seconds=5, and output_filename='flightradar24_{{ variables['Flight Code'] }}_screenshot.png'. Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'FlightRadar24 Screenshot Ready ✈️' and message 'Screenshot of flight {{ variables['Flight Code'] }} is now available in app artifacts.'",
       "variable_names": [
         "Flight Code"
       ],

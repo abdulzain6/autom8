@@ -883,6 +883,7 @@ SECURITY VALIDATION RULES:
         full_page: bool = False,
         delay_seconds: float = 0.0,
         js_script: Optional[str] = None,
+        js_delay_seconds: float = 0.0,
     ) -> dict:
         """
         Takes a screenshot of a webpage and saves it as an artifact.
@@ -893,6 +894,7 @@ SECURITY VALIDATION RULES:
             full_page (bool): Whether to capture the full page or just the viewport.
             delay_seconds (float): Optional delay in seconds to wait after page load.
             js_script (str, optional): Optional JavaScript code to execute before taking screenshot.
+            js_delay_seconds (float): Optional delay in seconds to wait after executing JavaScript.
 
         Returns:
             dict: Contains the artifact ID of the saved screenshot.
@@ -936,6 +938,10 @@ SECURITY VALIDATION RULES:
                         # Execute optional JavaScript script
                         if js_script:
                             await page.evaluate(js_script)
+
+                        # Optional delay after JavaScript execution
+                        if js_delay_seconds > 0:
+                            await asyncio.sleep(js_delay_seconds)
 
                         # Take screenshot
                         screenshot_bytes = await page.screenshot(full_page=full_page)

@@ -126,10 +126,17 @@
         "js_script": {
           "type": "string",
           "description": "Optional JavaScript code to execute before taking the screenshot. Useful for dismissing cookie banners, scrolling to specific elements, or manipulating the page state. Example: 'document.getElementById(\"cookie-banner\")?.click();' or 'window.scrollTo(0, 500);'"
+        },
+        "js_delay_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "default": 0,
+          "description": "Optional delay in seconds to wait after executing JavaScript before taking the screenshot. Useful for waiting for page changes or animations to complete after JavaScript execution. Default is 0 (no delay). Maximum allowed is 60 seconds."
         }
       },
       "required": ["url", "output_filename"],
-      "visible": ["url", "output_filename", "full_page", "delay_seconds", "js_script"],
+      "visible": ["url", "output_filename", "full_page", "delay_seconds", "js_script", "js_delay_seconds"],
       "additionalProperties": false
     }
   }
