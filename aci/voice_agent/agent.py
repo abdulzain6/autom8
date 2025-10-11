@@ -102,7 +102,7 @@ class Assistant(Agent):
             try:
                 # Check if linked account already exists
                 existing_linked_account = crud.linked_accounts.get_linked_account(
-                    self.db_session, user_id, app_name
+                    self.db_session, user_id, app_name.upper()
                 )
                 
                 if not existing_linked_account:
@@ -613,7 +613,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
 
             for app_name in app_names:
                 linked_account = linked_accounts_crud.get_linked_account(
-                    self.db_session, self.user_id, app_name
+                    self.db_session, self.user_id, app_name.upper()
                 )
                 if not linked_account:
                     logger.error(
