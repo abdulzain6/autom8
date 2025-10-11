@@ -346,11 +346,11 @@ class Browser(AppConnectorBase):
         """Helper to fork and get CDP URL from a worker."""
         with requests.Session() as session:
             # 1. Fork a new browser on the worker
-            fork_resp = session.post(f"{worker_address}/fork", timeout=60)
+            fork_resp = session.post(f"{worker_address}/fork", timeout=600)
             fork_resp.raise_for_status()
 
             # 2. Get the connection details
-            version_resp = session.get(f"{worker_address}/json/version", timeout=15)
+            version_resp = session.get(f"{worker_address}/json/version", timeout=600)
             version_resp.raise_for_status()
             ws_url = version_resp.json()["webSocketDebuggerUrl"]
 
@@ -365,7 +365,7 @@ class Browser(AppConnectorBase):
     def _shutdown_worker_browsers(self, worker_address: str):
         """Helper to shut down all browsers on a specific worker."""
         try:
-            requests.post(f"{worker_address}/shutdown", timeout=15)
+            requests.post(f"{worker_address}/shutdown", timeout=600)
             logger.info(f"Successfully shut down browsers on worker {worker_address}")
         except requests.RequestException as e:
             logger.error(f"Failed to shut down browsers on {worker_address}: {e}")
@@ -416,8 +416,8 @@ class Browser(AppConnectorBase):
 
             async def _run_skyvern_with_timeout():
                 try:
-                    # Wrap the task with a 5-minute timeout
-                    return await asyncio.wait_for(_run_skyvern_task(), timeout=300)
+                    # Wrap the task with a 10-minute timeout
+                    return await asyncio.wait_for(_run_skyvern_task(), timeout=600)
                 except Exception as e:
                     logger.error(f"Skyvern task failed: {e}", exc_info=True)
                     return {"result": None, "error": str(e), "success": False}
@@ -519,7 +519,7 @@ SECURITY VALIDATION RULES:
                         self._shutdown_worker_browsers(worker_address)
                         pool.release(worker_address)
 
-            return asyncio.run(_run_agent())
+            return asyncio.run(asyncio.wait_for(_run_agent(), timeout=600))
 
         future = _browser_executor.submit(_setup_and_run_agent)
         return future.result()
@@ -690,7 +690,7 @@ SECURITY VALIDATION RULES:
                             }
 
                 # Submit to event loop and get result
-                crawler_result = asyncio.run(_run_crawler_async())
+                crawler_result = asyncio.run(asyncio.wait_for(_run_crawler_async(), timeout=600))
 
                 logger.info(
                     f"[PID: {process_id} | Thread: {thread_id}] Browser scraping completed successfully."
@@ -804,7 +804,7 @@ SECURITY VALIDATION RULES:
                         page = context.pages[0]
 
                         await stealth_async(page)  # type: ignore
-                        await page.goto(url, wait_until="load", timeout=60000)
+                        await page.goto(url, wait_until="load", timeout=600000)
 
                         # Optional delay for dynamic content loading
                         if delay_seconds > 0:
@@ -815,7 +815,7 @@ SECURITY VALIDATION RULES:
                         result = await page.evaluate(js_code)
                         return result
 
-                result = asyncio.run(_run_js_in_browser())
+                result = asyncio.run(asyncio.wait_for(_run_js_in_browser(), timeout=600))
                 # If a filename is provided, save the result as an artifact
                 if output_filename is not None:
                     # Validate filename security before proceeding
@@ -929,7 +929,7 @@ SECURITY VALIDATION RULES:
                         page = context.pages[0]
 
                         await stealth_async(page)  # type: ignore
-                        await page.goto(url, wait_until="load", timeout=60000)
+                        await page.goto(url, wait_until="load", timeout=600000)
 
                         # Optional delay for dynamic content loading
                         if delay_seconds > 0:
@@ -947,7 +947,7 @@ SECURITY VALIDATION RULES:
                         screenshot_bytes = await page.screenshot(full_page=full_page)
                         return screenshot_bytes
 
-                screenshot_data = asyncio.run(_take_screenshot_async())
+                screenshot_data = asyncio.run(asyncio.wait_for(_take_screenshot_async(), timeout=600))
 
                 # Save screenshot as artifact
                 # Validate filename security before proceeding
