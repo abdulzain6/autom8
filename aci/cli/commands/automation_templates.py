@@ -102,9 +102,11 @@ def update_template_helper(
     existing_template_data = {
         "name": existing_template.name,
         "description": existing_template.description,
+        "banner_image_url": existing_template.banner_image_url,
         "tags": sorted(existing_template.tags),
         "goal": existing_template.goal,
         "variable_names": existing_template.variable_names,
+        "is_deep": existing_template.is_deep,
         "required_app_names": sorted([app.name for app in existing_template.required_apps]),
     }
     existing_template_upsert = AutomationTemplateUpsert.model_validate(existing_template_data)

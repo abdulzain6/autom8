@@ -13,7 +13,6 @@ from aci.server.function_executors.function_utils import (
     FunctionDefinitionFormat,
     execute_function,
 )
-from langchain_openai import ChatOpenAI
 from langchain_openai.chat_models.base import BaseChatOpenAI
 from logging import getLogger
 import logging
@@ -231,25 +230,33 @@ class AutomationExecutor:
                     )
                     # Trim the response to reduce token usage while preserving essential information
                     trimmed_result = self._trim_tool_response(result, 35000)
+                    
+                    # Ensure the result is always a string for LangGraph compatibility
+                    if isinstance(trimmed_result, (dict, list)):
+                        import json
+                        final_result = json.dumps(trimmed_result, default=str, ensure_ascii=False)
+                    else:
+                        final_result = str(trimmed_result)
+                    
                     logger.info(
-                        f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(str(trimmed_result))} chars"
+                        f"Tool {function.name} executed successfully, response trimmed from {len(str(result))} to {len(final_result)} chars"
                     )
-                    logger.info(f"Full trimmed result: {trimmed_result}")
-                    return trimmed_result
+                    logger.info(f"Final result: {final_result}")
+                    return final_result
                 except Exception as e:
                     logger.error(
                         f"Error executing tool: {function.name} with args: {kwargs}, error: {e}"
                     )
                     import traceback
                     traceback.print_exc()
-                    return {"error": str(e)}
+                    return f"Error: {str(e)}"
         except Exception as db_error:
             # Handle database session errors specifically
             logger.error(f"Database session error for tool {function.name}: {db_error}")
             if "pending rollback" in str(db_error).lower():
                 logger.warning("Handled pending rollback error, operation may have completed successfully")
-                return {"warning": "Database transaction issue occurred, but operation may have completed"}
-            return {"error": f"Database connection error: {str(db_error)}"}
+                return "Database transaction issue occurred, but operation may have completed"
+            return f"Database connection error: {str(db_error)}"
 
     def get_tools(self) -> list[StructuredTool]:
         """Convert the automation's functions into LangChain tools."""
