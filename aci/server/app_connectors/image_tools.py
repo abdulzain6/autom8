@@ -275,7 +275,7 @@ class ImageTools(AppConnectorBase):
             llm = ChatOpenAI(
                 base_url=DEEPINFRA_BASE_URL,
                 api_key=SecretStr(DEEPINFRA_API_KEY),
-                model="mistralai/Mistral-Small-3.2-24B-Instruct-2506",  
+                model="google/gemma-3-27b-it",  
                 timeout=300,
                 max_retries=3,
             )

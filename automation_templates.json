@@ -1432,6 +1432,64 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Google Maps Traffic Analysis",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/google_maps_traffic.jpeg?raw=true",
+      "description": "Takes a traffic view screenshot of Google Maps for any latitude and longitude coordinates, analyzes it with AI, and sends intelligent traffic condition notifications.",
+      "tags": [
+        "Transportation"
+      ],
+      "goal": "Take a traffic screenshot of Google Maps for the specified coordinates and analyze it with AI for traffic conditions. STEP 1 - Capture Screenshot: Visit https://www.google.com/maps/@{{ variables['Latitude'] }},{{ variables['Longitude'] }},14z?hl=en. Use BROWSER__TAKE_SCREENSHOT with full_page=false, delay_seconds=5, js_script=\"document.querySelector('[aria-label*=\"Accept all\"]')?.click();\", js_delay_seconds=3, and output_filename='traffic_analysis_{{ variables['Latitude'] }}_{{ variables['Longitude'] }}_screenshot.png'. STEP 2 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the screenshot with prompt: 'Analyze this Google Maps traffic screenshot and provide a detailed assessment of current traffic conditions. Identify areas with heavy traffic (red), moderate traffic (orange/yellow), light traffic (green), and any traffic incidents, construction, or road closures visible. Give an overall traffic status summary and specific recommendations for drivers.' STEP 3 - Smart Notification: Based on the AI analysis, send an intelligent notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Traffic Analysis: {{ variables['Latitude'] }}, {{ variables['Longitude'] }} 🚗' and a concise summary of traffic conditions including overall status, key congestion areas, and driving recommendations.",
+      "variable_names": [
+        "Latitude",
+        "Longitude"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "IMAGE_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Google Maps Place Availability Checker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/maps_availability.jpeg?raw=true",
+      "description": "Checks if a business or place is currently open on Google Maps and extracts availability information including opening hours and current status.",
+      "tags": [
+        "Travel"
+      ],
+      "goal": "Check the availability and opening hours for '{{ variables['Place Name'] }}' in '{{ variables['City'] }}, {{ variables['Country'] }}' on Google Maps. Build the search URL: https://www.google.com/maps/search/{{ variables['Place Name']|replace(' ', '+') }},+{{ variables['City']|replace(' ', '+') }},+{{ variables['Country']|replace(' ', '+') }}/ Use BROWSER__SCRAPE_WITH_BROWSER with extraction_instructions='Extract the business name, current open/closed status, opening hours for today, and any special notes about availability or closures', output_schema={'type': 'object', 'properties': {'business_name': {'type': 'string'}, 'current_status': {'type': 'string'}, 'today_hours': {'type': 'string'}, 'special_notes': {'type': 'string'}}}, js_script='setTimeout(() => { const results = document.querySelectorAll(\"a[href^=\"https://www.google.com/maps/place/\"]\"); if (results && results.length > 0) results[0].click(); }, 5000);', js_delay_seconds=10. Send a mobile notification with the availability information via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION.",
+      "variable_names": [
+        "Place Name",
+        "City",
+        "Country"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Zoom Earth Temperature Analysis",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/zoom_earth_temp_analysis.jpeg?raw=true",
+      "description": "Analyzes temperature conditions for any city using Zoom Earth satellite data and sends intelligent temperature notifications.",
+      "tags": [
+        "Environment"
+      ],
+      "goal": "Analyze temperature conditions for a specific location using Zoom Earth satellite data. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Zoom Earth: Construct the URL https://zoom.earth/maps/temperature/#view={latitude},{longitude},12z/model=icon using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Zoom Earth URL, set full_page=false, delay_seconds=10, and output_filename='zoom_earth_temp_{{ variables['City'] }}_{{ variables['Country'] }}_analysis.png'. STEP 4 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the temperature screenshot with prompt: 'Analyze this Zoom Earth temperature map screenshot and provide a concise one-line summary of current temperature conditions specifically for {{ variables['City'] }}, {{ variables['Country'] }}. Focus on the city's temperature range, any temperature variations within the city, and notable temperature patterns affecting the urban area.' STEP 5 - Temperature Notification: Send a concise one-line notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Temperature Analysis: {{ variables['City'] }}, {{ variables['Country'] }} 🌡️' and the AI-generated temperature summary.",
+      "variable_names": [
+        "City",
+        "Country"
+      ],
+      "required_app_names": [
+        "GEO_TOOLS",
+        "BROWSER",
+        "IMAGE_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }
