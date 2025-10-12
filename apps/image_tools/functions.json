@@ -28,5 +28,30 @@
       "visible": ["url", "filename", "max_size_mb"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "IMAGE_TOOLS__ANALYZE_IMAGE_WITH_LLM",
+    "description": "Analyzes an image artifact using a multimodal LLM. Takes an artifact ID and a query, verifies the artifact is an image, then sends it to an AI vision model for analysis.",
+    "tags": ["image", "analysis", "llm", "ai", "vision", "multimodal"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "description": "The ID of the artifact containing the image to analyze."
+        },
+        "query": {
+          "type": "string",
+          "description": "The query or prompt to send to the LLM along with the image (e.g., 'Describe this image in detail' or 'What objects can you see?')."
+        }
+      },
+      "required": ["artifact_id", "query"],
+      "visible": ["artifact_id", "query"],
+      "additionalProperties": false
+    }
   }
 ]

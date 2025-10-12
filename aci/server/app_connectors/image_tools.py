@@ -1,6 +1,10 @@
 import io
 import os
 import requests
+import base64
+
+from aci.server.config import DB_FULL_URL
+from aci.voice_agent.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL
 from typing import Optional, Dict, Any
 from urllib.parse import urlparse, unquote
 from aci.common.db.sql_models import LinkedAccount
@@ -10,6 +14,10 @@ from aci.common.utils import create_db_session
 from aci.server.app_connectors.base import AppConnectorBase
 from aci.server.file_management import FileManager
 from sqlalchemy.orm import Session
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from pydantic import SecretStr
 
 logger = get_logger(__name__)
 
@@ -212,6 +220,106 @@ class ImageTools(AppConnectorBase):
             return {
                 "success": False,
                 "error": f"Unexpected error: {str(e)}"
+            }
+        finally:
+            if db:
+                db.close()
+
+    def analyze_image_with_llm(
+        self, 
+        artifact_id: str, 
+        query: str
+    ) -> Dict[str, Any]:
+        """
+        Analyzes an image artifact using a multimodal LLM.
+        
+        Args:
+            artifact_id: The ID of the artifact containing the image to analyze.
+            query: The query/prompt to send to the LLM along with the image.
+            
+        Returns:
+            Dictionary containing the analysis result or error information.
+        """
+        self._before_execute()
+        
+        db: Optional[Session] = None
+        try:            
+            db = create_db_session(DB_FULL_URL)
+            file_manager = FileManager(db)
+            
+            # Retrieve the artifact
+            try:
+                content_generator, mime_type = file_manager.read_artifact(artifact_id)
+            except ValueError as e:
+                return {
+                    "success": False,
+                    "error": f"Artifact not found: {str(e)}"
+                }
+            
+            # Check if it's an image
+            if not mime_type.startswith("image/"):
+                return {
+                    "success": False,
+                    "error": f"Artifact is not an image. MIME type: {mime_type}"
+                }
+            
+            # Convert image content to base64
+            image_content = b""
+            for chunk in content_generator:
+                image_content += chunk
+            
+            # Encode to base64
+            base64_image = base64.b64encode(image_content).decode('utf-8')
+            
+            # Initialize the multimodal LLM
+            llm = ChatOpenAI(
+                base_url=DEEPINFRA_BASE_URL,
+                api_key=SecretStr(DEEPINFRA_API_KEY),
+                model="mistralai/Mistral-Small-3.2-24B-Instruct-2506",  
+                timeout=300,
+                max_retries=3,
+            )
+            
+            # Create the prompt template for multimodal analysis
+            prompt = ChatPromptTemplate.from_messages([
+                (
+                    "system",
+                    "You are a helpful AI assistant specialized in analyzing images. Provide detailed, accurate analysis based on the user's query and the image provided."
+                ),
+                (
+                    "human",
+                    [
+                        {"type": "text", "text": query},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
+                        }
+                    ]
+                )
+            ])
+            
+            # Create the chain
+            chain = prompt | llm | StrOutputParser()
+            
+            # Generate the analysis
+            analysis = chain.invoke({})
+            
+            logger.info(f"Successfully analyzed image artifact {artifact_id} with query: {query[:50]}...")
+            
+            return {
+                "success": True,
+                "analysis": analysis,
+                "artifact_id": artifact_id,
+                "mime_type": mime_type,
+                "query": query,
+                "message": f"Successfully analyzed image with multimodal LLM"
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to analyze image artifact {artifact_id}: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": f"Failed to analyze image: {str(e)}"
             }
         finally:
             if db:
