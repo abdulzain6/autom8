@@ -1547,6 +1547,44 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "CNN Fear & Greed Index Analysis",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cnn_fear_greed.png?raw=true",
+      "description": "Analyzes the CNN Fear & Greed Index by taking a screenshot and using AI to determine current market sentiment levels.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Monitor the CNN Fear & Greed Index for current market sentiment. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://edition.cnn.com/markets/fear-and-greed' with extraction_instructions: 'Extract the current Fear & Greed Index value (number between 0-100), the current sentiment label (Extreme Fear, Fear, Neutral, Greed, Extreme Greed), and the last updated timestamp. Look for the main index gauge/meter and its current reading. Send a concise mobile notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'CNN Fear & Greed Index 📊' and a short message summarizing the current index value and sentiment.",
+      "variable_names": [],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Flight Price Alert",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/flight_price_alert.png?raw=true",
+      "description": "Monitors flight prices between two destinations and sends alerts when prices drop below your specified threshold.",
+      "tags": [
+        "Travel"
+      ],
+      "goal": "Monitor flight prices and alert when they fall below your budget. Use GOOGLE_FLIGHTS__SEARCH_FLIGHTS with departure_airports='{{ variables['From'] }}', arrival_airports='{{ variables['To'] }}', departure_date='{{ variables['Departure Date'] }}', return_date='{{ variables['Return Date'] }}', sort_by='cheapest', max_results=10 to find flights. Check if any flight prices are below {{ variables['Max Price'] }}. If found, send a mobile notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Flight Deal Alert! ✈️' and details about flights found below your price threshold, including airline, price, and dates. Use searxng and frankfurter api to fill missing gaps like currency rates airport codes.",
+      "variable_names": [
+        "From",
+        "To",
+        "Max Price",
+        "Departure Date",
+        "Return Date"
+      ],
+      "required_app_names": [
+        "GOOGLE_FLIGHTS",
+        "NOTIFYME",
+        "FRANKFURTER_API",
+        "SEARXNG"
+      ],
+      "is_deep": false
     }
   ]
 }
