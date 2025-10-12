@@ -90,6 +90,9 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
+    environment:
+      - CHROMIUM_PROXY_SERVER=http://local-proxy:3000
+      - CHROMIUM_DENY_LIST="^http://(server|postgres|redis|huey_worker|headless-browser|local-proxy|skyvern).*"
     networks:
       - services_network
     deploy:

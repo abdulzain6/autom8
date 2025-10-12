@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Literal, cast
 from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field, SecretStr
-from aci.common.db.sql_models import Automation, Function
+from aci.common.db.sql_models import Automation, Function, AutomationRun
+from aci.common.enums import RunStatus
 from langchain_core.tools import StructuredTool
 from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
 from aci.server.config import DEEPINFRA_BASE_URL, DEEPINFRA_API_KEY
@@ -111,6 +112,40 @@ class AutomationExecutor:
             ),
         ]
         self.system_prompt = "\n\n---\n\n".join(prompt_components)
+
+    def get_previous_run_outputs(self, limit: int = 5) -> list[dict]:
+        """Get the previous run outputs for this automation."""
+        try:
+            with get_db_session() as db_session:
+                # Query for previous runs of this automation, excluding the current run if it exists
+                query = db_session.query(AutomationRun).filter(
+                    AutomationRun.automation_id == self.automation.id,
+                    AutomationRun.status == RunStatus.success  # Only get successful runs
+                )
+                
+                if self.run_id:
+                    query = query.filter(AutomationRun.id != self.run_id)
+                
+                # Order by started_at descending and limit to the specified number
+                previous_runs = query.order_by(AutomationRun.started_at.desc()).limit(limit).all()
+                
+                # Format the results
+                run_outputs = []
+                for run in previous_runs:
+                    run_outputs.append({
+                        "run_id": run.id,
+                        "started_at": run.started_at.isoformat() if run.started_at else None,
+                        "finished_at": run.finished_at.isoformat() if run.finished_at else None,
+                        "status": run.status.value if hasattr(run.status, 'value') else str(run.status),
+                        "message": run.message,
+                        "artifacts_count": len(run.artifacts) if run.artifacts else 0
+                    })
+                
+                return run_outputs
+                
+        except Exception as e:
+            logger.error(f"Error getting previous run outputs: {e}")
+            return []
 
     def get_functions(self) -> list[Function]:
         """Retrieve the list of functions associated with the automation."""
@@ -235,6 +270,25 @@ class AutomationExecutor:
                 func=lambda f=function, **kwargs: self._execute_tool_logic(f, **kwargs),
             )
             tools.append(tool)
+
+        # Add built-in tool for getting previous run outputs
+        class GetPreviousRunsInput(BaseModel):
+            limit: int = Field(default=5, description="Number of previous runs to retrieve (max 10)")
+        
+        def get_previous_runs_tool(limit: int = 5) -> list[dict]:
+            """Get the outputs from previous successful runs of this automation."""
+            if limit > 10:
+                limit = 10  # Cap at 10 for safety
+            return self.get_previous_run_outputs(limit)
+        
+        tools.append(
+            StructuredTool.from_function(
+                name="GET_PREVIOUS_RUN_OUTPUTS",
+                description="Retrieve the outputs from previous successful runs of this automation. Useful for learning from past executions and avoiding repeating the same work.",
+                func=get_previous_runs_tool,
+                args_schema=GetPreviousRunsInput,
+            )
+        )
 
         return tools
 

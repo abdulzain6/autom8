@@ -1478,7 +1478,7 @@
       "tags": [
         "Environment"
       ],
-      "goal": "Analyze temperature conditions for a specific location using Zoom Earth satellite data. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Zoom Earth: Construct the URL https://zoom.earth/maps/temperature/#view={latitude},{longitude},12z/model=icon using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Zoom Earth URL, set full_page=false, delay_seconds=10, and output_filename='zoom_earth_temp_{{ variables['City'] }}_{{ variables['Country'] }}_analysis.png'. STEP 4 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the temperature screenshot with prompt: 'Analyze this Zoom Earth temperature map screenshot and provide a concise one-line summary of current temperature conditions specifically for {{ variables['City'] }}, {{ variables['Country'] }}. Focus on the city's temperature range, any temperature variations within the city, and notable temperature patterns affecting the urban area.' STEP 5 - Temperature Notification: Send a concise one-line notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Temperature Analysis: {{ variables['City'] }}, {{ variables['Country'] }} 🌡️' and the AI-generated temperature summary.",
+      "goal": "Analyze temperature conditions for a specific location using Zoom Earth satellite data. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Zoom Earth: Construct the URL https://zoom.earth/maps/temperature/#view={latitude},{longitude},12z/place={latitude},{longitude}/model=icon using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Zoom Earth URL, set full_page=false, delay_seconds=10, and output_filename='zoom_earth_temp_{{ variables['City'] }}_{{ variables['Country'] }}_analysis.png'. STEP 4 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the temperature screenshot with prompt: 'Analyze this Zoom Earth temperature map screenshot and provide a concise one-line summary of current temperature conditions specifically for {{ variables['City'] }}, {{ variables['Country'] }}. Focus on the city's temperature range, any temperature variations within the city, and notable temperature patterns affecting the urban area.' STEP 5 - Temperature Notification: Send a concise one-line notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Temperature Analysis: {{ variables['City'] }}, {{ variables['Country'] }} 🌡️' and the AI-generated temperature summary.",
       "variable_names": [
         "City",
         "Country"
@@ -1487,6 +1487,44 @@
         "GEO_TOOLS",
         "BROWSER",
         "IMAGE_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Zoom Earth Precipitation Analysis",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/zoom_earth_precip_analysis.jpeg?raw=true",
+      "description": "Analyzes precipitation conditions for any city using Zoom Earth satellite data and sends intelligent weather notifications.",
+      "tags": [
+        "Environment"
+      ],
+      "goal": "Analyze precipitation conditions for a specific location using Zoom Earth satellite data. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Zoom Earth: Construct the URL https://zoom.earth/maps/precipitation/#view={latitude},{longitude},12z/place={latitude},{longitude}/model=icon using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Zoom Earth URL, set full_page=false, delay_seconds=10, and output_filename='zoom_earth_precip_{{ variables['City'] }}_{{ variables['Country'] }}_analysis.png'. STEP 4 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the precipitation screenshot with prompt: 'Analyze this Zoom Earth precipitation map screenshot and provide a concise one-line summary of current precipitation conditions specifically for {{ variables['City'] }}, {{ variables['Country'] }}. Focus on the city's precipitation patterns, rainfall intensity, cloud coverage, and any notable weather systems affecting the urban area.' STEP 5 - Precipitation Notification: Send a concise one-line notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Precipitation Analysis: {{ variables['City'] }}, {{ variables['Country'] }} 🌧️' and the AI-generated precipitation summary.",
+      "variable_names": [
+        "City",
+        "Country"
+      ],
+      "required_app_names": [
+        "GEO_TOOLS",
+        "BROWSER",
+        "IMAGE_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Recipe Discovery",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/random_recipe.jpeg?raw=true",
+      "description": "Discovers and generates recipe PDFs based on your food preferences from AllRecipes.com with clean printable formatting.",
+      "tags": [
+        "Food"
+      ],
+      "goal": "Generate a random recipe PDF based on '{{ variables['Food Preference'] }}' cuisine. STEP 1 - Check Previous Runs: Use GET_PREVIOUS_RUN_OUTPUTS to see what recipes have been generated before for this automation and avoid duplicates if possible. STEP 2 - Search AllRecipes: Use HTTP_TOOLS__GET_REQUEST to fetch the search results from 'https://www.allrecipes.com/search?q={{ variables['Food Preference'] }}'. STEP 3 - Extract Recipe URLs: Parse the HTML response to find recipe URLs that match the pattern '/recipe/[0-9]+/[^/]+/' and collect them into a list. STEP 4 - Select Random Recipe: Randomly select one recipe URL from the collected list, preferring ones not used in previous runs if available. STEP 5 - Prepare Print URL: Append '?print=' to the selected recipe URL to get the clean printable version. STEP 6 - Convert to PDF: Use PDF_TOOLS__URL_TO_PDF to convert the print URL into a PDF document with filename 'random_{{ variables['Food Preference'] }}_recipe.pdf'. STEP 7 - Notification: Send a mobile notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Food Preference'] }} Recipe Ready! 🍽️' and message 'Your delicious {{ variables['Food Preference'] }} recipe PDF has been generated and is ready for download. Recipe: [Include the recipe name and brief description in the output]'. Make sure to clearly mention the specific recipe name and a brief description in your final output so future runs can reference it.",
+      "variable_names": [
+        "Food Preference"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "PDF_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": false
