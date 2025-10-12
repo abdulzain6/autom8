@@ -219,25 +219,23 @@ class GoogleFlights(AppConnectorBase):
                     flight_data = flight
 
                 processed_flight = {
-                    "price": getattr(flight_data, 'price', 0),
-                    "currency": getattr(flight_data, 'currency', 'USD'),
-                    "duration_minutes": getattr(flight_data, 'duration', 0),
-                    "stops": getattr(flight_data, 'stops', 0),
+                    "price": flight_data.price,
+                    "duration_minutes": flight_data.duration,
+                    "stops": flight_data.stops,
                     "legs": []
                 }
 
                 # Process flight legs
-                legs = getattr(flight_data, 'legs', [])
+                legs = flight_data.legs
                 for leg in legs:
                     processed_leg = {
-                        "airline": getattr(leg.airline, 'value', str(leg.airline)) if hasattr(leg, 'airline') else 'Unknown',
-                        "flight_number": getattr(leg, 'flight_number', 'Unknown'),
-                        "departure_airport": getattr(leg.departure_airport, 'value', str(leg.departure_airport)) if hasattr(leg, 'departure_airport') else 'Unknown',
-                        "arrival_airport": getattr(leg.arrival_airport, 'value', str(leg.arrival_airport)) if hasattr(leg, 'arrival_airport') else 'Unknown',
-                        "departure_datetime": getattr(leg, 'departure_datetime', None),
-                        "arrival_datetime": getattr(leg, 'arrival_datetime', None),
-                        "duration_minutes": getattr(leg, 'duration', None),
-                        "aircraft": getattr(leg, 'aircraft', None),
+                        "airline": leg.airline.value,
+                        "flight_number": leg.flight_number,
+                        "departure_airport": leg.departure_airport.value,
+                        "arrival_airport": leg.arrival_airport.value,
+                        "departure_datetime": leg.departure_datetime,
+                        "arrival_datetime": leg.arrival_datetime,
+                        "duration_minutes": leg.duration,
                     }
                     processed_flight["legs"].append(processed_leg)
 
