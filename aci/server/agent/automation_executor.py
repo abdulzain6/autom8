@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from typing import Literal, cast
 from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field, SecretStr
@@ -282,11 +283,12 @@ class AutomationExecutor:
         class GetPreviousRunsInput(BaseModel):
             limit: int = Field(default=5, description="Number of previous runs to retrieve (max 10)")
         
-        def get_previous_runs_tool(limit: int = 5) -> list[dict]:
+        def get_previous_runs_tool(limit: int = 5) -> str:
             """Get the outputs from previous successful runs of this automation."""
             if limit > 10:
                 limit = 10  # Cap at 10 for safety
-            return self.get_previous_run_outputs(limit)
+            runs = self.get_previous_run_outputs(limit)
+            return json.dumps(runs, default=str, ensure_ascii=False)
         
         tools.append(
             StructuredTool.from_function(
