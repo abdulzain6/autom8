@@ -1,0 +1,17 @@
+{
+  "name": "GOOGLE_FLIGHTS",
+  "display_name": "Google Flights",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/google-flights.jpg",
+  "provider": "Google",
+  "version": "1.0.0",
+  "description": "Search for flights and find the cheapest flight options using Google Flights data.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Travel"
+  ],
+  "visibility": "public",
+  "active": true
+}

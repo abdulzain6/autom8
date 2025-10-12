@@ -1,0 +1,160 @@
+[
+  {
+    "name": "GOOGLE_FLIGHTS__SEARCH_FLIGHTS",
+    "description": "Search for flights with comprehensive filtering options including departure/arrival airports, dates, passenger details, seat class, and maximum stops.",
+    "tags": ["flights", "travel", "search", "airfare", "booking"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "departure_airports": {
+          "type": "string",
+          "description": "Comma-separated departure airport codes (e.g., 'JFK,LAX')"
+        },
+        "arrival_airports": {
+          "type": "string",
+          "description": "Comma-separated arrival airport codes (e.g., 'LHR,CDG')"
+        },
+        "departure_date": {
+          "type": "string",
+          "description": "Departure date in YYYY-MM-DD format"
+        },
+        "return_date": {
+          "type": "string",
+          "description": "Optional return date for round-trip in YYYY-MM-DD format"
+        },
+        "adults": {
+          "type": "integer",
+          "description": "Number of adult passengers",
+          "default": 1,
+          "minimum": 0
+        },
+        "children": {
+          "type": "integer",
+          "description": "Number of child passengers",
+          "default": 0,
+          "minimum": 0
+        },
+        "infants_in_seat": {
+          "type": "integer",
+          "description": "Number of infants in seats",
+          "default": 0,
+          "minimum": 0
+        },
+        "infants_on_lap": {
+          "type": "integer",
+          "description": "Number of infants on laps",
+          "default": 0,
+          "minimum": 0
+        },
+        "seat_type": {
+          "type": "string",
+          "description": "Seat class",
+          "enum": ["economy", "premium_economy", "business", "first"],
+          "default": "economy"
+        },
+        "max_stops": {
+          "type": "string",
+          "description": "Maximum stops",
+          "enum": ["non_stop", "one_stop", "two_stops", "any_stops"],
+          "default": "any_stops"
+        },
+        "sort_by": {
+          "type": "string",
+          "description": "Sort criteria",
+          "enum": ["cheapest", "duration", "departure_time", "arrival_time"],
+          "default": "cheapest"
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "Maximum number of results to return",
+          "default": 20,
+          "minimum": 1,
+          "maximum": 50
+        }
+      },
+      "required": ["departure_airports", "arrival_airports", "departure_date"],
+      "visible": ["departure_airports", "arrival_airports", "departure_date", "return_date", "adults", "children", "infants_in_seat", "infants_on_lap", "seat_type", "max_stops", "sort_by", "max_results"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "GOOGLE_FLIGHTS__SEARCH_CHEAP_FLIGHTS",
+    "description": "Find the cheapest flight dates within a date range for specific routes.",
+    "tags": ["flights", "travel", "cheap", "airfare", "dates"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "departure_airports": {
+          "type": "string",
+          "description": "Comma-separated departure airport codes (e.g., 'JFK,LAX')"
+        },
+        "arrival_airports": {
+          "type": "string",
+          "description": "Comma-separated arrival airport codes (e.g., 'LHR,CDG')"
+        },
+        "start_date": {
+          "type": "string",
+          "description": "Start date for search range in YYYY-MM-DD format"
+        },
+        "end_date": {
+          "type": "string",
+          "description": "End date for search range in YYYY-MM-DD format"
+        },
+        "adults": {
+          "type": "integer",
+          "description": "Number of adult passengers",
+          "default": 1,
+          "minimum": 0
+        },
+        "children": {
+          "type": "integer",
+          "description": "Number of child passengers",
+          "default": 0,
+          "minimum": 0
+        },
+        "infants_in_seat": {
+          "type": "integer",
+          "description": "Number of infants in seats",
+          "default": 0,
+          "minimum": 0
+        },
+        "infants_on_lap": {
+          "type": "integer",
+          "description": "Number of infants on laps",
+          "default": 0,
+          "minimum": 0
+        },
+        "seat_type": {
+          "type": "string",
+          "description": "Seat class",
+          "enum": ["economy", "premium_economy", "business", "first"],
+          "default": "economy"
+        },
+        "max_stops": {
+          "type": "string",
+          "description": "Maximum stops",
+          "enum": ["non_stop", "one_stop", "two_stops", "any_stops"],
+          "default": "any_stops"
+        },
+        "max_results": {
+          "type": "integer",
+          "description": "Maximum number of results to return",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 30
+        }
+      },
+      "required": ["departure_airports", "arrival_airports", "start_date", "end_date"],
+      "visible": ["departure_airports", "arrival_airports", "start_date", "end_date", "adults", "children", "infants_in_seat", "infants_on_lap", "seat_type", "max_stops", "max_results"],
+      "additionalProperties": false
+    }
+  }
+]
