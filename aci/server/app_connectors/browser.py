@@ -943,8 +943,51 @@ SECURITY VALIDATION RULES:
                         if js_delay_seconds > 0:
                             await asyncio.sleep(js_delay_seconds)
 
-                        # Take screenshot
-                        screenshot_bytes = await page.screenshot(full_page=full_page)
+                        if full_page:
+                            # For full page screenshots, we need to ensure all content is loaded
+                            # by scrolling through the page and waiting for dynamic content
+                            await page.evaluate("""
+                                () => {
+                                    return new Promise((resolve) => {
+                                        const scrollHeight = Math.max(
+                                            document.body.scrollHeight,
+                                            document.body.offsetHeight,
+                                            document.documentElement.clientHeight,
+                                            document.documentElement.scrollHeight,
+                                            document.documentElement.offsetHeight
+                                        );
+                                        
+                                        let currentScroll = 0;
+                                        const scrollStep = window.innerHeight * 0.8;
+                                        const totalSteps = Math.ceil(scrollHeight / scrollStep);
+                                        
+                                        function scrollAndWait() { 
+                                            if (currentScroll >= scrollHeight) {
+                                                // Scrolling complete, wait a bit more for any final content
+                                                setTimeout(resolve, 1000);
+                                                return;
+                                            }
+                                            
+                                            window.scrollTo(0, currentScroll);
+                                            currentScroll += scrollStep;
+                                            
+                                            setTimeout(scrollAndWait, 200);
+                                        }
+                                        
+                                        scrollAndWait();
+                                    });
+                                }
+                            """)
+                            
+                            # Wait for scrolling to complete and content to load
+                            await asyncio.sleep(2)
+                            
+                            # Take full page screenshot
+                            screenshot_bytes = await page.screenshot(full_page=True)
+                        else:
+                            # Take viewport screenshot
+                            screenshot_bytes = await page.screenshot(full_page=False)
+                        
                         return screenshot_bytes
 
                 screenshot_data = asyncio.run(asyncio.wait_for(_take_screenshot_async(), timeout=600))
