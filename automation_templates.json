@@ -1528,6 +1528,25 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Student Study Notes Generator",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/student_notes.jpeg?raw=true",
+      "description": "Creates comprehensive study notes for students with text content and relevant images, compiled into a professional PDF document.",
+      "tags": [
+        "Education"
+      ],
+      "goal": "Create comprehensive study notes for '{{ variables['Study Topic'] }}' with both text and images in a professional PDF format. STEP 1 - Research Topic: Use SEARXNG to search for '{{ variables['Study Topic'] }} study guide' and '{{ variables['Study Topic'] }} key concepts' to find high-quality educational content. Extract the top 5-7 most relevant URLs from reliable educational sources (Wikipedia, educational websites, academic sites). STEP 2 - Content Collection: For each selected URL, use HTTP_TOOLS__GET_URL to fetch the webpage content. Extract clean text content, headings, key points, and identify any relevant images (diagrams, charts, illustrations) from the HTML. STEP 3 - Image Processing: For each identified educational image, collect the image URL and create descriptive captions explaining what the image shows and its relevance to the study topic. STEP 4 - Content Organization: Structure the collected information into logical study note sections including: Introduction/Overview, Key Concepts, Important Details, Visual Aids (with images and captions), Summary, and Study Questions. STEP 5 - PDF Creation: Use PDF_TOOLS__MARKDOWN_TO_PDF to create a professional study notes document with proper Markdown formatting including: # Main Headings for sections, ## Subheadings for subsections, bullet points for key concepts, numbered lists for steps/processes, and image references with captions. Include image links throughout the document at appropriate sections. STEP 6 - Final Document: Save the comprehensive study notes as '{{ variables['Study Topic'] }}_study_notes.pdf' with a clean, student-friendly layout suitable for printing and studying. STEP 7 - Completion Notification: Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Study Notes Ready! 📚' and message 'Your comprehensive {{ variables['Study Topic'] }} study notes PDF with images and text has been created and is ready for download.'",
+      "variable_names": [
+        "Study Topic"
+      ],
+      "required_app_names": [
+        "SEARXNG",
+        "HTTP_TOOLS",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }
