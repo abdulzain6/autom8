@@ -47,10 +47,21 @@
           "visible": [],
           "additionalProperties": true,
           "description": "Required JSON schema defining the exact output structure for validation. Must be a valid JSON Schema (Draft 7) with type definitions. Example: {\"type\": \"object\", \"properties\": {\"name\": {\"type\": \"string\"}, \"price\": {\"type\": \"number\"}, \"features\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}}, \"required\": [\"name\", \"price\"]}"
+        },
+        "js_script": {
+          "type": "string",
+          "description": "Optional JavaScript code to execute before extraction. Useful for interacting with dynamic content, triggering events, or manipulating the page structure before scraping. Example: 'document.getElementById(\"load-more\").click();' or 'window.scrollTo(0, document.body.scrollHeight);'"
+        },
+        "js_delay_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 600,
+          "default": 0,
+          "description": "Optional delay in seconds to wait after executing JavaScript before starting extraction. Useful for waiting for page changes or dynamic content to load after JavaScript execution. Default is 0 (no delay). Maximum allowed is 600 seconds."
         }
       },
       "required": ["url", "extraction_instructions", "output_schema"],
-      "visible": ["url", "extraction_instructions", "output_schema"],
+      "visible": ["url", "extraction_instructions", "output_schema", "js_script", "js_delay_seconds"],
       "additionalProperties": false
     }
   },
@@ -133,10 +144,17 @@
           "maximum": 600,
           "default": 0,
           "description": "Optional delay in seconds to wait after executing JavaScript before taking the screenshot. Useful for waiting for page changes or animations to complete after JavaScript execution. Default is 0 (no delay). Maximum allowed is 600 seconds."
+        },
+        "zoom_level": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 5.0,
+          "default": 1.0,
+          "description": "Zoom level for the page before taking screenshot (1.0 = 100%, 0.5 = 50%, 2.0 = 200%). Lower values zoom out to fit more content in viewport. Default is 1.0 (no zoom)."
         }
       },
       "required": ["url", "output_filename"],
-      "visible": ["url", "output_filename", "full_page", "delay_seconds", "js_script", "js_delay_seconds"],
+      "visible": ["url", "output_filename", "full_page", "delay_seconds", "js_script", "js_delay_seconds", "zoom_level"],
       "additionalProperties": false
     }
   }

@@ -525,7 +525,7 @@ SECURITY VALIDATION RULES:
         return future.result()
 
     def scrape_with_browser(
-        self, url: str, extraction_instructions: str, output_schema: dict
+        self, url: str, extraction_instructions: str, output_schema: dict, js_script: Optional[str] = None, js_delay_seconds: float = 0.0
     ) -> dict:
         """
         Scrapes a website using crawl4ai with Steel browser via CDP and returns structured data.
@@ -539,6 +539,11 @@ SECURITY VALIDATION RULES:
             output_schema (dict): Required JSON schema defining the expected output structure.
                                 Must be a valid JSON schema with type definitions and properties.
                                 Example: {"type": "object", "properties": {"title": {"type": "string"}, "price": {"type": "number"}}}
+            js_script (str, optional): Optional JavaScript code to execute before extraction.
+                                     Useful for interacting with dynamic content, triggering events,
+                                     or manipulating the page structure before scraping.
+            js_delay_seconds (float): Optional delay in seconds to wait after executing JavaScript
+                                    before starting extraction. Default is 0.0 (no delay).
 
         Returns:
             dict: Contains 'extracted_content' with validated structured data and 'success' status.
@@ -547,6 +552,34 @@ SECURITY VALIDATION RULES:
         """
         # Validate URL security before proceeding
         self._validate_url_security(url)
+
+        # Basic JavaScript security validation if js_script is provided
+        if js_script:
+            if not isinstance(js_script, str):
+                raise ValueError("JavaScript script must be a string")
+
+            # Check for dangerous JavaScript patterns
+            dangerous_js_patterns = [
+                r"import\s*\(",  # Dynamic imports
+                r"require\s*\(",  # Node.js require
+                r"process\.",  # Node.js process access
+                r"__dirname",  # Node.js directory access
+                r"__filename",  # Node.js filename access
+                r"child_process",  # Child process execution
+                r"fs\.",  # File system access
+                r"exec\s*\(",  # Command execution
+                r"eval\s*\(",  # Code evaluation
+                r"Function\s*\(",  # Function constructor
+                r'setTimeout\s*\(\s*["\'][^"\']*["\']\s*,',  # setTimeout with string code
+                r'setInterval\s*\(\s*["\'][^"\']*["\']\s*,',  # setInterval with string code
+            ]
+
+            js_script_lower = js_script.lower()
+            for pattern in dangerous_js_patterns:
+                if re.search(pattern, js_script_lower):
+                    raise ValueError(
+                        f"JavaScript code contains potentially dangerous patterns that are not allowed: {pattern}"
+                    )
 
         logger.info(f"Starting browser scraping for URL: {url}")
 
@@ -624,13 +657,28 @@ SECURITY VALIDATION RULES:
                     )
                     llm_strategy = LLMExtractionStrategy(**extraction_kwargs)
 
-                    crawl_config = CrawlerRunConfig(
-                        extraction_strategy=llm_strategy,
-                        cache_mode=CacheMode.BYPASS,
-                        delay_before_return_html=12,
-                        max_scroll_steps=5,
-                        scroll_delay=2,
-                    )
+                    # Build crawl config with optional JS code
+                    crawl_config_kwargs = {
+                        "extraction_strategy": llm_strategy,
+                        "cache_mode": CacheMode.BYPASS,
+                        "delay_before_return_html": max(12, int(js_delay_seconds) + 5) if js_script and js_delay_seconds > 0 else 12,
+                        "max_scroll_steps": 5,
+                        "scroll_delay": 2,
+                    }
+                    
+                    if js_script:
+                        # If delay is specified, wrap the JS script with setTimeout
+                        if js_delay_seconds > 0:
+                            wrapped_js = f"""
+                            setTimeout(() => {{
+                                {js_script}
+                            }}, {int(js_delay_seconds * 1000)});
+                            """
+                            crawl_config_kwargs["js_code"] = wrapped_js
+                        else:
+                            crawl_config_kwargs["js_code"] = js_script
+                    
+                    crawl_config = CrawlerRunConfig(**crawl_config_kwargs)
 
                     async with AsyncWebCrawler(
                         crawler_strategy=crawler_strategy, config=browser_config
@@ -884,6 +932,7 @@ SECURITY VALIDATION RULES:
         delay_seconds: float = 0.0,
         js_script: Optional[str] = None,
         js_delay_seconds: float = 0.0,
+        zoom_level: float = 1.0,
     ) -> dict:
         """
         Takes a screenshot of a webpage and saves it as an artifact.
@@ -895,6 +944,7 @@ SECURITY VALIDATION RULES:
             delay_seconds (float): Optional delay in seconds to wait after page load.
             js_script (str, optional): Optional JavaScript code to execute before taking screenshot.
             js_delay_seconds (float): Optional delay in seconds to wait after executing JavaScript.
+            zoom_level (float): Zoom level for the page (1.0 = 100%, 0.5 = 50%, 2.0 = 200%). Default is 1.0.
 
         Returns:
             dict: Contains the artifact ID of the saved screenshot.
@@ -930,6 +980,12 @@ SECURITY VALIDATION RULES:
 
                         await stealth_async(page)  # type: ignore
                         await page.goto(url, wait_until="load", timeout=600000)
+
+                        # Set zoom level if different from default
+                        if zoom_level != 1.0:
+                            await page.evaluate(f"document.body.style.zoom = '{zoom_level}'")
+                            # Wait for zoom to take effect
+                            await asyncio.sleep(0.5)
 
                         # Optional delay for dynamic content loading
                         if delay_seconds > 0:
