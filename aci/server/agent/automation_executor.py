@@ -305,7 +305,7 @@ class AutomationExecutor:
         model = BaseChatOpenAI(
             base_url=DEEPINFRA_BASE_URL,
             api_key=SecretStr(DEEPINFRA_API_KEY),
-            model="moonshotai/Kimi-K2-Instruct-0905",
+            model="deepseek-ai/DeepSeek-V3.2-Exp",
             timeout=300,
             max_retries=3,
         )

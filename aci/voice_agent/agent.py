@@ -194,9 +194,10 @@ Timezone: Call get_user_timezone, convert to UTC, explain conversion.
 Voice: Brief (1-2 sentences), conversational, summarize results. Match user's language.
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
-            llm=openai.LLM.with_together(
-                model="moonshotai/Kimi-K2-Instruct-0905",
-                api_key=TOGETHER_API_KEY,
+            llm=openai.LLM(
+                model="deepseek-ai/DeepSeek-V3.2-Exp",
+                base_url=DEEPINFRA_BASE_URL,
+                api_key=DEEPINFRA_API_KEY,
                 reasoning_effort="low", # type: ignore
                 temperature=0,
             ),

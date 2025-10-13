@@ -461,7 +461,7 @@ class Browser(AppConnectorBase):
 
                         # 4️⃣ Init LLMs
                         llm = ChatOpenAI(
-                            model="moonshotai/Kimi-K2-Instruct-0905",
+                            model="deepseek-ai/DeepSeek-V3.2-Exp",
                             temperature=0.3,
                             api_key=config.DEEPINFRA_API_KEY,
                             base_url=config.DEEPINFRA_BASE_URL,

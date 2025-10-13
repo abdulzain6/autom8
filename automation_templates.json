@@ -1179,7 +1179,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Monitor football transfer rumors for specific players using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.espn.in/football/transfers-news-and-features/' with extraction_instructions focused on finding transfer news about {{ variables['Player Names'] }}. Extract player names, current clubs, rumored destinations, transfer fees, source reliability, and article headlines. Look for recent credible transfer rumors and news. Send comprehensive transfer updates via NOTIFYME__SEND_EMAIL with subject 'Transfer Alert: {{ variables['Player Names'] }} 🔄' including all relevant transfer details, source credibility, and potential move timelines. Focus on reliable sources and significant developments only.",
+      "goal": "Monitor football transfer rumors for specific players using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.espn.in/football/transfers-news-and-features/' with extraction_instructions focused on finding transfer news about {{ variables['Player Names'] }}. Extract player names, current clubs, rumored destinations, transfer fees, source reliability, and article headlines. Look for recent credible transfer rumors and news. Send comprehensive transfer updates via NOTIFYME__SEND_ME_EMAIL with subject 'Transfer Alert: {{ variables['Player Names'] }} 🔄' including all relevant transfer details, source credibility, and potential move timelines. Focus on reliable sources and significant developments only.",
       "variable_names": [
         "Player Names"
       ],
@@ -1566,23 +1566,55 @@
     {
       "name": "Flight Price Alert",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/flight_price_alert.png?raw=true",
-      "description": "Monitors flight prices between two destinations and sends alerts when prices drop below your specified threshold.",
+      "description": "Monitors flight prices between two destinations and sends alerts + email when prices drop below your specified threshold.",
       "tags": [
         "Travel"
       ],
-      "goal": "Monitor flight prices and alert when they fall below your budget. Use GOOGLE_FLIGHTS__SEARCH_FLIGHTS with departure_airports='{{ variables['From'] }}', arrival_airports='{{ variables['To'] }}', departure_date='{{ variables['Departure Date'] }}', return_date='{{ variables['Return Date'] }}', sort_by='cheapest', max_results=10 to find flights. Check if any flight prices are below {{ variables['Max Price'] }} (prices are always in USD). If found, send a brief mobile notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Flight Deal Alert! ✈️' and a short message like 'Found {{count}} flights from {{ variables['From'] }} to {{ variables['To'] }} under ${{ variables['Max Price'] }}'. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'Flight Deals: {{ variables['From'] }} to {{ variables['To'] }} - Under ${{ variables['Max Price'] }} [Current Date]' including: list of all qualifying flights with airline, price in USD and converted local currency (using FRANKFURTER_API first, then SEARXNG fallback for currency rates), dates, flight details, and direct booking links.",
+      "goal": "Monitor flight prices and alert when they fall below your budget. Use GOOGLE_FLIGHTS__SEARCH_FLIGHTS with departure_airports='{{ variables['From'] }}', arrival_airports='{{ variables['To'] }}', departure_date='{{ variables['Departure Date'] }}', return_date='{{ variables['Return Date'] }}', sort_by='cheapest', max_results=10 to find flights. Check if any flight prices are below {{ variables['Max Price (USD)'] }} (prices are always in USD). If found, send a brief mobile notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Flight Deal Alert! ✈️' and a short message like 'Found {{count}} flights from {{ variables['From'] }} to {{ variables['To'] }} under ${{ variables['Max Price (USD)'] }}'. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'Flight Deals: {{ variables['From'] }} to {{ variables['To'] }} - Under ${{ variables['Max Price (USD)'] }} [Current Date]' including: list of all qualifying flights with airline, price in USD, dates, flight details, and direct booking links.",
       "variable_names": [
         "From",
         "To",
-        "Max Price",
+        "Max Price (USD)",
         "Departure Date",
         "Return Date"
       ],
       "required_app_names": [
         "GOOGLE_FLIGHTS",
-        "NOTIFYME",
-        "FRANKFURTER_API",
-        "SEARXNG"
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Bitcoin Transaction Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/bitcoin_monitor.png?raw=true",
+      "description": "Monitors Bitcoin wallet addresses for new transactions and sends instant notifications when activity is detected.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Monitor Bitcoin wallet transactions for new activity. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous transaction data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://blockchair.com/bitcoin/address/{{ variables['Bitcoin Address'] }}#history' with extraction_instructions: 'Extract the latest transactions from the transaction history table including transaction hashes, amounts, timestamps, and types (received/sent). Focus on the most recent transactions and their details.'. Compare with previous run data to identify new transactions. If new transactions are found, send a short push notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Bitcoin Activity Detected ₿' and a brief summary like 'New transaction(s) on {{ variables['Bitcoin Address'] }} - check your wallet'. Output the current latest transaction data (including hash, amount, timestamp, and type) for comparison in future runs.",
+      "variable_names": [
+        "Bitcoin Address"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Ethereum Transaction Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/ethereum_monitor.png?raw=true",
+      "description": "Monitors Ethereum wallet addresses for new transactions and sends instant notifications when activity is detected.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Monitor Ethereum wallet transactions for new activity. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous transaction data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://blockchair.com/ethereum/address/{{ variables['Ethereum Address'] }}#history' with extraction_instructions: 'Extract the latest transactions from the transaction history table including transaction hashes, amounts, timestamps, and types (received/sent). Focus on the most recent transactions and their details.'. Compare with previous run data to identify new transactions. If new transactions are found, send a short push notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Ethereum Activity Detected Ξ' and a brief summary like 'New transaction(s) on {{ variables['Ethereum Address'] }} - check your wallet'. Output the current latest transaction data (including hash, amount, timestamp, and type) for comparison in future runs.",
+      "variable_names": [
+        "Ethereum Address"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
       ],
       "is_deep": false
     }
