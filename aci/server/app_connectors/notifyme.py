@@ -866,8 +866,8 @@ class Notifyme(AppConnectorBase):
             "to": phone,
             "type": "template",
             "template": {
-                "name": "automation_alert",
-                "language": {"code": "en_US"},
+                "name": "autom8_alert",
+                "language": {"code": "en"},
                 "components": [
                     {
                         "type": "body",
