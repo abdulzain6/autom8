@@ -54,17 +54,13 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events for the application.
     Initializes the Redis cache backend on startup.
     """
-    try:
-        scheduler.add_job(run_cleanup_job, "interval", hours=1)
-        scheduler.start()
-        logger.info("Scheduler started and cleanup job scheduled.")
-        redis = await aioredis.from_url(config.REDIS_URL)
-        await redis.ping()
-        logger.info("Successfully connected to Redis for caching.")
-        FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-    except Exception as e:
-        logger.info(f"Could not connect to Redis: {e}")
-        logger.info("Caching will be disabled.")
+    scheduler.add_job(run_cleanup_job, "interval", hours=1)
+    scheduler.start()
+    logger.info("Scheduler started and cleanup job scheduled.")
+    redis = await aioredis.from_url(config.REDIS_URL)
+    await redis.ping()
+    logger.info("Successfully connected to Redis for caching.")
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
     
     yield  # The application runs while in this context
     

@@ -42,13 +42,14 @@
       "tags": [
         "Security"
       ],
-      "goal": "Perform a comprehensive DNS security audit for the domain '{{ variables['Domain Name'] }}'. Conduct multiple DNS record lookups including A, AAAA, MX, TXT, NS, CNAME, and SOA records. Analyze the results for security vulnerabilities, misconfigurations, and best practices compliance. Check for SPF, DKIM, and DMARC email authentication records. Verify SSL certificate status and expiration dates. Assess subdomain enumeration and potential exposure risks. Compile findings into a professional cybersecurity assessment report with risk ratings, remediation recommendations, and compliance status. Send the detailed DNS Security Audit Report via email with the subject 'Professional DNS Security Assessment - {{ variables['Domain Name'] }}'.",
+      "goal": "Perform a comprehensive DNS security audit for the domain '{{ variables['Domain Name'] }}'. Conduct multiple DNS record lookups including A, AAAA, MX, TXT, NS, CNAME, and SOA records. Analyze the results for security vulnerabilities, misconfigurations, and best practices compliance. Check for SPF, DKIM, and DMARC email authentication records. Verify SSL certificate status and expiration dates. Assess subdomain enumeration and potential exposure risks. Compile findings into a professional cybersecurity assessment report with risk ratings, remediation recommendations, and compliance status. Format the report as a PDF and send it via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'DNS Security Audit Report 📋 - Domain: {{ variables['Domain Name'] }} - Comprehensive security assessment completed' and artifact_id for the PDF attachment. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_EMAIL with subject 'Professional DNS Security Assessment - {{ variables['Domain Name'] }}' and the PDF attachment.",
       "variable_names": [
         "Domain Name"
       ],
       "required_app_names": [
         "IP_TOOLS",
-        "PDF_TOOLS"
+        "PDF_TOOLS",
+        "NOTIFYME"
       ],
       "is_deep": false
     },
@@ -613,7 +614,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Generate detailed performance report for '{{ variables['Team Name'] }}' by searching recent matches in CRICBUZZ__GET_UPCOMING_SCHEDULE and checking current status in CRICBUZZ__GET_LIVE_MATCHES. Use SEARXNG to search for '{{ variables['Team Name'] }} cricket recent performance statistics' to get additional context. Analyze recent form, key player performances, win-loss record, and upcoming challenges. Create comprehensive team report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Recent Match Results, ## Key Player Stats, ## Team Strengths/Weaknesses, ## Upcoming Fixtures, and ## Performance Trends. Send detailed analysis via NOTIFYME__SEND_ME_EMAIL with subject '{{ variables['Team Name'] }} Performance Report' including statistical insights and team outlook.",
+      "goal": "Generate detailed performance report for '{{ variables['Team Name'] }}' by searching recent matches in CRICBUZZ__GET_UPCOMING_SCHEDULE and checking current status in CRICBUZZ__GET_LIVE_MATCHES. Use SEARXNG to search for '{{ variables['Team Name'] }} cricket recent performance statistics' to get additional context. Analyze recent form, key player performances, win-loss record, and upcoming challenges. Create comprehensive team report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Recent Match Results, ## Key Player Stats, ## Team Strengths/Weaknesses, ## Upcoming Fixtures, and ## Performance Trends. Format the report as a PDF and send it via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Cricket Team Performance Report 🏏 - {{ variables['Team Name'] }} analysis completed' and artifact_id for the PDF attachment. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_EMAIL with subject '{{ variables['Team Name'] }} Performance Report' and the PDF attachment.",
       "variable_names": [
         "Team Name"
       ],
