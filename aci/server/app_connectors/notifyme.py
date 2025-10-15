@@ -895,6 +895,8 @@ class Notifyme(AppConnectorBase):
 
         try:
             template_response = requests.post(template_url, headers=template_headers, json=template_data)
+            if template_response.status_code != 200:
+                logger.error(f"WhatsApp template message failed: HTTP {template_response.status_code} - {template_response.text}")
             template_response.raise_for_status()
             template_result = template_response.json()
             template_message_id = template_result.get("messages", [{}])[0].get("id")
@@ -931,25 +933,40 @@ class Notifyme(AppConnectorBase):
             file_extension = os.path.splitext(filename)[1].lower()
             if file_extension in ['.jpg', '.jpeg', '.png']:
                 media_type = "image"
+                content_type = "image/jpeg" if file_extension in ['.jpg', '.jpeg'] else "image/png"
             elif file_extension in ['.mp4', '.avi', '.mov']:
                 media_type = "video"
+                content_type = "video/mp4"
             elif file_extension in ['.mp3', '.wav', '.ogg']:
                 media_type = "audio"
+                content_type = "audio/mpeg" if file_extension == '.mp3' else "audio/wav" if file_extension == '.wav' else "audio/ogg"
             else:
                 media_type = "document"
+                # Use proper MIME types for documents
+                if file_extension == '.pdf':
+                    content_type = "application/pdf"
+                elif file_extension in ['.doc', '.docx']:
+                    content_type = "application/msword" if file_extension == '.doc' else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                elif file_extension == '.txt':
+                    content_type = "text/plain"
+                elif file_extension == '.csv':
+                    content_type = "text/csv"
+                else:
+                    content_type = "application/octet-stream"
 
             # Step 1: Upload media to get media ID
             upload_url = f"{base_url}/media"
             upload_headers = headers.copy()
-            upload_headers["Content-Type"] = "application/octet-stream"
+            upload_headers["Content-Type"] = content_type
 
             # Add filename to headers for document type
             if media_type == "document":
-                upload_headers["Content-Type"] = f"application/octet-stream"
                 upload_headers["Content-Disposition"] = f'attachment; filename="{filename}"'
 
             try:
                 upload_response = requests.post(upload_url, headers=upload_headers, data=file_content)
+                if upload_response.status_code != 200:
+                    logger.error(f"WhatsApp media upload failed for {filename}: HTTP {upload_response.status_code} - {upload_response.text}")
                 upload_response.raise_for_status()
                 upload_result = upload_response.json()
                 media_id = upload_result.get("id")
@@ -979,6 +996,8 @@ class Notifyme(AppConnectorBase):
                     del message_data[media_type]["caption"]
 
                 message_response = requests.post(message_url, headers=message_headers, json=message_data)
+                if message_response.status_code != 200:
+                    logger.error(f"WhatsApp message send failed for {filename}: HTTP {message_response.status_code} - {message_response.text}")
                 message_response.raise_for_status()
                 message_result = message_response.json()
                 media_message_id = message_result.get("messages", [{}])[0].get("id")
