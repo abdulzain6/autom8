@@ -31,6 +31,7 @@ from sqlalchemy.orm import (
     MappedAsDataclass,
     mapped_column,
     relationship,
+    validates,
 )
 
 from aci.common.db.custom_sql_types import (
@@ -79,10 +80,20 @@ class UserProfile(Base):
     )
     name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    phone_number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)  # E.164 format: +1234567890
 
     def __init__(self, id: str, **kwargs):
         self.id = id
         super().__init__(**kwargs)
+
+    @validates('phone_number')
+    def validate_phone_number(self, key, value):
+        if value is not None:
+            import re
+            # E.164 format validation: + followed by 1-3 digit country code and 4-14 digits
+            if not re.match(r'^\+\d{1,3}\d{4,14}$', value):
+                raise ValueError(f"Invalid phone number format: {value}. Expected E.164 format like +1234567890")
+        return value
 
 
 class Function(Base):

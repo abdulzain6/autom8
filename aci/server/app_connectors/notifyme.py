@@ -11,7 +11,7 @@ from aci.common.fcm import FCMManager
 from aci.common.utils import create_db_session
 from aci.server import config
 from aci.server.file_management import FileManager
-from aci.common.db.sql_models import Artifact, LinkedAccount
+from aci.common.db.sql_models import Artifact, LinkedAccount, UserProfile
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.server.app_connectors.base import AppConnectorBase
@@ -20,6 +20,8 @@ try:
     from PIL import Image
 except ImportError:
     Image = None
+
+import requests
 
 logger = get_logger(__name__)
 
@@ -51,12 +53,18 @@ class Notifyme(AppConnectorBase):
             linked_account, security_scheme, security_credentials, run_id=run_id
         )
 
-        # Store user's email
-        self.user_email = str(self.linked_account.user.email)
+        # Initialize database session and file manager
         self.db = create_db_session(config.DB_FULL_URL)
         self.file_manager = FileManager(self.db)
-
-        logger.info(f"NotifyMe connector initialized for user: {self.user_email}")
+        
+        # Store user's email
+        self.user_email = str(self.linked_account.user.email)
+        
+        # Get user's phone number from profile
+        profile = self.db.query(UserProfile).filter(UserProfile.id == self.linked_account.user_id).first()
+        self.user_phone = profile.phone_number if profile else None
+        
+        logger.info(f"NotifyMe connector initialized for user: {self.user_email}, phone: {self.user_phone}")
 
     def _convert_markdown_to_html(self, text: str, include_logo: bool = False) -> str:
         """
@@ -823,3 +831,60 @@ class Notifyme(AppConnectorBase):
             raise Exception(
                 f"An unexpected error occurred while sending the mobile notification: {e}"
             ) from e
+
+    def send_me_whatsapp_notification(
+        self, body: str
+    ) -> dict:
+        """
+        Sends a WhatsApp message to the user's phone number.
+
+        Args:
+            body: The main content of the message.
+
+        Returns:
+            A dictionary with the status and message ID.
+
+        Raises:
+            ValueError: If the user has no phone number.
+            Exception: If the API call fails.
+        """
+        if not self.user_phone:
+            raise ValueError("User phone number is required for WhatsApp notifications")
+
+        logger.info(f"Sending WhatsApp notification to {self.user_phone}")
+
+        # Remove + from phone number for WhatsApp API
+        phone = self.user_phone.lstrip('+')
+
+        url = f"https://graph.facebook.com/v22.0/{config.WHATSAPP_PHONE_NUMBER_ID}/messages"
+        headers = {
+            "Authorization": f"Bearer {config.WHATSAPP_API_TOKEN}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "messaging_product": "whatsapp",
+            "to": phone,
+            "type": "template",
+            "template": {
+                "name": "automation_alert",
+                "language": {"code": "en_US"},
+                "components": [
+                    {
+                        "type": "body",
+                        "parameters": [
+                            {"type": "text", "text": body}
+                        ]
+                    }
+                ]
+            }
+        }
+
+        try:
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+            result = response.json()
+            message_id = result.get("messages", [{}])[0].get("id")
+            return {"status": "success", "message_id": message_id}
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to send WhatsApp message: {e}")
+            raise Exception(f"Failed to send WhatsApp message: {e}") from e

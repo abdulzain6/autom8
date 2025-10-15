@@ -62,5 +62,26 @@
       "visible": ["title", "body"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION",
+    "description": "Sends a WhatsApp message to your phone number. Requires a phone number to be set in your profile.",
+    "tags": ["notification", "whatsapp", "mobile", "alert"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string",
+          "description": "The main content/message of the WhatsApp message."
+        }
+      },
+      "required": ["body"],
+      "visible": ["body"],
+      "additionalProperties": false
+    }
   }
 ]

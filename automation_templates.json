@@ -1617,6 +1617,25 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Sector Surge Watcher",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/sector_surge.png?raw=true",
+      "description": "Monitors market gainers and detects sector surges when multiple companies from the same sector are rising together.",
+      "tags": [
+        "Finance",
+        "Markets"
+      ],
+      "goal": "Monitor market gainers and detect sector surges. STEP 1 - Fetch Gainers: Use HTTP_TOOLS__GET_URL to fetch 'https://www.google.com/finance/markets/gainers' and extract all gainers with ticker symbols, company names, and percentage changes. STEP 2 - Sector Research: Use AI knowledge to determine the business sector for each ticker based on known company classifications (e.g., Technology: AAPL, MSFT, GOOGL, AMZN; Healthcare: JNJ, PFE, UNH; Energy: XOM, CVX; Financials: JPM, BAC; etc.). For tickers not recognized by AI knowledge, use SEARXNG to search for '{{ticker}} company sector industry' and extract the primary business sector. STEP 3 - Aggregate by Sector: Group gainers by sector and count how many companies are in each sector. STEP 4 - Detect Surges: Identify sectors with {{ variables['Min Surge Count'] }} or more gainers as 'Sector Surges'. STEP 5 - Report: Create a summary showing surging sectors, their gainers, top percentage changes, and source links. Send via NOTIFYME__SEND_ME_EMAIL with subject 'Market Sector Surge Alert - [Current Date]' including sector breakdown, ticker lists, and surge analysis.",
+      "variable_names": [
+        "Min Surge Count"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "SEARXNG",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }
