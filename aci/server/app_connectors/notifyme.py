@@ -750,6 +750,13 @@ class Notifyme(AppConnectorBase):
                         f"Artifact with ID {artifact_id} not found or access denied."
                     )
 
+                # Check individual file size before reading content (same limit as WhatsApp)
+                individual_max_size = 100 * 1024 * 1024  # 100MB per file
+                if file_record.size_bytes > individual_max_size:
+                    raise ValueError(
+                        f"Individual file {file_record.filename} exceeds the 100MB size limit for email attachments."
+                    )
+
                 # Get file content first to calculate actual size after compression  
                 content_generator, _ = self.file_manager.read_artifact(artifact_id)
                 file_content = b"".join(content_generator)
@@ -833,19 +840,20 @@ class Notifyme(AppConnectorBase):
             ) from e
 
     def send_me_whatsapp_notification(
-        self, body: str
+        self, body: str, artifact_id: Optional[str] = None
     ) -> dict:
         """
-        Sends a WhatsApp message to the user's phone number.
+        Sends a WhatsApp template message to the user's phone number, optionally followed by a single file attachment (max 100MB).
 
         Args:
             body: The main content of the message.
+            artifact_id: An optional artifact ID to send as a separate media message.
 
         Returns:
-            A dictionary with the status and message ID.
+            A dictionary with the status and message ID(s).
 
         Raises:
-            ValueError: If the user has no phone number.
+            ValueError: If the user has no phone number, artifact access is denied, or file is too large.
             Exception: If the API call fails.
         """
         if not self.user_phone:
@@ -856,12 +864,18 @@ class Notifyme(AppConnectorBase):
         # Remove + from phone number for WhatsApp API
         phone = self.user_phone.lstrip('+')
 
-        url = f"https://graph.facebook.com/v22.0/{config.WHATSAPP_PHONE_NUMBER_ID}/messages"
+        base_url = f"https://graph.facebook.com/v22.0/{config.WHATSAPP_PHONE_NUMBER_ID}"
         headers = {
             "Authorization": f"Bearer {config.WHATSAPP_API_TOKEN}",
-            "Content-Type": "application/json"
         }
-        data = {
+
+        message_ids = []
+
+        # Always send template message first
+        template_url = f"{base_url}/messages"
+        template_headers = headers.copy()
+        template_headers["Content-Type"] = "application/json"
+        template_data = {
             "messaging_product": "whatsapp",
             "to": phone,
             "type": "template",
@@ -880,11 +894,100 @@ class Notifyme(AppConnectorBase):
         }
 
         try:
-            response = requests.post(url, headers=headers, json=data)
-            response.raise_for_status()
-            result = response.json()
-            message_id = result.get("messages", [{}])[0].get("id")
-            return {"status": "success", "message_id": message_id}
+            template_response = requests.post(template_url, headers=template_headers, json=template_data)
+            template_response.raise_for_status()
+            template_result = template_response.json()
+            template_message_id = template_result.get("messages", [{}])[0].get("id")
+            message_ids.append(template_message_id)
+            logger.info(f"Successfully sent WhatsApp template message")
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to send WhatsApp message: {e}")
-            raise Exception(f"Failed to send WhatsApp message: {e}") from e
+            logger.error(f"Failed to send WhatsApp template message: {e}")
+            raise Exception(f"Failed to send WhatsApp template message: {e}") from e
+
+        # If artifacts are provided, send the first one as a media message
+        if artifact_id:
+            file_record = (
+                self.db.query(Artifact).filter(Artifact.id == artifact_id).first()
+            )
+            if not file_record:
+                raise ValueError(f"Artifact with ID {artifact_id} not found")
+
+            if file_record.user_id != self.linked_account.user_id:
+                raise ValueError(f"Artifact with ID {artifact_id} not found or access denied.")
+
+            # Check file size limit (100MB) before reading file content
+            max_size_bytes = 100 * 1024 * 1024  # 100MB
+            if file_record.size_bytes > max_size_bytes:
+                raise ValueError(f"File {file_record.filename} exceeds the 100MB size limit for WhatsApp attachments")
+
+            # Get file content
+            content_generator, _ = self.file_manager.read_artifact(artifact_id)
+            file_content = b"".join(content_generator)
+            filename = file_record.filename
+
+            logger.info(f"Processing WhatsApp attachment: {filename} ({file_record.size_bytes} bytes)")
+
+            # Determine media type based on file extension
+            file_extension = os.path.splitext(filename)[1].lower()
+            if file_extension in ['.jpg', '.jpeg', '.png']:
+                media_type = "image"
+            elif file_extension in ['.mp4', '.avi', '.mov']:
+                media_type = "video"
+            elif file_extension in ['.mp3', '.wav', '.ogg']:
+                media_type = "audio"
+            else:
+                media_type = "document"
+
+            # Step 1: Upload media to get media ID
+            upload_url = f"{base_url}/media"
+            upload_headers = headers.copy()
+            upload_headers["Content-Type"] = "application/octet-stream"
+
+            # Add filename to headers for document type
+            if media_type == "document":
+                upload_headers["Content-Type"] = f"application/octet-stream"
+                upload_headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+            try:
+                upload_response = requests.post(upload_url, headers=upload_headers, data=file_content)
+                upload_response.raise_for_status()
+                upload_result = upload_response.json()
+                media_id = upload_result.get("id")
+
+                if not media_id:
+                    raise Exception(f"Failed to upload media {filename}: no media ID returned")
+
+                logger.info(f"Successfully uploaded media {filename}, media ID: {media_id}")
+
+                # Step 2: Send media message
+                message_url = f"{base_url}/messages"
+                message_headers = headers.copy()
+                message_headers["Content-Type"] = "application/json"
+
+                message_data = {
+                    "messaging_product": "whatsapp",
+                    "to": phone,
+                    "type": media_type,
+                    media_type: {
+                        "id": media_id,
+                        "caption": f"File: {filename}"  # Simple caption with filename
+                    }
+                }
+
+                # Remove caption for audio messages
+                if media_type == "audio":
+                    del message_data[media_type]["caption"]
+
+                message_response = requests.post(message_url, headers=message_headers, json=message_data)
+                message_response.raise_for_status()
+                message_result = message_response.json()
+                media_message_id = message_result.get("messages", [{}])[0].get("id")
+                message_ids.append(media_message_id)
+
+                logger.info(f"Successfully sent WhatsApp media message for {filename}")
+
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Failed to send WhatsApp media message for {filename}: {e}")
+                raise Exception(f"Failed to send WhatsApp media message: {e}") from e
+
+        return {"status": "success", "message_ids": message_ids}
