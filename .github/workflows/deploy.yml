@@ -31,5 +31,7 @@ jobs:
 
             # --- Final Cleanup ---
             echo "Pruning old images..."
+            chmod +x ./clear-registry.sh
+            sudo ./clear-registry.sh
             sudo docker image prune -af
             echo "✅ Deployment checks complete!"

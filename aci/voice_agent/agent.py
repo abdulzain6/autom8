@@ -195,7 +195,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM(
-                model="Qwen/Qwen3-235B-A22B-fp8-tput",
+                model="deepseek-ai/DeepSeek-V3",
                 base_url=TOGETHER_BASE_URL,
                 api_key=TOGETHER_API_KEY,
                 reasoning_effort="low", # type: ignore
