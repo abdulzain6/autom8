@@ -25,10 +25,8 @@ jobs:
             
             echo "Changes detected in application files. Preparing and deploying autom8 stack..."
             chmod +x ./deploy-prep.sh
-            ./deploy-prep.sh
-            sudo docker stack deploy --with-registry-auth -c docker-stack.yml autom8
+            ./deploy-prep.sh && sudo docker stack deploy --with-registry-auth -c docker-stack.yml autom8            
           
-
             # --- Final Cleanup ---
             echo "Pruning old images..."
             chmod +x ./clear-registry.sh
