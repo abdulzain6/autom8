@@ -19,7 +19,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   # --- 2. Main Application Server (The Secure Bridge) ---
   server:
@@ -37,7 +37,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   huey_worker:
     image: localhost:5000/aci-app:latest
@@ -48,7 +48,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   # --- 3. LiveKit Server ---
   livekit:
@@ -66,7 +66,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   # --- 4. Voice Agent ---
   voice_agent:
@@ -79,7 +79,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   # --- 5. Internal Services ---
   gotenberg:
@@ -98,7 +98,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   code-executor:
     image: localhost:5000/code-executor:latest
@@ -108,7 +108,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   searxng:
     image: searxng/searxng:latest
@@ -121,7 +121,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   cycletls-server:
     image: localhost:5000/cycletls-server:latest
@@ -131,7 +131,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
   steel-browser-api:
     image: ghcr.io/steel-dev/steel-browser-api:latest
@@ -143,7 +143,7 @@ services:
     deploy:
       replicas: 0
       restart_policy:
-        condition: on-failure
+        condition: any
       resources:
         limits:
           cpus: '2.5'      # Still recommended to handle CPU spikes for one heavy browser
@@ -161,7 +161,7 @@ services:
     deploy:
       replicas: 2 # Start with 2 replicas, you can scale this number
       restart_policy:
-        condition: on-failure
+        condition: any
 
   local-proxy:
     image: localhost:5000/local-proxy:latest
@@ -176,7 +176,7 @@ services:
     deploy:
       replicas: 1 # Start with 2 replicas, you can scale this number
       restart_policy:
-        condition: on-failure
+        condition: any
 
   skyvern:
     image: public.ecr.aws/skyvern/skyvern:latest
@@ -198,7 +198,7 @@ services:
     deploy:
       replicas: 0
       restart_policy:
-        condition: on-failure
+        condition: any
 
   skyvern-ui:
     image: public.ecr.aws/skyvern/skyvern-ui:latest
@@ -216,7 +216,7 @@ services:
     deploy:
       replicas: 0
       restart_policy:
-        condition: on-failure
+        condition: any
 
   postgres:
     image: postgres:14-alpine
@@ -245,7 +245,7 @@ services:
     deploy:
       replicas: 1
       restart_policy:
-        condition: on-failure
+        condition: any
 
 # --- Swarm will create these as overlay networks, allowing services to connect ---
 networks:
