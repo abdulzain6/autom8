@@ -5,7 +5,7 @@ from openai import OpenAI, AsyncOpenAI
 import json
 import logging
 from time import time
-from typing import Any, Dict, cast
+from typing import Any, Dict, cast, Optional
 from livekit.agents import (
     Agent,
     AgentSession,
@@ -195,9 +195,9 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM(
-                model="deepseek-ai/DeepSeek-V3.2-Exp",
-                base_url=DEEPINFRA_BASE_URL,
-                api_key=DEEPINFRA_API_KEY,
+                model="Qwen/Qwen3-235B-A22B-fp8-tput",
+                base_url=TOGETHER_BASE_URL,
+                api_key=TOGETHER_API_KEY,
                 reasoning_effort="low", # type: ignore
                 temperature=0,
             ),
@@ -210,6 +210,98 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             vad=silero.VAD.load(),
             turn_detection=MultilingualModel(),
         )
+
+    async def _notify_tool_used(self, tool_name: str, display_name: Optional[str] = None) -> None:
+        """
+        Sends a notification to the frontend when a tool is being used.
+        
+        Args:
+            tool_name: The name of the tool being used
+            display_name: Optional user-friendly name to display instead of tool_name
+        """
+        try:
+            room = get_job_context().room
+            participant_identity = next(iter(room.remote_participants))
+
+            name_to_show = display_name or tool_name
+            await room.local_participant.perform_rpc(
+                destination_identity=participant_identity,
+                method="toolUsed",
+                payload=json.dumps({
+                    "message": f"AI is working on your request using {name_to_show}...",
+                    "tool_name": tool_name
+                }),
+                response_timeout=5,  # Shorter timeout for notifications
+            )
+        except Exception as e:
+            # Don't fail the tool execution if notification fails
+            logger.warning(f"Failed to send tool usage notification: {e}")
+
+    @staticmethod
+    def _tool_notification_wrapper(tool_name: str, display_name: Optional[str] = None):
+        """
+        Decorator factory to wrap tool functions with usage notifications.
+        
+        Args:
+            tool_name: The name of the tool being used
+            display_name: Optional user-friendly name to display instead of tool_name
+        """
+        def decorator(func):
+            async def wrapper(self_ref, *args, **kwargs):
+                # Send tool started notification
+                await self_ref._notify_tool_used(tool_name, display_name=display_name)
+                
+                try:
+                    # Execute the tool
+                    result = await func(self_ref, *args, **kwargs)
+                    
+                    # Send tool completed notification
+                    await self_ref._notify_tool_completed(tool_name, success=True, display_name=display_name)
+                    
+                    return result
+                    
+                except Exception as e:
+                    # Send tool completed notification with failure
+                    await self_ref._notify_tool_completed(tool_name, success=False, error=str(e), display_name=display_name)
+                    raise
+            
+            return wrapper
+        return decorator
+
+    async def _notify_tool_completed(self, tool_name: str, success: bool, error: Optional[str] = None, display_name: Optional[str] = None) -> None:
+        """
+        Sends a notification to the frontend when a tool execution is completed.
+        
+        Args:
+            tool_name: The name of the tool that was used
+            success: Whether the tool execution was successful
+            error: Error message if the tool failed
+            display_name: Optional user-friendly name to display instead of tool_name
+        """
+        try:
+            room = get_job_context().room
+            participant_identity = next(iter(room.remote_participants))
+
+            name_to_show = display_name or tool_name
+            if success:
+                message = f"AI completed using {name_to_show}"
+            else:
+                message = f"AI encountered an issue with {name_to_show}"
+
+            await room.local_participant.perform_rpc(
+                destination_identity=participant_identity,
+                method="toolUseCompleted",
+                payload=json.dumps({
+                    "message": message,
+                    "tool_name": tool_name,
+                    "success": success,
+                    "error": error
+                }),
+                response_timeout=5,  # Shorter timeout for notifications
+            )
+        except Exception as e:
+            # Don't fail if notification fails
+            logger.warning(f"Failed to send tool completion notification: {e}")
 
     async def on_user_turn_completed(
         self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
@@ -333,6 +425,20 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             else:
                 parameters = {}
             
+            # Parse function name to get user-friendly display name
+            if "__" in function_name:
+                # Format: APP_NAME__FUNCTION_NAME -> "function name"
+                app_name, func_part = function_name.split("__", 1)
+                # Convert camelCase/PascalCase to readable text
+                display_name = func_part.replace("_", " ").lower()
+                # Capitalize first letter
+                display_name = display_name[0].upper() + display_name[1:] if display_name else display_name
+            else:
+                display_name = function_name.replace("_", " ").lower()
+            
+            # Send tool started notification with the cleaned function name
+            await self._notify_tool_used("execute_function", display_name=f"{display_name}")
+            
             logger.info(f"Executing function: {function_name} with parameters: {parameters}")
             
             # Use the existing execute_function from function_utils
@@ -349,11 +455,15 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             
             # Format the result
             if result.success:
+                # Send success notification
+                await self._notify_tool_completed("execute_function", success=True, display_name=f"{display_name}")
                 return json.dumps({
                     "success": True,
                     "data": result.data,
                 })
             else:
+                # Send failure notification
+                await self._notify_tool_completed("execute_function", success=False, error=result.error, display_name=f"{display_name}")
                 return json.dumps({
                     "success": False,
                     "error": result.error,
@@ -361,17 +471,20 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             
         except KeyError as e:
             logger.error(f"Missing required argument in execute_function: {e}")
+            await self._notify_tool_completed("execute_function", success=False, error=f"Missing required argument: {str(e)}", display_name="function execution")
             return json.dumps({
                 "success": False,
                 "error": f"Missing required argument: {str(e)}"
             })
         except Exception as e:
             logger.error(f"Error in execute_function: {e}", exc_info=True)
+            await self._notify_tool_completed("execute_function", success=False, error=f"Error executing function: {str(e)}", display_name="function execution")
             return json.dumps({
                 "success": False,
                 "error": f"Error executing function: {str(e)}"
             })
 
+    @_tool_notification_wrapper("display_mini_app", "preparing your mini app")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -445,11 +558,13 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             # This will catch RPC timeouts or other communication errors
             raise ToolError(f"Failed to send the mini-app to the frontend: {e}")
 
+    @_tool_notification_wrapper("get_linked_apps", "checking your connected apps")
     @function_tool()
     async def get_linked_apps(self) -> str:
         """Fetch and return the names of apps linked to the user's account."""
         return self.linked_apps_str
 
+    @_tool_notification_wrapper("get_app_info", "getting app information")
     @function_tool()
     async def get_app_info(self, app_names: list[str]) -> str:
         """Fetch and return detailed information about specified apps and their functions."""
@@ -500,6 +615,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             logger.error(f"Error in get_app_info: {e}", exc_info=True)
             return json.dumps({"error": "An internal error occurred."})
 
+    @_tool_notification_wrapper("create_automation", "creating your automation")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -667,6 +783,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 f"An unexpected error occurred while creating the automation: {str(e)}"
             )
 
+    @_tool_notification_wrapper("list_user_automations", "checking your automations")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -750,6 +867,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             )
             return f"An unexpected error occurred while retrieving your automations: {str(e)}"
 
+    @_tool_notification_wrapper("update_automation", "updating your automation")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -877,6 +995,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             )
             return f"An unexpected error occurred while updating the automation: {str(e)}"
 
+    @_tool_notification_wrapper("get_user_timezone", "checking your timezone")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -933,6 +1052,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 f"Failed to get timezone information from the frontend: {e}"
             )
 
+    @_tool_notification_wrapper("get_automation_by_id", "getting automation details")
     @function_tool(
         raw_schema={
             "type": "function",

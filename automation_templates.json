@@ -1637,6 +1637,56 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "Polymarket Daily Summary",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/polymarket_summary.png?raw=true",
+      "description": "Daily summary of Polymarket prediction markets based on your search keyword, including market trends, prices, and key insights.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Generate a daily summary of Polymarket prediction markets for '{{ variables['Search Keyword'] }}'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://polymarket.com/search?_q={{ variables['Search Keyword'] }}' with extraction_instructions: 'Extract the top 10-15 prediction markets related to the search keyword. For each market, capture: market title/question, current probability/price, 24h volume, total volume, end date, and market status (active/resolved). Focus on active markets with significant trading volume.' Analyze the extracted data to identify trending markets, price movements, and key insights. Create a comprehensive summary highlighting: top trending markets, significant price changes, high-volume markets, and market sentiment analysis. Format the findings into a professional daily digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Polymarket Daily Summary - {{ variables['Search Keyword'] }} [Current Date]' including: executive summary of market trends, detailed breakdown of top markets with current prices and volumes, key insights and analysis, and direct Polymarket links for each market. Send a brief alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Polymarket Summary 📊 - Daily update for {{ variables['Search Keyword'] }} markets available - check your email for details'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Polymarket Summary 📊' and message 'Daily update for {{ variables['Search Keyword'] }} markets available - check your email for details'.",
+      "variable_names": [
+        "Search Keyword"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Polymarket Trending Questions",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/polymarket_trending.png?raw=true",
+      "description": "Daily digest of the most trending prediction markets on Polymarket with volume analysis and market insights.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Get the daily trending prediction markets on Polymarket. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://polymarket.com/' with extraction_instructions: 'Extract the top trending prediction markets from the homepage. For each market, capture: market title/question, current probability/price, 24h volume, total volume, end date, market category, and trending rank. Focus on the most active and trending markets.' Analyze the trending data to identify market categories with highest activity, unusual price movements, and emerging trends. Create a trending markets digest highlighting: top 10 trending markets, volume leaders, price movement analysis, and category breakdown. Format the findings into an engaging daily digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Polymarket Trending Markets - Top Questions [Current Date]' including: trending market rankings, volume analysis, price insights, category trends, and direct Polymarket links. Send a brief alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Polymarket Trending 📈 - Top markets update available - check your email for details'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Polymarket Trending 📈' and message 'Top markets update available - check your email for details'.",
+      "variable_names": [],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Polymarket Odds Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/polymarket_odds.png?raw=true",
+      "description": "Monitor specific Polymarket prediction market odds and get alerted when probabilities change significantly.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Monitor odds changes for a specific Polymarket prediction market. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous odds data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape '{{ variables['Market URL'] }}' with extraction_instructions: 'Extract the market title/question, current probability/price for the main outcome, 24h volume, total volume, end date, and market status. Also extract any available historical price data or charts if visible.' Compare current odds with previous run data to detect significant changes (threshold: {{ variables['Change Threshold (%)'] }}% or more). If significant odds movement is detected, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Odds Alert! 📊 - {{ variables['Market URL'] }} odds changed by {change_percentage}% - Current: {current_odds}%'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Odds Alert! 📊' and message '{{ variables['Market URL'] }} odds changed by {change_percentage}% - Current: {current_odds}%'. Always output the current odds data for comparison in future runs. Send a daily summary email via NOTIFYME__SEND_ME_EMAIL with subject 'Odds Monitor - {{ variables['Market URL'] }} [Current Date]' including current odds, recent changes, volume analysis, and market status.",
+      "variable_names": [
+        "Market URL",
+        "Change Threshold (%)"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }

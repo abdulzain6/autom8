@@ -880,7 +880,7 @@ class Notifyme(AppConnectorBase):
             "to": phone,
             "type": "template",
             "template": {
-                "name": "autom8_alert",
+                "name": "process_update",
                 "language": {"code": "en"},
                 "components": [
                     {
