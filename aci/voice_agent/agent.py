@@ -240,33 +240,30 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
     @staticmethod
     def _tool_notification_wrapper(tool_name: str, display_name: Optional[str] = None):
         """
-        Decorator factory to wrap tool functions with usage notifications.
+        Context manager factory to wrap tool functions with usage notifications.
         
         Args:
             tool_name: The name of the tool being used
             display_name: Optional user-friendly name to display instead of tool_name
         """
-        def decorator(func):
-            async def wrapper(self_ref, *args, **kwargs):
-                # Send tool started notification
-                await self_ref._notify_tool_used(tool_name, display_name=display_name)
-                
-                try:
-                    # Execute the tool
-                    result = await func(self_ref, *args, **kwargs)
-                    
-                    # Send tool completed notification
-                    await self_ref._notify_tool_completed(tool_name, success=True, display_name=display_name)
-                    
-                    return result
-                    
-                except Exception as e:
-                    # Send tool completed notification with failure
-                    await self_ref._notify_tool_completed(tool_name, success=False, error=str(e), display_name=display_name)
-                    raise
+        from contextlib import asynccontextmanager
+        
+        @asynccontextmanager
+        async def context_manager(self_ref):
+            # Send tool started notification
+            await self_ref._notify_tool_used(tool_name, display_name=display_name)
             
-            return wrapper
-        return decorator
+            try:
+                yield
+            except Exception as e:
+                # Send tool completed notification with failure
+                await self_ref._notify_tool_completed(tool_name, success=False, error=str(e), display_name=display_name)
+                raise
+            else:
+                # Send tool completed notification
+                await self_ref._notify_tool_completed(tool_name, success=True, display_name=display_name)
+        
+        return context_manager
 
     async def _notify_tool_completed(self, tool_name: str, success: bool, error: Optional[str] = None, display_name: Optional[str] = None) -> None:
         """
@@ -506,7 +503,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
-    @_tool_notification_wrapper("display_mini_app", "preparing your mini app")
     async def display_mini_app(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -532,24 +528,25 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             html_content = str(raw_arguments["html_content"])
             validate_html(html_content)
             
-            room = get_job_context().room
-            participant_identity = next(iter(room.remote_participants))
+            async with self._tool_notification_wrapper("display_mini_app", "Display mini app")(self):
+                room = get_job_context().room
+                participant_identity = next(iter(room.remote_participants))
 
-            # The frontend client must have a listener for the "displayMiniApp" method
-            await room.local_participant.perform_rpc(
-                destination_identity=participant_identity,
-                method="displayMiniApp",
-                payload=json.dumps(
-                    {
-                        "title": raw_arguments.get("app_title", "Mini App"),
-                        "html": html_content,
-                    }
-                ),
-                response_timeout=10,
-            )
+                # The frontend client must have a listener for the "displayMiniApp" method
+                await room.local_participant.perform_rpc(
+                    destination_identity=participant_identity,
+                    method="displayMiniApp",
+                    payload=json.dumps(
+                        {
+                            "title": raw_arguments.get("app_title", "Mini App"),
+                            "html": html_content,
+                        }
+                    ),
+                    response_timeout=10,
+                )
 
-            # The frontend should send back a simple success message
-            return "App successfully sent to the user for display."
+                # The frontend should send back a simple success message
+                return "App successfully sent to the user for display."
         except StopIteration:
             raise ToolError(
                 "No remote participants found in the room to display the app."
@@ -559,13 +556,12 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             raise ToolError(f"Failed to send the mini-app to the frontend: {e}")
 
     @function_tool()
-    @_tool_notification_wrapper("get_linked_apps", "checking your connected apps")
     async def get_linked_apps(self) -> str:
         """Fetch and return the names of apps linked to the user's account."""
-        return self.linked_apps_str
+        async with self._tool_notification_wrapper("get_linked_apps", "Get linked apps")(self):
+            return self.linked_apps_str
 
     @function_tool()
-    @_tool_notification_wrapper("get_app_info", "getting app information")
     async def get_app_info(self, app_names: list[str]) -> str:
         """Fetch and return detailed information about specified apps and their functions."""
         logger.info(f"Agent requested info for apps: {app_names}")
@@ -573,47 +569,48 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             return json.dumps(
                 {"error": "You can request info for up to 3 apps at a time."}
             )
-        try:
-            # Normalize app names to uppercase for case-insensitive lookup
-            normalized_app_names = [name.upper() for name in app_names]
-            
-            # Use the new CRUD function to get apps with their functions pre-loaded
-            apps = crud.apps.get_apps_with_functions_by_names(
-                self.db_session, normalized_app_names
-            )
-            if not apps:
-                return json.dumps({"error": f"No apps found with names: {app_names}"})
-
-            # Build the detailed response
-            response_data = []
-            for app in apps:
-                if app.name.lower() in self._restricted_apps:
-                    continue
-
-                response_data.append(
-                    {
-                        "name": app.name,
-                        "description": app.description,
-                        "functions": [
-                            {
-                                "name": func.name,
-                                "description": func.description,
-                                "parameters": cast(
-                                    OpenAIFunctionDefinition,
-                                    format_function_definition(
-                                        func, FunctionDefinitionFormat.OPENAI
-                                    ),
-                                ).function.parameters,
-                            }
-                            for func in app.functions
-                            if func.active
-                        ],
-                    }
+        async with self._tool_notification_wrapper("get_app_info", "Get app info")(self):
+            try:
+                # Normalize app names to uppercase for case-insensitive lookup
+                normalized_app_names = [name.upper() for name in app_names]
+                
+                # Use the new CRUD function to get apps with their functions pre-loaded
+                apps = crud.apps.get_apps_with_functions_by_names(
+                    self.db_session, normalized_app_names
                 )
-            return json.dumps(response_data)
-        except Exception as e:
-            logger.error(f"Error in get_app_info: {e}", exc_info=True)
-            return json.dumps({"error": "An internal error occurred."})
+                if not apps:
+                    return json.dumps({"error": f"No apps found with names: {app_names}"})
+
+                # Build the detailed response
+                response_data = []
+                for app in apps:
+                    if app.name.lower() in self._restricted_apps:
+                        continue
+
+                    response_data.append(
+                        {
+                            "name": app.name,
+                            "description": app.description,
+                            "functions": [
+                                {
+                                    "name": func.name,
+                                    "description": func.description,
+                                    "parameters": cast(
+                                        OpenAIFunctionDefinition,
+                                        format_function_definition(
+                                            func, FunctionDefinitionFormat.OPENAI
+                                        ),
+                                    ).function.parameters,
+                                }
+                                for func in app.functions
+                                if func.active
+                            ],
+                        }
+                    )
+                return json.dumps(response_data)
+            except Exception as e:
+                logger.error(f"Error in get_app_info: {e}", exc_info=True)
+                return json.dumps({"error": "An internal error occurred."})
 
     @function_tool(
         raw_schema={
@@ -659,7 +656,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
-    @_tool_notification_wrapper("create_automation", "creating your automation")
     async def create_automation(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -683,105 +679,106 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
         )
         logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
 
-        try:
-            # Import here to avoid circular imports
-            from aci.common.schemas.automations import AutomationAgentCreate
-            from aci.common.db import crud
-            from aci.common.db.crud import linked_accounts as linked_accounts_crud
-            from aci.common.schemas.automations import AutomationCreate
+        async with self._tool_notification_wrapper("create_automation", "Create automation")(self):
+            try:
+                # Import here to avoid circular imports
+                from aci.common.schemas.automations import AutomationAgentCreate
+                from aci.common.db import crud
+                from aci.common.db.crud import linked_accounts as linked_accounts_crud
+                from aci.common.schemas.automations import AutomationCreate
 
-            # Convert raw arguments to proper types
-            automation_args = {
-                "name": str(raw_arguments["name"]),
-                "goal": str(raw_arguments["goal"]),
-                "app_names": (
-                    [str(app) for app in raw_arguments["app_names"]]
-                    if isinstance(raw_arguments["app_names"], list)
-                    else []
-                ),
-                "description": (
-                    str(raw_arguments.get("description"))
-                    if raw_arguments.get("description")
-                    else None
-                ),
-                "is_deep": bool(raw_arguments.get("is_deep", False)),
-                "is_recurring": bool(raw_arguments.get("is_recurring", False)),
-                "cron_schedule": (
-                    str(raw_arguments.get("cron_schedule"))
-                    if raw_arguments.get("cron_schedule")
-                    else None
-                ),
-            }
+                # Convert raw arguments to proper types
+                automation_args = {
+                    "name": str(raw_arguments["name"]),
+                    "goal": str(raw_arguments["goal"]),
+                    "app_names": (
+                        [str(app) for app in raw_arguments["app_names"]]
+                        if isinstance(raw_arguments["app_names"], list)
+                        else []
+                    ),
+                    "description": (
+                        str(raw_arguments.get("description"))
+                        if raw_arguments.get("description")
+                        else None
+                    ),
+                    "is_deep": bool(raw_arguments.get("is_deep", False)),
+                    "is_recurring": bool(raw_arguments.get("is_recurring", False)),
+                    "cron_schedule": (
+                        str(raw_arguments.get("cron_schedule"))
+                        if raw_arguments.get("cron_schedule")
+                        else None
+                    ),
+                }
 
-            logger.info(f"[AUTOMATION_TOOL] Processed arguments: {automation_args}")
+                logger.info(f"[AUTOMATION_TOOL] Processed arguments: {automation_args}")
 
-            # Create the automation schema
-            automation_data = AutomationAgentCreate(**automation_args)
-            logger.info(
-                f"[AUTOMATION_TOOL] Created automation schema for '{automation_data.name}'"
-            )
-
-            # Get the user's linked accounts for the specified apps
-            app_names = automation_data.app_names
-            linked_accounts = []
-            logger.info(
-                f"[AUTOMATION_TOOL] Checking linked accounts for apps: {app_names}"
-            )
-
-            for app_name in app_names:
-                linked_account = linked_accounts_crud.get_linked_account(
-                    self.db_session, self.user_id, app_name.upper()
-                )
-                if not linked_account:
-                    logger.error(
-                        f"[AUTOMATION_TOOL] Missing linked account for app: {app_name}"
-                    )
-                    return f"Error: You don't have the '{app_name}' app connected. Please connect this app first before creating the automation."
-                linked_accounts.append(linked_account)
+                # Create the automation schema
+                automation_data = AutomationAgentCreate(**automation_args)
                 logger.info(
-                    f"[AUTOMATION_TOOL] Found linked account for {app_name}: {linked_account.id}"
+                    f"[AUTOMATION_TOOL] Created automation schema for '{automation_data.name}'"
                 )
 
-            # Convert to the standard AutomationCreate schema
-            automation_create = AutomationCreate(
-                name=automation_data.name,
-                description=automation_data.description,
-                goal=automation_data.goal,
-                is_deep=automation_data.is_deep,
-                active=automation_data.active,
-                linked_account_ids=[la.id for la in linked_accounts],
-                is_recurring=automation_data.is_recurring,
-                cron_schedule=automation_data.cron_schedule,
-            )
+                # Get the user's linked accounts for the specified apps
+                app_names = automation_data.app_names
+                linked_accounts = []
+                logger.info(
+                    f"[AUTOMATION_TOOL] Checking linked accounts for apps: {app_names}"
+                )
 
-            logger.info(
-                f"[AUTOMATION_TOOL] Creating automation with linked accounts: {[la.id for la in linked_accounts]}"
-            )
+                for app_name in app_names:
+                    linked_account = linked_accounts_crud.get_linked_account(
+                        self.db_session, self.user_id, app_name.upper()
+                    )
+                    if not linked_account:
+                        logger.error(
+                            f"[AUTOMATION_TOOL] Missing linked account for app: {app_name}"
+                        )
+                        return f"Error: You don't have the '{app_name}' app connected. Please connect this app first before creating the automation."
+                    linked_accounts.append(linked_account)
+                    logger.info(
+                        f"[AUTOMATION_TOOL] Found linked account for {app_name}: {linked_account.id}"
+                    )
 
-            # Create the automation
-            automation = crud.automations.create_automation(
-                self.db_session, self.user_id, automation_create
-            )
+                # Convert to the standard AutomationCreate schema
+                automation_create = AutomationCreate(
+                    name=automation_data.name,
+                    description=automation_data.description,
+                    goal=automation_data.goal,
+                    is_deep=automation_data.is_deep,
+                    active=automation_data.active,
+                    linked_account_ids=[la.id for la in linked_accounts],
+                    is_recurring=automation_data.is_recurring,
+                    cron_schedule=automation_data.cron_schedule,
+                )
 
-            logger.info(
-                f"[AUTOMATION_TOOL] Successfully created automation '{automation.name}' with ID: {automation.id}"
-            )
+                logger.info(
+                    f"[AUTOMATION_TOOL] Creating automation with linked accounts: {[la.id for la in linked_accounts]}"
+                )
 
-            result = f"Successfully created automation '{automation.name}' (ID: {automation.id}). The automation is {'active and will run on schedule' if automation.is_recurring else 'ready to be triggered manually'}."
-            logger.info(f"[AUTOMATION_TOOL] create_automation result: {result}")
-            return result
+                # Create the automation
+                automation = crud.automations.create_automation(
+                    self.db_session, self.user_id, automation_create
+                )
 
-        except ValueError as e:
-            logger.error(f"[AUTOMATION_TOOL] ValueError in create_automation: {str(e)}")
-            return f"Error creating automation: {str(e)}"
-        except Exception as e:
-            logger.error(
-                f"[AUTOMATION_TOOL] Unexpected error in create_automation: {str(e)}",
-                exc_info=True,
-            )
-            return (
-                f"An unexpected error occurred while creating the automation: {str(e)}"
-            )
+                logger.info(
+                    f"[AUTOMATION_TOOL] Successfully created automation '{automation.name}' with ID: {automation.id}"
+                )
+
+                result = f"Successfully created automation '{automation.name}' (ID: {automation.id}). The automation is {'active and will run on schedule' if automation.is_recurring else 'ready to be triggered manually'}."
+                logger.info(f"[AUTOMATION_TOOL] create_automation result: {result}")
+                return result
+
+            except ValueError as e:
+                logger.error(f"[AUTOMATION_TOOL] ValueError in create_automation: {str(e)}")
+                return f"Error creating automation: {str(e)}"
+            except Exception as e:
+                logger.error(
+                    f"[AUTOMATION_TOOL] Unexpected error in create_automation: {str(e)}",
+                    exc_info=True,
+                )
+                return (
+                    f"An unexpected error occurred while creating the automation: {str(e)}"
+                )
 
     @function_tool(
         raw_schema={
@@ -800,7 +797,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
-    @_tool_notification_wrapper("list_user_automations", "checking your automations")
     async def list_user_automations(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -815,57 +811,58 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
         )
         logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
 
-        try:
-            from aci.common.db import crud
+        async with self._tool_notification_wrapper("list_user_automations", "List automations")(self):
+            try:
+                from aci.common.db import crud
 
-            # Handle limit parameter with proper type checking
-            limit_value = raw_arguments.get("limit", 20)
-            if isinstance(limit_value, (int, float)):
-                limit = min(int(limit_value), 100)
-            else:
-                limit = 20
+                # Handle limit parameter with proper type checking
+                limit_value = raw_arguments.get("limit", 20)
+                if isinstance(limit_value, (int, float)):
+                    limit = min(int(limit_value), 100)
+                else:
+                    limit = 20
 
-            logger.info(f"[AUTOMATION_TOOL] Listing automations with limit: {limit}")
+                logger.info(f"[AUTOMATION_TOOL] Listing automations with limit: {limit}")
 
-            # Use a fresh database session to avoid transaction issues
-            with get_db_session() as fresh_db_session:
-                automations = crud.automations.list_user_automations(
-                    fresh_db_session, self.user_id, limit, 0
-                )
+                # Use a fresh database session to avoid transaction issues
+                with get_db_session() as fresh_db_session:
+                    automations = crud.automations.list_user_automations(
+                        fresh_db_session, self.user_id, limit, 0
+                    )
 
-                logger.info(
-                    f"[AUTOMATION_TOOL] Found {len(automations)} automations for user {self.user_id}"
-                )
+                    logger.info(
+                        f"[AUTOMATION_TOOL] Found {len(automations)} automations for user {self.user_id}"
+                    )
 
-                if not automations:
+                    if not automations:
+                        return json.dumps({
+                            "message": "You haven't created any automations yet.",
+                            "automations": []
+                        })
+
+                    # Return simple JSON with just id, name, and schedule
+                    automations_list = []
+                    for automation in automations:
+                        automations_list.append({
+                            "id": automation.id,
+                            "name": automation.name,
+                            "schedule": automation.cron_schedule if automation.is_recurring else None
+                        })
+
+                    logger.info(
+                        f"[AUTOMATION_TOOL] list_user_automations completed successfully"
+                    )
                     return json.dumps({
-                        "message": "You haven't created any automations yet.",
-                        "automations": []
+                        "message": f"Found {len(automations)} automation(s)",
+                        "automations": automations_list
                     })
 
-                # Return simple JSON with just id, name, and schedule
-                automations_list = []
-                for automation in automations:
-                    automations_list.append({
-                        "id": automation.id,
-                        "name": automation.name,
-                        "schedule": automation.cron_schedule if automation.is_recurring else None
-                    })
-
-                logger.info(
-                    f"[AUTOMATION_TOOL] list_user_automations completed successfully"
+            except Exception as e:
+                logger.error(
+                    f"[AUTOMATION_TOOL] Error in list_user_automations: {str(e)}",
+                    exc_info=True,
                 )
-                return json.dumps({
-                    "message": f"Found {len(automations)} automation(s)",
-                    "automations": automations_list
-                })
-
-        except Exception as e:
-            logger.error(
-                f"[AUTOMATION_TOOL] Error in list_user_automations: {str(e)}",
-                exc_info=True,
-            )
-            return f"An unexpected error occurred while retrieving your automations: {str(e)}"
+                return f"An unexpected error occurred while retrieving your automations: {str(e)}"
 
     @function_tool(
         raw_schema={
@@ -917,7 +914,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
-    @_tool_notification_wrapper("update_automation", "updating your automation")
     async def update_automation(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -931,69 +927,70 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
         )
         logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
 
-        try:
-            from aci.common.db import crud
-            from aci.common.schemas.automations import AutomationUpdate
+        async with self._tool_notification_wrapper("update_automation", "Update automation")(self):
+            try:
+                from aci.common.db import crud
+                from aci.common.schemas.automations import AutomationUpdate
 
-            automation_id = str(raw_arguments["automation_id"])
-            
-            # Use a fresh database session
-            with get_db_session() as fresh_db_session:
-                # Verify the automation exists and belongs to the user
-                automation = crud.automations.get_automation(
-                    fresh_db_session, automation_id
-                )
-                if not automation:
-                    return f"Error: Automation with ID '{automation_id}' not found."
-
-                if automation.user_id != self.user_id:
-                    return f"Error: You don't have access to automation '{automation_id}'."
-
-                # Build update data from provided arguments
-                update_data = {}
-                if "name" in raw_arguments:
-                    update_data["name"] = str(raw_arguments["name"])
-                if "description" in raw_arguments:
-                    update_data["description"] = str(raw_arguments["description"])
-                if "goal" in raw_arguments:
-                    update_data["goal"] = str(raw_arguments["goal"])
-                if "active" in raw_arguments:
-                    update_data["active"] = bool(raw_arguments["active"])
-                if "is_deep" in raw_arguments:
-                    update_data["is_deep"] = bool(raw_arguments["is_deep"])
-                if "is_recurring" in raw_arguments:
-                    update_data["is_recurring"] = bool(raw_arguments["is_recurring"])
-                if "cron_schedule" in raw_arguments:
-                    update_data["cron_schedule"] = str(raw_arguments["cron_schedule"])
-                if "app_names" in raw_arguments:
-                    update_data["linked_account_ids"] = []  # Handle app linking separately if needed
-
-                if not update_data:
-                    return "Error: No fields provided to update."
-
-                # Create AutomationUpdate schema
-                automation_update = AutomationUpdate(**update_data)
+                automation_id = str(raw_arguments["automation_id"])
                 
-                # Update the automation
-                updated_automation = crud.automations.update_automation(
-                    fresh_db_session, automation_id, automation_update
-                )
-                fresh_db_session.commit()
+                # Use a fresh database session
+                with get_db_session() as fresh_db_session:
+                    # Verify the automation exists and belongs to the user
+                    automation = crud.automations.get_automation(
+                        fresh_db_session, automation_id
+                    )
+                    if not automation:
+                        return f"Error: Automation with ID '{automation_id}' not found."
 
-                logger.info(
-                    f"[AUTOMATION_TOOL] Successfully updated automation {automation_id}"
-                )
-                return f"Successfully updated automation '{updated_automation.name}' (ID: {automation_id})."
+                    if automation.user_id != self.user_id:
+                        return f"Error: You don't have access to automation '{automation_id}'."
 
-        except ValueError as e:
-            logger.error(f"[AUTOMATION_TOOL] ValueError in update_automation: {str(e)}")
-            return f"Error updating automation: {str(e)}"
-        except Exception as e:
-            logger.error(
-                f"[AUTOMATION_TOOL] Unexpected error in update_automation: {str(e)}",
-                exc_info=True,
-            )
-            return f"An unexpected error occurred while updating the automation: {str(e)}"
+                    # Build update data from provided arguments
+                    update_data = {}
+                    if "name" in raw_arguments:
+                        update_data["name"] = str(raw_arguments["name"])
+                    if "description" in raw_arguments:
+                        update_data["description"] = str(raw_arguments["description"])
+                    if "goal" in raw_arguments:
+                        update_data["goal"] = str(raw_arguments["goal"])
+                    if "active" in raw_arguments:
+                        update_data["active"] = bool(raw_arguments["active"])
+                    if "is_deep" in raw_arguments:
+                        update_data["is_deep"] = bool(raw_arguments["is_deep"])
+                    if "is_recurring" in raw_arguments:
+                        update_data["is_recurring"] = bool(raw_arguments["is_recurring"])
+                    if "cron_schedule" in raw_arguments:
+                        update_data["cron_schedule"] = str(raw_arguments["cron_schedule"])
+                    if "app_names" in raw_arguments:
+                        update_data["linked_account_ids"] = []  # Handle app linking separately if needed
+
+                    if not update_data:
+                        return "Error: No fields provided to update."
+
+                    # Create AutomationUpdate schema
+                    automation_update = AutomationUpdate(**update_data)
+                    
+                    # Update the automation
+                    updated_automation = crud.automations.update_automation(
+                        fresh_db_session, automation_id, automation_update
+                    )
+                    fresh_db_session.commit()
+
+                    logger.info(
+                        f"[AUTOMATION_TOOL] Successfully updated automation {automation_id}"
+                    )
+                    return f"Successfully updated automation '{updated_automation.name}' (ID: {automation_id})."
+
+            except ValueError as e:
+                logger.error(f"[AUTOMATION_TOOL] ValueError in update_automation: {str(e)}")
+                return f"Error updating automation: {str(e)}"
+            except Exception as e:
+                logger.error(
+                    f"[AUTOMATION_TOOL] Unexpected error in update_automation: {str(e)}",
+                    exc_info=True,
+                )
+                return f"An unexpected error occurred while updating the automation: {str(e)}"
 
     @function_tool(
         raw_schema={
@@ -1007,7 +1004,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
-    @_tool_notification_wrapper("get_user_timezone", "checking your timezone")
     async def get_user_timezone(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -1025,32 +1021,33 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             - timezone_offset: UTC offset in minutes
             - utc_time: Current UTC time for reference
         """
-        try:
-            room = get_job_context().room
-            participant_identity = next(iter(room.remote_participants))
+        async with self._tool_notification_wrapper("get_user_timezone", "Get user timezone")(self):
+            try:
+                room = get_job_context().room
+                participant_identity = next(iter(room.remote_participants))
 
-            # The frontend client must have a listener for the "getUserTimezone" method
-            rpc_response = await room.local_participant.perform_rpc(
-                destination_identity=participant_identity,
-                method="getUserTimezone",
-                payload="{}",  # Empty payload since we don't need to send data
-                response_timeout=10,
-            )
+                # The frontend client must have a listener for the "getUserTimezone" method
+                rpc_response = await room.local_participant.perform_rpc(
+                    destination_identity=participant_identity,
+                    method="getUserTimezone",
+                    payload="{}",  # Empty payload since we don't need to send data
+                    response_timeout=10,
+                )
 
-            # The frontend should send back timezone information as JSON
-            logger.info(f"Received timezone data from frontend: {rpc_response}")
-            return f"User timezone information retrieved: {rpc_response}"
+                # The frontend should send back timezone information as JSON
+                logger.info(f"Received timezone data from frontend: {rpc_response}")
+                return f"User timezone information retrieved: {rpc_response}"
 
-        except StopIteration:
-            raise ToolError(
-                "No remote participants found in the room to get timezone information."
-            )
-        except Exception as e:
-            # This will catch RPC timeouts or other communication errors
-            logger.error(f"Failed to get user timezone: {e}", exc_info=True)
-            raise ToolError(
-                f"Failed to get timezone information from the frontend: {e}"
-            )
+            except StopIteration:
+                raise ToolError(
+                    "No remote participants found in the room to get timezone information."
+                )
+            except Exception as e:
+                # This will catch RPC timeouts or other communication errors
+                logger.error(f"Failed to get user timezone: {e}", exc_info=True)
+                raise ToolError(
+                    f"Failed to get timezone information from the frontend: {e}"
+                )
 
     @function_tool(
         raw_schema={
@@ -1069,7 +1066,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
-    @_tool_notification_wrapper("get_automation_by_id", "getting automation details")
     async def get_automation_by_id(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -1084,62 +1080,63 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
         )
         logger.info(f"[AUTOMATION_TOOL] Raw arguments: {raw_arguments}")
 
-        try:
-            from aci.common.db import crud
+        async with self._tool_notification_wrapper("get_automation_by_id", "Get automation by ID")(self):
+            try:
+                from aci.common.db import crud
 
-            automation_id = str(raw_arguments["automation_id"])
-            
-            # Use a fresh database session
-            with get_db_session() as fresh_db_session:
-                # Verify the automation exists and belongs to the user
-                automation = crud.automations.get_automation(
-                    fresh_db_session, automation_id
-                )
-                if not automation:
+                automation_id = str(raw_arguments["automation_id"])
+                
+                # Use a fresh database session
+                with get_db_session() as fresh_db_session:
+                    # Verify the automation exists and belongs to the user
+                    automation = crud.automations.get_automation(
+                        fresh_db_session, automation_id
+                    )
+                    if not automation:
+                        return json.dumps({
+                            "success": False,
+                            "error": f"Automation with ID '{automation_id}' not found."
+                        })
+
+                    if automation.user_id != self.user_id:
+                        return json.dumps({
+                            "success": False,
+                            "error": f"You don't have access to automation '{automation_id}'."
+                        })
+
+                    # Return the full automation object as JSON
+                    automation_data = {
+                        "id": automation.id,
+                        "name": automation.name,
+                        "description": automation.description,
+                        "goal": automation.goal,
+                        "is_deep": automation.is_deep,
+                        "active": automation.active,
+                        "is_recurring": automation.is_recurring,
+                        "cron_schedule": automation.cron_schedule,
+                        "created_at": automation.created_at.isoformat() if automation.created_at else None,
+                        "updated_at": automation.updated_at.isoformat() if automation.updated_at else None,
+                        "last_run_at": automation.last_run_at.isoformat() if automation.last_run_at else None,
+                        "linked_account_ids": [la.id for la in automation.linked_accounts] if automation.linked_accounts else []
+                    }
+
+                    logger.info(
+                        f"[AUTOMATION_TOOL] Successfully retrieved automation {automation_id}"
+                    )
                     return json.dumps({
-                        "success": False,
-                        "error": f"Automation with ID '{automation_id}' not found."
+                        "success": True,
+                        "automation": automation_data
                     })
 
-                if automation.user_id != self.user_id:
-                    return json.dumps({
-                        "success": False,
-                        "error": f"You don't have access to automation '{automation_id}'."
-                    })
-
-                # Return the full automation object as JSON
-                automation_data = {
-                    "id": automation.id,
-                    "name": automation.name,
-                    "description": automation.description,
-                    "goal": automation.goal,
-                    "is_deep": automation.is_deep,
-                    "active": automation.active,
-                    "is_recurring": automation.is_recurring,
-                    "cron_schedule": automation.cron_schedule,
-                    "created_at": automation.created_at.isoformat() if automation.created_at else None,
-                    "updated_at": automation.updated_at.isoformat() if automation.updated_at else None,
-                    "last_run_at": automation.last_run_at.isoformat() if automation.last_run_at else None,
-                    "linked_account_ids": [la.id for la in automation.linked_accounts] if automation.linked_accounts else []
-                }
-
-                logger.info(
-                    f"[AUTOMATION_TOOL] Successfully retrieved automation {automation_id}"
+            except Exception as e:
+                logger.error(
+                    f"[AUTOMATION_TOOL] Error in get_automation_by_id: {str(e)}",
+                    exc_info=True,
                 )
                 return json.dumps({
-                    "success": True,
-                    "automation": automation_data
+                    "success": False,
+                    "error": f"An unexpected error occurred while retrieving the automation: {str(e)}"
                 })
-
-        except Exception as e:
-            logger.error(
-                f"[AUTOMATION_TOOL] Error in get_automation_by_id: {str(e)}",
-                exc_info=True,
-            )
-            return json.dumps({
-                "success": False,
-                "error": f"An unexpected error occurred while retrieving the automation: {str(e)}"
-            })
 
 
 def prewarm(proc: JobProcess):
