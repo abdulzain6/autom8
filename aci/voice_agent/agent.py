@@ -484,7 +484,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 "error": f"Error executing function: {str(e)}"
             })
 
-    @_tool_notification_wrapper("display_mini_app", "preparing your mini app")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -507,6 +506,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
+    @_tool_notification_wrapper("display_mini_app", "preparing your mini app")
     async def display_mini_app(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -558,14 +558,14 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             # This will catch RPC timeouts or other communication errors
             raise ToolError(f"Failed to send the mini-app to the frontend: {e}")
 
-    @_tool_notification_wrapper("get_linked_apps", "checking your connected apps")
     @function_tool()
+    @_tool_notification_wrapper("get_linked_apps", "checking your connected apps")
     async def get_linked_apps(self) -> str:
         """Fetch and return the names of apps linked to the user's account."""
         return self.linked_apps_str
 
-    @_tool_notification_wrapper("get_app_info", "getting app information")
     @function_tool()
+    @_tool_notification_wrapper("get_app_info", "getting app information")
     async def get_app_info(self, app_names: list[str]) -> str:
         """Fetch and return detailed information about specified apps and their functions."""
         logger.info(f"Agent requested info for apps: {app_names}")
@@ -615,7 +615,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             logger.error(f"Error in get_app_info: {e}", exc_info=True)
             return json.dumps({"error": "An internal error occurred."})
 
-    @_tool_notification_wrapper("create_automation", "creating your automation")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -660,6 +659,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
+    @_tool_notification_wrapper("create_automation", "creating your automation")
     async def create_automation(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -783,7 +783,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 f"An unexpected error occurred while creating the automation: {str(e)}"
             )
 
-    @_tool_notification_wrapper("list_user_automations", "checking your automations")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -801,6 +800,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
+    @_tool_notification_wrapper("list_user_automations", "checking your automations")
     async def list_user_automations(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -867,7 +867,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             )
             return f"An unexpected error occurred while retrieving your automations: {str(e)}"
 
-    @_tool_notification_wrapper("update_automation", "updating your automation")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -918,6 +917,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
+    @_tool_notification_wrapper("update_automation", "updating your automation")
     async def update_automation(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -995,7 +995,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             )
             return f"An unexpected error occurred while updating the automation: {str(e)}"
 
-    @_tool_notification_wrapper("get_user_timezone", "checking your timezone")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -1008,6 +1007,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
+    @_tool_notification_wrapper("get_user_timezone", "checking your timezone")
     async def get_user_timezone(
         self, raw_arguments: dict[str, object], context: RunContext
     ):
@@ -1052,7 +1052,6 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 f"Failed to get timezone information from the frontend: {e}"
             )
 
-    @_tool_notification_wrapper("get_automation_by_id", "getting automation details")
     @function_tool(
         raw_schema={
             "type": "function",
@@ -1070,6 +1069,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             },
         }
     )
+    @_tool_notification_wrapper("get_automation_by_id", "getting automation details")
     async def get_automation_by_id(
         self, raw_arguments: dict[str, object], context: RunContext
     ):

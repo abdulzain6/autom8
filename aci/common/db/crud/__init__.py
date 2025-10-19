@@ -10,7 +10,6 @@ from . import (
     automation_runs, 
     automation_templates,
     fcm_tokens,
-    plans,
     usage,
 )
 
@@ -26,6 +25,5 @@ __all__ = [
     "automations",
     "automation_runs",
     "fcm_tokens",
-    "plans",
     "usage",
 ]

@@ -716,52 +716,6 @@ class UserUsage(Base):
     )
 
 
-class Plan(Base):
-    """
-    Represents a subscription plan with pricing, features, and usage limits.
-    """
-
-    __tablename__ = "plans"
-
-    id: Mapped[str] = mapped_column(
-        String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
-    )
-
-    # Required fields (no defaults)
-    name: Mapped[str] = mapped_column(String(MAX_STRING_LENGTH), nullable=False)
-    duration: Mapped[PlanDuration] = mapped_column(SqlEnum(PlanDuration), nullable=False)
-    features: Mapped[List[str]] = mapped_column(ARRAY(String), nullable=False)
-    price: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    revenue_cat_product_id: Mapped[str] = mapped_column(
-        String(MAX_STRING_LENGTH), nullable=False, unique=True
-    )
-    automation_runs_limit: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    voice_chat_minutes_limit: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    automations_limit: Mapped[int] = mapped_column(BigInteger, nullable=False)
-
-    # Optional fields (nullable=True, considered to have defaults)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    trial_days: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
-    apps_limit: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
-
-    # Fields with explicit defaults
-    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    is_popular: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    display_order: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default_factory=lambda: datetime.now(timezone.utc),
-        nullable=False,
-        init=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default_factory=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-        nullable=False,
-        init=False,
-    )
 
 
 __all__ = [
@@ -776,5 +730,4 @@ __all__ = [
     "AutomationRun",
     "AutomationLinkedAccount",
     "UserUsage",
-    "Plan",
 ]
