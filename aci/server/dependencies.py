@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from pydantic import BaseModel, ConfigDict
 from collections.abc import Generator
 from typing import Annotated, Awaitable, Optional, TypeVar, overload
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -183,16 +183,18 @@ def get_current_user(
 
 
 # --- Request Context ---
-def get_request_context(
+def get_request_context_no_auth(
     db_session: Annotated[Session, Depends(yield_db_session)],
-    current_user: Annotated[User, Depends(get_current_user)],
 ) -> RequestContext:
     """
-    Returns a RequestContext object containing the DB session and the authenticated user.
+    Returns a RequestContext object containing the DB session without user authentication.
+    Used for endpoints that don't require user authentication (like webhooks).
     """
+    # Create a dummy user for the context - this won't be used for authorization
+    dummy_user = User(id="webhook-system")
     return RequestContext(
         db_session=db_session,
-        user=current_user,
+        user=dummy_user,
     )
 
 def typed_cache(*, expire: int | None = None) -> Callable[..., Any]:
@@ -201,3 +203,44 @@ def typed_cache(*, expire: int | None = None) -> Callable[..., Any]:
     both sync and async functions without causing type errors.
     """
     return cache(expire=expire)
+
+
+async def verify_revenuecat_signature(
+    authorization: Optional[str] = Header(None)
+) -> bool:
+    """
+    Dependency to verify the RevenueCat webhook's Authorization header.
+    """
+    if not config.REVENUECAT_WEBHOOK_AUTH_TOKEN:
+        # This is a server configuration error, not a client error.
+        logger.error("REVENUECAT_WEBHOOK_AUTH_TOKEN is not set on the server.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Webhook authentication is not configured.",
+        )
+
+    if authorization is None:
+        logger.warning("Webhook received without Authorization header.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header.",
+        )
+
+    try:
+        # The header should be in the format: "Bearer <your_token>"
+        scheme, token = authorization.split(" ")
+        if scheme.lower() != "bearer":
+            raise ValueError("Invalid authorization scheme")
+
+        if token != config.REVENUECAT_WEBHOOK_AUTH_TOKEN:
+            raise ValueError("Invalid token")
+            
+    except ValueError as e:
+        logger.warning(f"Webhook failed authentication: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid credentials.",
+        )
+
+    # If we get here, the token is valid
+    return True

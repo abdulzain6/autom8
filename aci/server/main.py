@@ -23,6 +23,7 @@ from aci.server.routes import (
     fcm_tokens,
     activity,
     usage,
+    webhooks,
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi_cache import FastAPICache
@@ -172,4 +173,9 @@ app.include_router(
     usage.router,
     prefix=config.ROUTER_PREFIX_USAGE,
     tags=[config.ROUTER_PREFIX_USAGE.split("/")[-1]],
+)
+app.include_router(
+    webhooks.router,
+    prefix=config.ROUTER_PREFIX_WEBHOOKS,
+    tags=[config.ROUTER_PREFIX_WEBHOOKS.split("/")[-1]],
 )

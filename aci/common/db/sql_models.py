@@ -80,19 +80,24 @@ class UserProfile(Base):
     )
     name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    phone_number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)  # E.164 format: +1234567890
+    phone_number: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True
+    )  # E.164 format: +1234567890
 
     def __init__(self, id: str, **kwargs):
         self.id = id
         super().__init__(**kwargs)
 
-    @validates('phone_number')
+    @validates("phone_number")
     def validate_phone_number(self, key, value):
         if value is not None:
             import re
+
             # E.164 format validation: + followed by 1-3 digit country code and 4-14 digits
-            if not re.match(r'^\+\d{1,3}\d{4,14}$', value):
-                raise ValueError(f"Invalid phone number format: {value}. Expected E.164 format like +1234567890")
+            if not re.match(r"^\+\d{1,3}\d{4,14}$", value):
+                raise ValueError(
+                    f"Invalid phone number format: {value}. Expected E.164 format like +1234567890"
+                )
         return value
 
 
@@ -130,7 +135,10 @@ class Function(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
+        DateTime(timezone=False),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
@@ -190,7 +198,10 @@ class App(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
+        DateTime(timezone=False),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
@@ -278,7 +289,10 @@ class AppConfiguration(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
+        DateTime(timezone=False),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
@@ -325,7 +339,10 @@ class DefaultAppCredential(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
+        DateTime(timezone=False),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
@@ -370,13 +387,16 @@ class LinkedAccount(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
+        DateTime(timezone=False),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
     )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
-        default_factory= lambda: datetime.now(timezone.utc),
-        onupdate= lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
         init=False,
     )
@@ -419,7 +439,10 @@ class Secret(Base):
     value: Mapped[bytes] = mapped_column(BYTEA, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=False), default_factory=lambda: datetime.now(timezone.utc), nullable=False, init=False
+        DateTime(timezone=False),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False),
@@ -449,7 +472,9 @@ class Artifact(Base):
     )
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
     user: Mapped[SupabaseUser] = relationship("SupabaseUser", lazy="select", init=False)
-    run_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("automation_runs.id"))
+    run_id: Mapped[Optional[str]] = mapped_column(
+        String, ForeignKey("automation_runs.id")
+    )
 
 
 class Automation(Base):
@@ -458,7 +483,9 @@ class Automation(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
-    last_run_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), init=False)
+    last_run_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), init=False
+    )
     cron_schedule: Mapped[Optional[str]] = mapped_column(String(255))
     linked_accounts: Mapped[List["AutomationLinkedAccount"]] = relationship(
         back_populates="automation", cascade="all, delete-orphan", init=False
@@ -481,7 +508,7 @@ class Automation(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default_factory=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc)
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     id: Mapped[str] = mapped_column(
@@ -523,7 +550,7 @@ class AutomationRun(Base):
         # This tells SQLAlchemy to delete all child artifacts when this run is deleted.
         cascade="all, delete-orphan",
         # This back-populates the run attribute on the Artifact model if you add it.
-        # back_populates="run", 
+        # back_populates="run",
         init=False,
     )
 
@@ -568,7 +595,7 @@ class AutomationTemplate(Base):
         TSVECTOR,
         nullable=True,
         init=False,
-        server_default=None, 
+        server_default=None,
     )
     variable_names: Mapped[List[str]] = mapped_column(
         ARRAY(String),
@@ -590,9 +617,9 @@ class AutomationTemplate(Base):
 
     __table_args__ = (
         Index(
-            'ix_automation_templates_search_vector',
-            'search_vector',
-            postgresql_using='gin'
+            "ix_automation_templates_search_vector",
+            "search_vector",
+            postgresql_using="gin",
         ),
     )
 
@@ -608,19 +635,17 @@ class FCMToken(Base):
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
     )
-    
+
     # A user can have multiple tokens, so user_id is not unique on its own.
-    user_id: Mapped[str] = mapped_column(
-        String, ForeignKey("users.id"), nullable=False
-    )
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
 
     # The FCM token itself is globally unique to a device instance.
     token: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    
+
     device_type: Mapped[DeviceType] = mapped_column(
         SqlEnum(DeviceType), nullable=False, default=DeviceType.UNKNOWN
     )
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default_factory=lambda: datetime.now(timezone.utc),
@@ -654,25 +679,23 @@ class UserUsage(Base):
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
     )
-    
-    user_id: Mapped[str] = mapped_column(
-        String, ForeignKey("users.id"), nullable=False
-    )
-    
+
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
+
     # Year and month for the usage period (e.g., 2025, 9 for September 2025)
     year: Mapped[int] = mapped_column(nullable=False)
     month: Mapped[int] = mapped_column(nullable=False)
-    
+
     # Voice agent usage in minutes (user-facing metric)
     voice_agent_minutes: Mapped[float] = mapped_column(
         nullable=False, default=0.0, server_default="0.0"
     )
-    
+
     # Number of automation runs in this month
     automation_runs_count: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default="0"
     )
-    
+
     # Additional usage metrics
     successful_automation_runs: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default="0"
@@ -680,7 +703,7 @@ class UserUsage(Base):
     failed_automation_runs: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default="0"
     )
-    
+
     # Internal cost tracking metrics (from LiveKit usage)
     llm_tokens_used: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default="0"
@@ -691,7 +714,7 @@ class UserUsage(Base):
     tts_characters_used: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default="0"
     )
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default_factory=lambda: datetime.now(timezone.utc),
@@ -706,7 +729,9 @@ class UserUsage(Base):
         init=False,
     )
 
-    user: Mapped["SupabaseUser"] = relationship("SupabaseUser", lazy="select", init=False)
+    user: Mapped["SupabaseUser"] = relationship(
+        "SupabaseUser", lazy="select", init=False
+    )
 
     __table_args__ = (
         # Ensure one record per user per month
@@ -716,6 +741,64 @@ class UserUsage(Base):
     )
 
 
+class WebhookEvent(Base):
+    """
+    Stores webhook events received from external services for audit purposes.
+    Used to track and debug webhook processing.
+    """
+
+    __tablename__ = "webhook_events"
+
+    processing_result: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # HTTP status code returned to the webhook provider
+    http_status_code: Mapped[Optional[int]] = mapped_column(nullable=True)
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
+    )
+
+    # The webhook provider (e.g., 'revenuecat', 'stripe', etc.)
+    provider: Mapped[str] = mapped_column(
+        String(MAX_STRING_LENGTH), nullable=False, index=True
+    )
+
+    # The event type from the webhook provider
+    event_type: Mapped[str] = mapped_column(
+        String(MAX_STRING_LENGTH), nullable=False, index=True
+    )
+
+    # The full event payload as received
+    event_data: Mapped[dict] = mapped_column(
+        MutableDict.as_mutable(JSONB), nullable=False
+    )
+
+    # User ID associated with the event (if available)
+    user_id: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
+
+    # Processing status
+    processed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default_factory=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default_factory=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        init=False,
+    )
+
+    __table_args__ = (
+        # Index for efficient querying by provider and event type
+        Index("ix_webhook_events_provider_event_type", "provider", "event_type"),
+        # Index for querying by user and creation time
+        Index("ix_webhook_events_user_created", "user_id", "created_at"),
+    )
 
 
 __all__ = [
@@ -730,4 +813,5 @@ __all__ = [
     "AutomationRun",
     "AutomationLinkedAccount",
     "UserUsage",
+    "WebhookEvent",
 ]

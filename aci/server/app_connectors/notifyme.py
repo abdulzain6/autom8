@@ -956,15 +956,25 @@ class Notifyme(AppConnectorBase):
 
             # Step 1: Upload media to get media ID
             upload_url = f"{base_url}/media"
+            
+            # Headers for upload (NO Content-Type, requests will add it for multipart)
             upload_headers = headers.copy()
-            upload_headers["Content-Type"] = content_type
-
-            # Add filename to headers for document type
-            if media_type == "document":
-                upload_headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+            
+            # Form data payload (This is the fix)
+            form_data = {
+                'messaging_product': 'whatsapp'
+            }
+            
+            # Files payload (filename, content, mime_type)
+            files_data = {
+                'file': (filename, file_content, content_type)
+            }
 
             try:
-                upload_response = requests.post(upload_url, headers=upload_headers, data=file_content)
+                # Use 'data' for form fields and 'files' for the file
+                upload_response = requests.post(
+                    upload_url, headers=upload_headers, data=form_data, files=files_data
+                )
                 if upload_response.status_code != 200:
                     logger.error(f"WhatsApp media upload failed for {filename}: HTTP {upload_response.status_code} - {upload_response.text}")
                 upload_response.raise_for_status()

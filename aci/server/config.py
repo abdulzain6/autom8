@@ -56,6 +56,7 @@ ROUTER_PREFIX_AUTOMATION_RUNS = "/v1/automation-runs"
 ROUTER_PREFIX_ACTIVITY = "/v1/activity"
 ROUTER_PREFIX_USAGE = "/v1/usage"
 ROUTER_PREFIX_FCM = "/v1/fcm"
+ROUTER_PREFIX_WEBHOOKS = "/v1/webhooks"
 
 # 8KB
 MAX_LOG_FIELD_SIZE = 8 * 1024
@@ -111,3 +112,7 @@ SKYVERN_API_KEY = check_and_get_env_variable("SERVER_SKYVERN_API_KEY")
 USE_SKYVERN = os.getenv("SERVER_USE_SKYVERN", "false").lower() == "true"
 BROWSER_POOL_REFRESH_INTERVAL = int(os.getenv("SERVER_BROWSER_POOL_REFRESH_INTERVAL", "30"))
 BROWSER_SERVICE_NAME = os.getenv("SERVER_BROWSER_SERVICE_NAME", "headless-browser")
+
+
+# RevenueCat
+REVENUECAT_WEBHOOK_AUTH_TOKEN = check_and_get_env_variable("SERVER_REVENUECAT_WEBHOOK_AUTH_TOKEN")

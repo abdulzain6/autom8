@@ -337,26 +337,6 @@
       "is_deep": false
     },
     {
-      "name": "Create Notion Meeting Notes From Todoist Tasks",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/todoist_notion_notes.jpeg?raw=true",
-      "description": "When a Todoist task is marked as a meeting, create a Notion meeting notes page pre-populated with task details and attendees.",
-      "tags": [
-        "Productivity"
-      ],
-      "goal": "Monitor Todoist tasks labeled 'meeting' or moved into the project the user picks when enabling this automation. For each matching task, create a Notion page in the Notion database the user selects with title '{{ task.content }} - Meeting Notes' and include metadata (due date, priority, project) and a link back to the Todoist task. Optionally extract attendees from the task description. Send an optional confirmation notification with the Notion page link using NOTIFYME__SEND_ME_EMAIL or a mobile notification based on user preference. Do not create duplicate data.",
-      "variable_names": [
-        "Meeting Project Name",
-        "Notion Database Name",
-        "Send Confirmation Email (yes/no)"
-      ],
-      "required_app_names": [
-        "TODOIST",
-        "NOTION",
-        "NOTIFYME"
-      ],
-      "is_deep": false
-    },
-    {
       "name": "Daily Todoist Summary",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/todoist_daily_digest.jpeg?raw=true",
       "description": "Sends a daily digest of your top Todoist tasks, overdue items, and upcoming tasks for the day.",
@@ -372,44 +352,6 @@
       "is_deep": false
     },
     {
-      "name": "Work Schedule Setup",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/work_schedule.jpeg?raw=true",
-      "description": "Creates a professional work schedule in Cal.com with specified working hours and timezone for optimal meeting booking.",
-      "tags": [
-        "Productivity"
-      ],
-      "goal": "Create work schedule using CAL__CREATE_SCHEDULE with name '{{ variables['Schedule Name'] }}', timezone '{{ variables['Timezone'] }}', and availability for Monday through Friday from {{ variables['Start Time'] }} to {{ variables['End Time'] }}.",
-      "variable_names": [
-        "Schedule Name",
-        "Timezone",
-        "Start Time",
-        "End Time"
-      ],
-      "required_app_names": [
-        "CAL"
-      ],
-      "is_deep": false
-    },
-    {
-      "name": "Weekend Availability Setup",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/weekend_schedule.jpeg?raw=true",
-      "description": "Sets up weekend availability in Cal.com for flexible meeting scheduling outside regular business hours.",
-      "tags": [
-        "Productivity"
-      ],
-      "goal": "Create weekend schedule using CAL__CREATE_SCHEDULE with name '{{ variables['Schedule Name'] }}', timezone '{{ variables['Timezone'] }}', and availability for Saturday and Sunday from {{ variables['Start Time'] }} to {{ variables['End Time'] }}.",
-      "variable_names": [
-        "Schedule Name",
-        "Timezone",
-        "Start Time",
-        "End Time"
-      ],
-      "required_app_names": [
-        "CAL"
-      ],
-      "is_deep": false
-    },
-    {
       "name": "Schedule Overview Report",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/schedule_report.jpeg?raw=true",
       "description": "Generates a comprehensive report of all your Cal.com schedules with availability details and settings.",
@@ -417,41 +359,6 @@
         "Productivity"
       ],
       "goal": "Generate schedule overview report using CAL__GET_SCHEDULES to retrieve all schedules, then create professional summary document with PDF_TOOLS__MARKDOWN_TO_PDF showing schedule details and availability patterns in a professional PDF format.",
-      "variable_names": [],
-      "required_app_names": [
-        "CAL",
-        "PDF_TOOLS"
-      ],
-      "is_deep": true
-    },
-    {
-      "name": "Custom Schedule Creator",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/custom_schedule.jpeg?raw=true",
-      "description": "Creates a fully customized schedule in Cal.com with specific days, hours, and availability patterns tailored to your needs.",
-      "tags": [
-        "Productivity"
-      ],
-      "goal": "Create custom schedule using CAL__CREATE_SCHEDULE with name '{{ variables['Schedule Name'] }}', timezone '{{ variables['Timezone'] }}', and availability for {{ variables['Available Days'] }} from {{ variables['Start Time'] }} to {{ variables['End Time'] }}.",
-      "variable_names": [
-        "Schedule Name",
-        "Timezone",
-        "Available Days",
-        "Start Time",
-        "End Time"
-      ],
-      "required_app_names": [
-        "CAL"
-      ],
-      "is_deep": false
-    },
-    {
-      "name": "Schedule Backup & Documentation",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/schedule_backup.jpeg?raw=true",
-      "description": "Creates a comprehensive backup and documentation of all your Cal.com schedules for safekeeping and reference.",
-      "tags": [
-        "Productivity"
-      ],
-      "goal": "Backup all Cal.com schedules using CAL__GET_SCHEDULES to retrieve schedule data, then create detailed backup document with PDF_TOOLS__MARKDOWN_TO_PDF containing all schedule configurations and settings in a professional PDF format.",
       "variable_names": [],
       "required_app_names": [
         "CAL",
@@ -691,47 +598,6 @@
       "required_app_names": [
         "YOUTUBE_UNOFFICIAL",
         "PDF_TOOLS",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
-      "name": "Create Todoist Task From GitHub Assignment",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/github_to_todoist.jpeg?raw=true",
-      "description": "When a GitHub issue is assigned to you, create a corresponding Todoist task so work is visible in your task list.",
-      "tags": [
-        "Productivity"
-      ],
-      "goal": "Monitor the user's GitHub repositories for issues assigned to them. When an issue is assigned, create a Todoist task in the project the user selects with content '{{ variables['Task Prefix'] }}: {{ issue.title }}' and include a link to the GitHub issue in the task notes. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'GitHub Issue Assigned! 📋 - {{ issue.title }} - {{ issue.html_url }}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'GitHub Issue Assigned! 📋' and message '{{ issue.title }} - {{ issue.html_url }}'. Make sure you do not duplicate tasks for the same issue. Do not create duplicates.",
-      "variable_names": [
-        "GitHub Repo",
-        "Todoist Project Name",
-        "Task Prefix"
-      ],
-      "required_app_names": [
-        "GITHUB",
-        "TODOIST",
-        "NOTIFYME"
-      ],
-      "is_deep": false
-    },
-    {
-      "name": "Create Todoist Tasks From GitHub Milestone",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/milestone_to_tasks.jpeg?raw=true",
-      "description": "Create Todoist tasks for each open issue in a GitHub milestone to track milestone work in your task list.",
-      "tags": [
-        "Productivity",
-        "Developer Tools"
-      ],
-      "goal": "When the user selects a GitHub repo and milestone title, generate Todoist tasks for each open issue in that milestone in the Todoist project the user selects. Include issue title and link in each task and send a completion notification via NOTIFYME__SEND_ME_EMAIL when the import finishes.",
-      "variable_names": [
-        "GitHub Repo",
-        "Milestone Title",
-        "Todoist Project Name"
-      ],
-      "required_app_names": [
-        "GITHUB",
-        "TODOIST",
         "NOTIFYME"
       ],
       "is_deep": true

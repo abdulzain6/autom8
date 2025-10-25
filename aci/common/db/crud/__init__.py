@@ -11,6 +11,7 @@ from . import (
     automation_templates,
     fcm_tokens,
     usage,
+    webhook_events
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "automation_runs",
     "fcm_tokens",
     "usage",
+    "webhook_events"
 ]
