@@ -155,6 +155,11 @@ def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
     period_type = event.period_type
     event_type = event.type
 
+    if period_type:
+        period_type = period_type.lower()
+    if event_type:
+        event_type = event_type.lower()
+    
     # 3. Handle "stale event" logic
     # For events that set an expiration date, we should only process them if
     # they are newer than the currently stored expiration date.
@@ -165,7 +170,7 @@ def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
     )
 
     # These events grant access and define an expiration date
-    if event_type in ["INITIAL_PURCHASE", "RENEWAL", "UNCANCEL", "PRODUCT_CHANGE"]:
+    if event_type in ["initial_purchase", "renewal", "uncancel", "product_change"]:
         if is_stale:
             logger.warning(
                 f"Stale event '{event_type}' for user {app_user_id}. "
@@ -173,10 +178,6 @@ def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
                 f"stored expiry ({user.subscription_expires_at}). Ignoring."
             )
             return
-
-        if period_type:
-            period_type = period_type.lower()
-
         # This is a trial
         if period_type == "trial":
             user.subscription_status = SubscriptionStatus.TRIALING
@@ -192,17 +193,17 @@ def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
         user.subscription_expires_at = expires_at
 
     # User turned off auto-renew. Access is still valid until expires_at.
-    elif event_type == "CANCEL":
+    elif event_type == "cancellation":
         # Only update if the user is not already expired
         if user.subscription_status != SubscriptionStatus.EXPIRED:
             user.subscription_status = SubscriptionStatus.CANCELLED
         
     # A billing issue occurred. Access is often still valid (grace period).
-    elif event_type == "BILLING_ISSUE":
+    elif event_type == "billing_issue":
         user.subscription_status = SubscriptionStatus.UNPAID
 
     # Access has officially ended.
-    elif event_type == "EXPIRED":
+    elif event_type == "expiration":
         # Robustness check: Only expire if the event's expiration date
         # matches our stored expiration date. This prevents a stale
         # EXPIRED event from an old subscription from overriding a
@@ -225,7 +226,7 @@ def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
     # This event is just a notification. The "EXPIRED" event
     # is what actually revokes access. We can safely ignore this
     # or just log it.
-    elif event_type == "SUBSCRIPTION_PAUSED":
+    elif event_type == "subscription_paused":
         logger.info(
             f"User {app_user_id} paused subscription. "
             "No status change until EXPIRATION event."

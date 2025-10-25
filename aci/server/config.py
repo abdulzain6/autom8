@@ -66,11 +66,10 @@ ROUTER_PREFIX_SUBSCRIPTIONS = "/v1/subscriptions"
 def _load_subscription_plans():
     """Load subscription plans from the JSON configuration file."""
     try:
-        # Get the project root directory (autom8 folder)
-        project_root = Path(__file__).parent.parent.parent
-        plans_file = project_root / "subscription_plans.json"
 
-        if not plans_file.exists():
+        plans_file = os.getenv("SUBSCRIPTION_PLANS_FILE_PATH", "aci/subscription_plans.json") 
+
+        if not os.path.exists(plans_file):
             print(f"Warning: subscription_plans.json not found at {plans_file}")
             return []
 
