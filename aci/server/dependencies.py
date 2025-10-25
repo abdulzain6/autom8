@@ -347,7 +347,7 @@ async def verify_revenuecat_signature(
 
 
 def get_request_context(
-    check_subscription: bool = False
+    check_subscription: bool = True
 ) -> Callable[..., RequestContext]:
     """
     A dependency factory that returns the correct context getter.
