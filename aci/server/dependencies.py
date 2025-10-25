@@ -258,7 +258,7 @@ def _get_subscribed_context_internal(
     # 2. Check subscription status
     active_statuses = {SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING}
 
-    if db_user.subscription_status not in active_statuses:
+    if db_user.subscription_status not in active_statuses or not db_user.subscription_status:
         logger.warning(
             f"User {user.id} denied access for premium feature. Status: {db_user.subscription_status}"
         )
@@ -272,6 +272,9 @@ def _get_subscribed_context_internal(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=error_detail.model_dump(),
         )
+    else:
+        logger.info(f"User {user.id} has active subscription. Access granted.")
+        logger.info(f"User subscription status: {db_user.subscription_status}")
 
     # 4. Return the context (with the JWT User model, as per your RequestContext schema)
     return RequestContext(db_session=db_session, user=user)
@@ -353,6 +356,8 @@ def get_request_context(
                                validates the user's subscription.
     """
     if check_subscription:
+        logger.info("Using subscribed request context dependency.")
         return _get_subscribed_context_internal
     else:
+        logger.info("Using standard request context dependency.")
         return _get_request_context_internal

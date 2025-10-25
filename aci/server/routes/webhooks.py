@@ -174,6 +174,9 @@ def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
             )
             return
 
+        if period_type:
+            period_type = period_type.lower()
+
         # This is a trial
         if period_type == "trial":
             user.subscription_status = SubscriptionStatus.TRIALING
