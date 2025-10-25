@@ -1,62 +1,51 @@
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RevenueCatEvent(BaseModel):
-    """
-    A comprehensive model for the 'event' object in a RevenueCat webhook.
-    Fields are based on the official documentation.
-    """
+    # Fields your processing code uses
+    app_user_id: str
+    event_timestamp_ms: int
+    type: str
+    product_id: Optional[str] = None
+    period_type: Optional[str] = None
 
-    # --- Core Event Info ---
-    id: str = Field(..., description="Unique ID for this webhook event")
-    type: str = Field(..., description="The type of event (e.g., INITIAL_PURCHASE, RENEWAL, CANCEL)")
-    event_timestamp_ms: int = Field(..., description="Timestamp of when the event occurred, in ms")
+    # --- FIX 1 ---
+    # Fixes "purchase_date_ms: Field required" error.
+    # The payload sends "purchased_at_ms".
+    purchased_at_ms: int
 
-    # --- User IDs ---
-    app_user_id: str = Field(..., description="The user ID from your app")
-    original_app_user_id: str = Field(..., description="The original app_user_id this user was merged into, if any")
-    aliases: List[str] = Field(..., description="List of app_user_id aliases associated with this user")
+    # --- FIX 2 ---
+    # Fixes "transaction_id: Input should be a valid string" error.
+    # The test event sends null, so it must be Optional.
+    transaction_id: Optional[str] = None
 
-    # --- Product & Transaction ---
-    product_id: str = Field(..., description="The product ID of the subscription")
-    entitlement_ids: Optional[List[str]] = Field(default=None, description="List of granted entitlement IDs")
-    transaction_id: str = Field(..., description="The store's transaction ID")
-    original_transaction_id: str = Field(..., description="The original transaction ID for the subscription")
-    store: str = Field(..., description="The app store (e.g., APP_STORE, PLAY_STORE, STRIPE)")
-    environment: str = Field(..., description="SANDBOX or PRODUCTION")
+    # --- FIX 3 ---
+    # Fixes "original_transaction_id: Input should be a valid string" error.
+    original_transaction_id: Optional[str] = None
 
-    # --- Subscription Period & Status ---
-    period_type: str = Field(..., description="Type of period (e.g., NORMAL, INTRO, TRIAL)")
-    purchase_date_ms: int = Field(..., description="Purchase date in milliseconds")
-    expiration_date_ms: Optional[int] = Field(default=None, description="Expiration date in milliseconds")
-    grace_period_expiration_date_ms: Optional[int] = Field(default=None, description="Grace period expiration date, if any")
-    is_trial_conversion: Optional[bool] = Field(default=None, description="True if this event is a trial conversion")
+    # --- FIX 4 (Proactive) ---
+    # Your processing code uses "expiration_date_ms", but this test
+    # payload sends "expiration_at_ms". We use an alias to
+    # make the payload field "expiration_at_ms" map to your
+    # code's variable "expiration_date_ms".
+    expiration_date_ms: Optional[int] = Field(None, alias="expiration_at_ms")
 
-    # --- Price & Currency ---
-    price: Optional[float] = Field(default=None, description="Price of the purchase in USD")
-    price_in_purchased_currency: Optional[float] = Field(default=None, description="Price in the original purchase currency")
-    currency: Optional[str] = Field(default=None, description="Currency code (e.g., USD)")
-    takehome_percentage: Optional[float] = Field(default=None, description="The percentage of revenue you take home")
+    # Other common fields from payload
+    environment: str
+    entitlement_ids: Optional[List[str]] = None
 
-    # --- Event-Specific Fields ---
-    cancel_reason: Optional[str] = Field(default=None, description="Reason for cancellation (for CANCEL events)")
-    unsubscribe_detected_at_ms: Optional[int] = Field(default=None, description="When an unsubscribe was detected")
-    billing_issues_detected_at_ms: Optional[int] = Field(default=None, description="When a billing issue was detected")
-    
-    # --- Transfer Fields (for TRANSFER events) ---
-    transferred_from: Optional[List[str]] = Field(default=None, description="List of app_user_ids transferred from")
-    transferred_to: Optional[List[str]] = Field(default=None, description="List of app_user_ids transferred to")
+    # Allows the model to ignore extra fields from RevenueCat
+    # without crashing (e.g., "aliases", "currency", etc.)
+    model_config = ConfigDict(extra="ignore")
 
 
 class RevenueCatWebhookPayload(BaseModel):
-    """
-    RevenueCat webhook payload model.
-    This wraps the event and includes the API version.
-    """
+    event: RevenueCatEvent
+    api_version: str
 
-    event: RevenueCatEvent = Field(..., description="The event data")
-    api_version: str = Field(..., description="API version (e.g., '1.0')")
+    # Allow extra top-level fields
+    model_config = ConfigDict(extra="ignore")
 
 
 class WebhookResponse(BaseModel):
