@@ -23,7 +23,7 @@ router = APIRouter()
 @router.post("", response_model=AutomationPublic, status_code=status.HTTP_201_CREATED)
 def create_new_automation(
     automation_in: AutomationCreate,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Create a new automation for the authenticated user.
@@ -54,7 +54,7 @@ def create_new_automation(
 
 @router.get("", response_model=List[AutomationPublic])
 def list_my_automations(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     params: Annotated[AutomationListParams, Depends()],
 ):
     """
@@ -72,7 +72,7 @@ def list_my_automations(
 @router.get("/{automation_id}", response_model=AutomationPublic)
 def get_automation_by_id(
     automation_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Retrieve a specific automation by its ID.
@@ -99,7 +99,7 @@ def get_automation_by_id(
 def update_existing_automation(
     automation_id: str,
     automation_in: AutomationUpdate,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Update an existing automation.
@@ -132,7 +132,7 @@ def update_existing_automation(
 @router.delete("/{automation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_existing_automation(
     automation_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Delete an automation by its ID.
@@ -165,7 +165,7 @@ def delete_existing_automation(
 )
 def create_automation_from_a_template(
     template_data: AutomationFromTemplateCreate,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Create a new automation by rendering a template with the provided variables.
@@ -188,7 +188,7 @@ def create_automation_from_a_template(
 )
 def run_an_automation(
     automation_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Manually triggers a run for a specific automation.

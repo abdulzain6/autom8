@@ -1,4 +1,6 @@
 import os
+import json
+from pathlib import Path
 
 from pydantic import SecretStr
 from aci.common.utils import check_and_get_env_variable, construct_db_url
@@ -57,6 +59,30 @@ ROUTER_PREFIX_ACTIVITY = "/v1/activity"
 ROUTER_PREFIX_USAGE = "/v1/usage"
 ROUTER_PREFIX_FCM = "/v1/fcm"
 ROUTER_PREFIX_WEBHOOKS = "/v1/webhooks"
+ROUTER_PREFIX_SUBSCRIPTIONS = "/v1/subscriptions"
+
+# SUBSCRIPTION PLANS
+# Load subscription plans from JSON file at startup
+def _load_subscription_plans():
+    """Load subscription plans from the JSON configuration file."""
+    try:
+        # Get the project root directory (autom8 folder)
+        project_root = Path(__file__).parent.parent.parent
+        plans_file = project_root / "subscription_plans.json"
+
+        if not plans_file.exists():
+            print(f"Warning: subscription_plans.json not found at {plans_file}")
+            return []
+
+        with open(plans_file, 'r') as f:
+            data = json.load(f)
+
+        return data.get("plans", [])
+    except Exception as e:
+        print(f"Error loading subscription plans: {e}")
+        return []
+
+SUBSCRIPTION_PLANS = _load_subscription_plans()
 
 # 8KB
 MAX_LOG_FIELD_SIZE = 8 * 1024

@@ -39,7 +39,7 @@ def get_run_and_verify_ownership(
 )
 def list_runs_for_a_specific_automation(
     automation_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     params: Annotated[AutomationRunListParams, Depends()],
 ):
     """
@@ -67,7 +67,7 @@ def list_runs_for_a_specific_automation(
 @router.get("/{run_id}", response_model=AutomationRunPublic)
 def get_a_specific_run(
     run_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Retrieve a specific automation run by its ID.
@@ -79,7 +79,7 @@ def get_a_specific_run(
 @router.delete("/runs/{run_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_a_run(
     run_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Delete a specific automation run and its associated artifact files from storage.
@@ -108,7 +108,7 @@ def delete_a_run(
 def download_an_artifact_from_a_run(
     run_id: str,
     artifact_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ):
     """
     Downloads a specific artifact file associated with a specific automation run.

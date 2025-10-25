@@ -30,7 +30,7 @@ openai_client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BAS
 @router.get("/categories", response_model_exclude_none=True)
 @deps.typed_cache(expire=3600)  # Cache for 1 hour since categories change infrequently
 def get_all_categories(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
 ) -> list[str]:
     """
     Get all unique categories (tags) from all active apps.
@@ -55,7 +55,7 @@ def get_all_categories(
 @router.get("", response_model_exclude_none=True)
 @deps.typed_cache(expire=350) 
 def list_apps(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     query_params: Annotated[AppsList, Depends()],
     app_names: Annotated[list[str] | None, Query()] = None,
 ) -> list[AppDetails]:
@@ -112,7 +112,7 @@ def list_apps(
 
 @router.get("/search", response_model_exclude_none=True)
 def search_apps(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     query_params: Annotated[AppsSearch, Depends()],
     categories: Annotated[list[str] | None, Query()] = None,
 ) -> list[AppBasic]:
@@ -189,7 +189,7 @@ def search_apps(
 @router.get("/{app_name}", response_model_exclude_none=True)
 @deps.typed_cache(expire=350) 
 def get_app_details(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     app_name: str,
     include_functions: bool = Query(
         True, description="Whether to include function details in the response."

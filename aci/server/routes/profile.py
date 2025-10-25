@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get("", response_model=UserProfileResponse)
 def get_my_profile(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Retrieve the current authenticated user's profile.
@@ -32,7 +32,7 @@ def get_my_profile(
 @router.put("", response_model=UserProfileResponse)
 def update_my_profile(
     profile_update: UserProfileUpdate,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Update the current authenticated user's profile details, such as their name.
@@ -49,7 +49,7 @@ def update_my_profile(
 
 @router.post("/avatar")
 def upload_my_avatar(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
     file: UploadFile = File(...),
 ):
     """
@@ -104,7 +104,7 @@ def upload_my_avatar(
 
 @router.get("/avatar")
 def get_my_avatar(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Retrieve the current authenticated user's avatar image.

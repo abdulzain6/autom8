@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 
 @router.get("", response_model=list[FunctionDetails])
 def list_functions(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     query_params: Annotated[FunctionsList, Query()],
 ) -> list[Function]:
     """Get a list of functions and their details. Sorted by function name."""
@@ -40,7 +40,7 @@ def list_functions(
     response_model_exclude_none=True,
 )
 def execute(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     function_name: str,
     body: FunctionExecute,
 ) -> FunctionExecutionResult:

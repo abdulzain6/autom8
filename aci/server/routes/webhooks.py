@@ -1,5 +1,8 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Request, status, Depends
 from fastapi.responses import JSONResponse
+from aci.common.db.sql_models import SupabaseUser
+from aci.common.enums import SubscriptionStatus
 from aci.common.logging_setup import get_logger
 from aci.common.db import crud
 from aci.common.schemas.webhooks import (
@@ -8,6 +11,7 @@ from aci.common.schemas.webhooks import (
     RevenueCatEvent,
 )
 from aci.server import dependencies as deps
+from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -20,7 +24,7 @@ router = APIRouter()
     description="Process RevenueCat webhook events for subscription and purchase updates.",
     dependencies=[Depends(deps.verify_revenuecat_signature)],
 )
-async def revenuecat_webhook(
+def revenuecat_webhook(
     payload: RevenueCatWebhookPayload,
     request: Request,
     context: deps.RequestContext = Depends(deps.get_request_context_no_auth),
@@ -73,7 +77,7 @@ async def revenuecat_webhook(
         )
 
         # Handle different event types
-        await _process_revenuecat_event(event)
+        _process_revenuecat_event(event, context.db_session)
 
         # Update the stored event as processed successfully
         if event_id:
@@ -116,75 +120,127 @@ async def revenuecat_webhook(
         )
 
 
-async def _process_revenuecat_event(event: RevenueCatEvent) -> None:
+def _ms_to_datetime(ms: int | None) -> datetime | None:
+    """Converts milliseconds timestamp to a timezone-aware datetime object."""
+    if ms is None:
+        return None
+    return datetime.fromtimestamp(ms / 1000.0, tz=timezone.utc)
+
+
+def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
     """
     Process a RevenueCat event and update user subscription status accordingly.
 
     Args:
         event: The RevenueCat event data
+        db: The SQLAlchemy database session
     """
-    event_type = event.type
     app_user_id = event.app_user_id
+
+    # 1. Find the user in your database
+    # We must operate on a user that already exists in our system.
+    # RevenueCat should not be the source of user creation.
+    user = db.query(SupabaseUser).filter(SupabaseUser.id == app_user_id).first()
+
+    if not user:
+        logger.warning(
+            f"Received RevenueCat event '{event.type}' for non-existent "
+            f"user ID: {app_user_id}. Ignoring."
+        )
+        return
+
+    # 2. Extract key event data
+    expires_at = _ms_to_datetime(event.expiration_date_ms) # Corrected field name
     product_id = event.product_id
+    period_type = event.period_type
+    event_type = event.type
 
-    if event_type in ["INITIAL_PURCHASE", "RENEWAL", "UNCANCEL"]:
-        # User has active subscription - you might want to update user status
-        logger.info(
-            f"User {app_user_id} has active subscription for product {product_id}"
-        )
+    # 3. Handle "stale event" logic
+    # For events that set an expiration date, we should only process them if
+    # they are newer than the currently stored expiration date.
+    is_stale = (
+        user.subscription_expires_at
+        and expires_at
+        and expires_at < user.subscription_expires_at
+    )
 
-        # TODO: Update user subscription status in database
-        # You could add a subscription status table or update user profile
-        # Example:
-        # crud.subscriptions.update_subscription_status(
-        #     db=db_session,
-        #     user_id=app_user_id,
-        #     product_id=product_id,
-        #     status="active",
-        #     expires_at=datetime.fromtimestamp(event.expiration_date_ms / 1000) if event.expiration_date_ms else None
-        # )
+    # These events grant access and define an expiration date
+    if event_type in ["INITIAL_PURCHASE", "RENEWAL", "UNCANCEL", "PRODUCT_CHANGE"]:
+        if is_stale:
+            logger.warning(
+                f"Stale event '{event_type}' for user {app_user_id}. "
+                f"Event expiry ({expires_at}) is before "
+                f"stored expiry ({user.subscription_expires_at}). Ignoring."
+            )
+            return
 
+        # This is a trial
+        if period_type == "trial":
+            user.subscription_status = SubscriptionStatus.TRIALING
+            user.is_trial = True
+            user.trial_ends_at = expires_at
+        # This is a regular paid subscription
+        else:
+            user.subscription_status = SubscriptionStatus.ACTIVE
+            user.is_trial = False
+            user.trial_ends_at = None
+
+        user.subscription_product_id = product_id
+        user.subscription_expires_at = expires_at
+
+    # User turned off auto-renew. Access is still valid until expires_at.
     elif event_type == "CANCEL":
-        # User cancelled subscription
-        logger.info(
-            f"User {app_user_id} cancelled subscription for product {product_id}"
-        )
+        # Only update if the user is not already expired
+        if user.subscription_status != SubscriptionStatus.EXPIRED:
+            user.subscription_status = SubscriptionStatus.CANCELLED
+        
+    # A billing issue occurred. Access is often still valid (grace period).
+    elif event_type == "BILLING_ISSUE":
+        user.subscription_status = SubscriptionStatus.UNPAID
 
-        # TODO: Handle subscription cancellation
-        # Mark user as cancelled but still active until expiration
-        # crud.subscriptions.update_subscription_status(
-        #     db=db_session,
-        #     user_id=app_user_id,
-        #     product_id=product_id,
-        #     status="cancelled"
-        # )
-
+    # Access has officially ended.
     elif event_type == "EXPIRED":
-        # Subscription expired
-        logger.info(f"User {app_user_id} subscription expired for product {product_id}")
+        # Robustness check: Only expire if the event's expiration date
+        # matches our stored expiration date. This prevents a stale
+        # EXPIRED event from an old subscription from overriding a
+        # brand new, active subscription.
+        if (
+            user.subscription_expires_at 
+            and expires_at 
+            and user.subscription_expires_at.date() != expires_at.date()
+        ):
+            logger.warning(
+                f"Ignoring '{event_type}' event for user {app_user_id}. "
+                f"Event expiry ({expires_at}) does not match "
+                f"stored expiry ({user.subscription_expires_at})."
+            )
+            return
 
-        # TODO: Handle subscription expiration
-        # Update user status to expired/inactive
-        # crud.subscriptions.update_subscription_status(
-        #     db=db_session,
-        #     user_id=app_user_id,
-        #     product_id=product_id,
-        #     status="expired"
-        # )
+        user.subscription_status = SubscriptionStatus.EXPIRED
+        user.is_trial = False # Ensure trial is off when expired
 
-    elif event_type == "NON_RENEWING":
-        # Subscription won't renew
+    # This event is just a notification. The "EXPIRED" event
+    # is what actually revokes access. We can safely ignore this
+    # or just log it.
+    elif event_type == "SUBSCRIPTION_PAUSED":
         logger.info(
-            f"User {app_user_id} subscription will not renew for product {product_id}"
+            f"User {app_user_id} paused subscription. "
+            "No status change until EXPIRATION event."
         )
-
-        # TODO: Handle non-renewing subscription
-        # crud.subscriptions.update_subscription_status(
-        #     db=db_session,
-        #     user_id=app_user_id,
-        #     product_id=product_id,
-        #     status="non_renewing"
-        # )
 
     else:
+        # NON_RENEWING will now be logged here
         logger.info(f"Unhandled RevenueCat event type: {event_type}")
+        
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        logger.info(
+            f"Successfully processed event '{event_type}' for user {app_user_id}. "
+            f"New status: {user.subscription_status}, Is Trial: {user.is_trial}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to commit subscription update for user {app_user_id}: {e}")
+        db.rollback()
+        raise  # Re-raise the exception to be caught by the main handler

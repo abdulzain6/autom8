@@ -86,3 +86,14 @@ class PlanDuration(StrEnum):
     QUARTERLY = "quarterly"
     YEARLY = "yearly"
     LIFETIME = "lifetime"
+
+
+class SubscriptionStatus(StrEnum):
+    """
+    User subscription status types (RevenueCat compatible)
+    """
+    ACTIVE = "active"
+    TRIALING = "trialing"
+    CANCELLED = "cancelled"
+    UNPAID = "unpaid"
+    EXPIRED = "expired"

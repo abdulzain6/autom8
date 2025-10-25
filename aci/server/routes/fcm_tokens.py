@@ -17,7 +17,7 @@ router = APIRouter()
 )
 def upsert_user_fcm_token(
     token_in: FCMTokenUpsert,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Register a new FCM device token for the authenticated user or update an
@@ -42,7 +42,7 @@ def upsert_user_fcm_token(
 
 @router.get("", response_model=List[FCMTokenPublic], summary="List Device Tokens")
 def get_user_fcm_tokens(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Retrieve all registered FCM device tokens for the authenticated user.
@@ -60,7 +60,7 @@ def get_user_fcm_tokens(
 )
 def delete_user_fcm_token(
     token_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     De-register and delete a specific FCM device token for the authenticated user.

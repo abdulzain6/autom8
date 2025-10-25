@@ -48,7 +48,7 @@ LINKED_ACCOUNTS_OAUTH2_CALLBACK_ROUTE_NAME = "linked_accounts_oauth2_callback"
 
 @router.post("/no-auth", response_model=LinkedAccountPublic)
 def link_account_with_no_auth(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     body: LinkedAccountNoAuthCreate,
 ) -> LinkedAccount:
     """
@@ -112,7 +112,7 @@ def link_account_with_no_auth(
 
 @router.post("/api-key", response_model=LinkedAccountPublic)
 def link_account_with_api_key(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     body: LinkedAccountAPIKeyCreate,
 ) -> LinkedAccount:
     """
@@ -212,7 +212,7 @@ def link_account_with_api_key(
 @router.get("/oauth2")
 async def link_oauth2_account(
     request: Request,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     query_params: Annotated[LinkedAccountOAuth2Create, Query()],
 ) -> dict:
     """
@@ -443,7 +443,7 @@ async def linked_accounts_oauth2_callback(
 
 @router.get("", response_model=list[LinkedAccountPublic])
 def list_linked_accounts(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     query_params: Annotated[LinkedAccountsList, Query()],
 ) -> list[LinkedAccount]:
     """
@@ -468,7 +468,7 @@ def list_linked_accounts(
     response_model_exclude_none=True,
 )
 def get_linked_account(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     linked_account_id: str,
 ) -> LinkedAccount:
     """
@@ -513,7 +513,7 @@ def get_linked_account(
 
 @router.delete("/{linked_account_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_linked_account(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     linked_account_id: str,
 ) -> None:
     """
@@ -562,7 +562,7 @@ def delete_linked_account(
 
 @router.patch("/{linked_account_id}", response_model=LinkedAccountPublic)
 def update_linked_account(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context)],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
     linked_account_id: str,
     body: LinkedAccountUpdate,
 ) -> LinkedAccount:

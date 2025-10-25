@@ -43,7 +43,7 @@ from aci.common.enums import (
     Protocol,
     RunStatus,
     SecurityScheme,
-    PlanDuration,
+    SubscriptionStatus,
 )
 
 EMBEDDING_DIMENSION = 1536
@@ -60,16 +60,33 @@ class Base(MappedAsDataclass, DeclarativeBase):
 class SupabaseUser(Base):
     __tablename__ = "users"
 
-    id = Column(String, primary_key=True)  # UUID
-    email = Column(String)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    id: Mapped[str] = mapped_column(String, primary_key=True)  # UUID
+    email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    subscription_status: Mapped[Optional[SubscriptionStatus]] = mapped_column(
+        SqlEnum(SubscriptionStatus), nullable=True, index=True
+    )
+    subscription_product_id: Mapped[Optional[str]] = mapped_column(
+        String(MAX_STRING_LENGTH), nullable=True
+    )
+    subscription_expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    trial_ends_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    is_trial: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+
     fcm_tokens: Mapped[List["FCMToken"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
         init=False,
     )
-
 
 class UserProfile(Base):
     __tablename__ = "profiles"
@@ -802,6 +819,8 @@ class WebhookEvent(Base):
 
 
 __all__ = [
+    "SupabaseUser",
+    "UserProfile",
     "App",
     "AppConfiguration",
     "Base",

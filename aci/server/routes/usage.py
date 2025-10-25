@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get("/current", response_model=UserUsageResponse)
 def get_current_month_usage(
-    context: RequestContext = Depends(get_request_context),
+    context: RequestContext = Depends(get_request_context(check_subscription=False)),
 ):
     """Get current month usage for the authenticated user."""
     now = datetime.now(timezone.utc)
@@ -28,7 +28,7 @@ def get_current_month_usage(
 
 @router.get("/stats", response_model=UserUsageStats)
 def get_usage_stats(
-    context: RequestContext = Depends(get_request_context),
+    context: RequestContext = Depends(get_request_context(check_subscription=False)),
 ):
     """Get aggregated usage statistics for the authenticated user."""
     stats_data = usage_crud.get_usage_stats(context.db_session, context.user.id)
@@ -72,7 +72,7 @@ def get_usage_history(
     limit: Optional[int] = Query(
         12, ge=1, le=24, description="Number of months to return"
     ),
-    context: RequestContext = Depends(get_request_context),
+    context: RequestContext = Depends(get_request_context(check_subscription=False)),
 ):
     """Get usage history for the authenticated user."""
     usage_records = usage_crud.get_user_usage_history(
@@ -124,7 +124,7 @@ def get_usage_history(
 def get_specific_month_usage(
     year: int,
     month: int,
-    context: RequestContext = Depends(get_request_context),
+    context: RequestContext = Depends(get_request_context(check_subscription=False)),
 ):
     """Get usage for a specific month and year."""
     if month < 1 or month > 12:
@@ -159,7 +159,7 @@ def get_specific_month_usage(
 
 @router.get("/automations-count")
 def get_user_automations_count(
-    context: RequestContext = Depends(get_request_context),
+    context: RequestContext = Depends(get_request_context(check_subscription=False)),
 ):
     """Get total number of automations created by the authenticated user."""
     count = usage_crud.get_user_total_automations_count(

@@ -1,0 +1,24 @@
+{
+  "plans": [
+    {
+      "product_id": "autom8_pro:autom8-pro",
+      "name": "Pro Monthly",
+      "max_automations": 12,
+      "max_automation_runs": 200,
+      "max_voice_agent_minutes": 60,
+      "max_automations_trial": 12,
+      "max_automation_runs_trial": 15,
+      "max_voice_minutes_trial": 15
+    },
+    {
+      "product_id": "autom8_pro:autom8-pro-yearly",
+      "name": "Pro Yearly",
+      "max_automations": 12,
+      "max_automation_runs": 2400,
+      "max_voice_agent_minutes": 720,
+      "max_automations_trial": 12,
+      "max_automation_runs_trial": 15,
+      "max_voice_minutes_trial": 15
+    }
+  ]
+}

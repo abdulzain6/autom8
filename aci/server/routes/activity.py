@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get("/", response_model=ActivityResponse)
 def get_user_activity_feed(
-    context: RequestContext = Depends(get_request_context),
+    context: RequestContext = Depends(get_request_context(check_subscription=False)),
     status: Optional[RunStatus] = Query(None, description="Filter by run status"),
     limit: int = Query(20, description="Number of activities to return", ge=1, le=100),
     offset: int = Query(0, description="Number of activities to skip", ge=0)
@@ -76,7 +76,7 @@ def get_user_activity_feed(
 
 
 @router.get("/stats", response_model=ActivityResponse)
-def get_user_activity_stats(context: RequestContext = Depends(get_request_context)):
+def get_user_activity_stats(context: RequestContext = Depends(get_request_context(check_subscription=False))):
     """
     Get activity statistics for the user.
     
@@ -106,7 +106,7 @@ def get_user_activity_stats(context: RequestContext = Depends(get_request_contex
 
 @router.get("/recent", response_model=ActivityResponse)
 def get_recent_activity(
-    context: RequestContext = Depends(get_request_context),
+    context: RequestContext = Depends(get_request_context(check_subscription=False)),
     days: int = Query(7, description="Number of days to look back", ge=1, le=30)
 ):
     """
@@ -151,7 +151,7 @@ def get_recent_activity(
 @router.get("/{activity_id}")
 async def get_activity_details(
     activity_id: str,
-    context: RequestContext = Depends(get_request_context)
+    context: RequestContext = Depends(get_request_context(check_subscription=False))
 ):
     """
     Get detailed information about a specific activity.
