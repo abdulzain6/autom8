@@ -4,6 +4,8 @@ import random
 import socket
 from typing import Optional, Dict, Any, List
 from urllib.parse import urlparse, urljoin
+
+import jsonschema
 from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
@@ -310,6 +312,22 @@ class HttpTools(AppConnectorBase):
                 "success": False,
                 "error": f"URL security validation failed: {str(e)}"
             }
+        try:
+            # Ensure schema is a valid JSON schema structure
+            if not isinstance(output_schema, dict):
+                raise ValueError("output_schema must be a dictionary")
+
+            # Basic schema validation - check for required fields
+            if "type" not in output_schema:
+                raise ValueError("output_schema must include 'type' field")
+
+            # Test schema validity by creating a validator
+            jsonschema.Draft7Validator.check_schema(output_schema)
+            logger.info(f"Output schema validation passed: {output_schema}")
+
+        except jsonschema.SchemaError as e:
+            logger.error(f"Invalid output schema provided: {e}")
+            raise ValueError(f"Invalid schema: {str(e)}")
         
         try:
             # Make GET request using CycleTLS to bypass bot detection
