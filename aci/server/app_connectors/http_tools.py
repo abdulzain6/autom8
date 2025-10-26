@@ -7,9 +7,11 @@ from urllib.parse import urlparse, urljoin
 from aci.common.db.sql_models import LinkedAccount
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
+from aci.server import config
 from aci.server.app_connectors.base import AppConnectorBase
 from aci.server.config import CYCLE_TLS_SERVER_URL, HTTP_PROXY
 from aci.server.cycletls_client import CycleTlsServerClient
+from crawl4ai import LLMConfig, LLMExtractionStrategy
 import html2text
 
 
@@ -253,28 +255,7 @@ class HttpTools(AppConnectorBase):
             return False  # If validation passes, it's not internal
         except ValueError:
             return True  # If validation fails, it's considered internal/unsafe
-
-    def _extract_links(self, html_content: str, base_url: str) -> List[Dict[str, str]]:
-        """Extract links from HTML content."""
-        links = []
-        try:
-            # Simple regex to find links - could be enhanced with BeautifulSoup if needed
-            link_pattern = r'<a[^>]*href=["\']([^"\'>]+)["\'][^>]*>([^<]*)</a>'
-            matches = re.findall(link_pattern, html_content, re.IGNORECASE)
-            
-            for href, text in matches:
-                # Convert relative URLs to absolute
-                full_url = urljoin(base_url, href)
-                if full_url.startswith(('http://', 'https://')):
-                    links.append({
-                        "url": full_url,
-                        "text": text.strip()
-                    })
-        except Exception as e:
-            logger.warning(f"Failed to extract links: {e}")
         
-        return links[:50]  # Limit to 50 links for LLM processing
-
     def _html_to_text(self, html_content: str) -> str:
         """Convert HTML to clean text using html2text."""
         if html2text is None:
@@ -305,16 +286,19 @@ class HttpTools(AppConnectorBase):
     def get_url(
         self,
         url: str,
-        max_length: int = DEFAULT_TRIM_LENGTH,
-        include_links: bool = True
+        extraction_instructions: str, 
+        output_schema: dict
     ) -> Dict[str, Any]:
         """
         Fetches content from a URL using CycleTLS and returns clean text.
         
         Args:
             url: The URL to fetch content from.
-            max_length: Maximum length of returned text (default: 10000 characters).
-            include_links: Whether to include extracted links (default: True).
+            extraction_instructions (str): LLM instructions for data extraction using GPT-OSS model.
+                                         Must be specific about what data to extract and how to format it.
+            output_schema (dict): Required JSON schema defining the expected output structure.
+                                Must be a valid JSON schema with type definitions and properties.
+                                Example: {"type": "object", "properties": {"title": {"type": "string"}, "price": {"type": "number"}}}
         """
         self._before_execute()
         
@@ -327,13 +311,7 @@ class HttpTools(AppConnectorBase):
                 "error": f"URL security validation failed: {str(e)}"
             }
         
-        # Ensure max_length is reasonable
-        max_length = min(max_length, MAX_CONTENT_LENGTH)
-        
         try:
-            # Add small random delay to appear more human-like
-            time.sleep(random.uniform(0.5, 2.0))
-            
             # Make GET request using CycleTLS to bypass bot detection
             content = self.client.get(url)
             
@@ -342,35 +320,48 @@ class HttpTools(AppConnectorBase):
                     "success": False,
                     "error": "Failed to fetch content from URL. The server may be blocking requests."
                 }
-            
-            # Extract links if requested
-            links = []
-            if include_links:
-                links = self._extract_links(content, url)
-            
             # Convert HTML to text
             text_content = self._html_to_text(content)
             
-            # Trim content for LLM processing
-            if len(text_content) > max_length:
-                text_content = text_content[:max_length] + "...\n[Content truncated for LLM processing]"
-            
             logger.info(f"Successfully fetched content from {url} ({len(text_content)} characters)")
+            
+            llm_config = LLMConfig(
+                provider="openai/gpt-oss-120b",
+                api_token=config.TOGETHER_API_KEY,
+                base_url=config.TOGETHER_BASE_URL,
+            )
+
+            extraction_kwargs = {
+                "llm_config": llm_config,
+                "extraction_type": "schema",
+                "instruction": extraction_instructions,
+                "schema": output_schema,
+                "overlap_rate": 0.1,
+                "chunk_token_threshold": 10000,
+                "apply_chunking": True,
+                "input_format": "markdown",
+                "reasoning_effort": "low",
+            }
+
+            llm_strategy = LLMExtractionStrategy(**extraction_kwargs)
+
+            # Split the text content into chunks of 6000 characters each with an overlap of 1000 characters
+            chunk_size = 6000
+            overlap = 1000
+            chunks = [
+                text_content[i:i + chunk_size]
+                for i in range(0, len(text_content), chunk_size - overlap)
+            ]
+            
+            extracted_data = llm_strategy.run(url=url, sections=chunks)
             
             result = {
                 "success": True,
                 "url": url,
-                "content": text_content,
-                "content_type": "text/html",  # CycleTLS primarily handles HTML
-                "length": len(text_content),
-                "truncated": len(text_content) >= max_length,
-                "message": f"Successfully fetched and processed content from {url}"
+                "message": f"Successfully fetched and processed content from {url}",
+                "data": extracted_data
             }
-            
-            if include_links and links:
-                result["links"] = links
-                result["link_count"] = len(links)
-            
+        
             return result
             
         except Exception as e:

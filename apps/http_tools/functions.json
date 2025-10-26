@@ -1,8 +1,8 @@
 [
   {
     "name": "HTTP_TOOLS__GET_URL",
-    "description": "Fetches content from a URL using GET request, extracts clean text using html2text, and returns formatted content with links. Includes security checks to prevent accessing internal services.",
-    "tags": ["http", "get", "url", "fetch", "html", "text", "links"],
+    "description": "Fetches content from a URL using CycleTLS, extracts data using LLM instructions, and returns structured data according to the provided schema.",
+    "tags": ["http", "get", "url", "fetch", "llm", "extraction", "structured", "schema"],
     "visibility": "public",
     "active": true,
     "protocol": "connector",
@@ -14,19 +14,17 @@
           "type": "string",
           "description": "The URL to fetch content from using GET request."
         },
-        "max_length": {
-          "type": "integer",
-          "description": "Maximum length of returned text for LLM processing (default: 10000 characters).",
-          "default": 10000
+        "extraction_instructions": {
+          "type": "string",
+          "description": "LLM instructions for data extraction using GPT-OSS model. Must be specific about what data to extract and how to format it."
         },
-        "include_links": {
-          "type": "boolean",
-          "description": "Whether to include extracted links in the response (default: true).",
-          "default": true
+        "output_schema": {
+          "type": "object",
+          "description": "Required JSON schema defining the expected output structure. Must be a valid JSON schema with type definitions and properties. Example: {\"type\": \"object\", \"properties\": {\"title\": {\"type\": \"string\"}, \"price\": {\"type\": \"number\"}}}"
         }
       },
-      "required": ["url"],
-      "visible": ["url", "max_length", "include_links"],
+      "required": ["url", "extraction_instructions", "output_schema"],
+      "visible": ["url", "extraction_instructions", "output_schema"],
       "additionalProperties": false
     }
   }
