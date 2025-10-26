@@ -33,8 +33,8 @@ class UserSubscriptionInfo(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-@router.get("", response_model=List[Dict[str, Any]])
-def get_subscription_plans() -> List[Dict[str, Any]]:
+@router.get("")
+def get_subscription_plans():
     """
     Retrieve all available subscription plans and their limits.
     """
@@ -43,7 +43,7 @@ def get_subscription_plans() -> List[Dict[str, Any]]:
 
 @router.get("/status", response_model=UserSubscriptionInfo)
 def get_user_subscription_status(
-    context: RequestContext = Depends(deps.get_request_context),
+    context: RequestContext = Depends(deps.get_request_context(check_subscription=False)),
 ) -> UserSubscriptionInfo:
     """
     Retrieve the current user's subscription status and details.
