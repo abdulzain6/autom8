@@ -3,53 +3,65 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from aci.common.db.sql_models import FCMToken
 from ...schemas.fcm_tokens import FCMTokenUpsert
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def upsert_fcm_token(
     db: Session, *, user_id: str, token_in: FCMTokenUpsert
 ) -> FCMToken:
     """
-    Creates or updates a user's FCM token for a specific device type.
-
-    This "upsert" logic ensures a user has only one token per device type.
-    - If a token for the user/device_type combo exists, it updates the token value.
-    - If it doesn't exist, it creates a new record.
-
-    Args:
-        db: The SQLAlchemy database session.
-        user_id: The ID of the user owning the token.
-        token_in: The Pydantic schema containing the new token and device type.
-
-    Returns:
-        The created or updated FCMToken object.
+    Creates or updates a user's FCM token for a specific device type,
+    ensuring uniqueness for both the token and the user/device combo.
     """
-    # Find an existing token for this user and device type.
-    stmt = select(FCMToken).where(
-        FCMToken.user_id == user_id,
-        FCMToken.device_type == token_in.device_type
-    )
-    existing_token_for_device = db.execute(stmt).scalar_one_or_none()
+    
+    # 1. Find any record that ALREADY has this token
+    token_record = db.execute(
+        select(FCMToken).where(FCMToken.token == token_in.token)
+    ).scalar_one_or_none()
 
-    if existing_token_for_device:
-        # If one exists, update its token value if it's different.
-        if existing_token_for_device.token != token_in.token:
-            existing_token_for_device.token = token_in.token
-            db.commit()
-        
-        db.refresh(existing_token_for_device)
-        return existing_token_for_device
-    else:
-        # If no token exists for this device type, create a new one.
-        # First, ensure this token isn't somehow registered to another user,
-        # which would violate the unique constraint on the token itself.
-        existing_token_any_user = db.execute(
-            select(FCMToken).where(FCMToken.token == token_in.token)
-        ).scalar_one_or_none()
+    # 2. Find any record that this user ALREADY has for this device type
+    device_record = db.execute(
+        select(FCMToken).where(
+            FCMToken.user_id == user_id,
+            FCMToken.device_type == token_in.device_type
+        )
+    ).scalar_one_or_none()
 
-        if existing_token_any_user:
-            db.delete(existing_token_any_user)
-            db.commit()
+    try:
+        # Case 1: Token exists, device record exists, and they are the same row.
+        # User is re-registering the same token on the same device. Nothing to do.
+        if token_record and device_record and token_record.id == device_record.id:
+            return token_record
+
+        # Case 2: Token exists, but it's on a different row (or device_record is None).
+        # This token is being "stolen" from another user or re-assigned from another of the
+        # *current* user's devices.
+        if token_record:
+            # If the current user had an old token on this device, that record is now stale.
+            if device_record:
+                db.delete(device_record)
             
+            # Re-assign the existing token record to this user and device
+            token_record.user_id = user_id
+            token_record.device_type = token_in.device_type
+            db.commit()
+            db.refresh(token_record)
+            return token_record
+
+        # Case 3: Token does not exist, but a record for this device does.
+        # User is getting a new token for an existing device (e.g., app re-install).
+        if device_record:
+            # Update the old record with the new token
+            device_record.token = token_in.token
+            db.commit()
+            db.refresh(device_record)
+            return device_record
+
+        # Case 4: Token does not exist, device record does not exist.
+        # This is a brand new registration for this user and device.
         new_token = FCMToken(
             user_id=user_id,
             token=token_in.token,
@@ -59,6 +71,11 @@ def upsert_fcm_token(
         db.commit()
         db.refresh(new_token)
         return new_token
+        
+    except Exception as e:
+        db.rollback() # Rollback on any error
+        logger.error(f"Error during FCM token upsert: {e}", exc_info=True)
+        raise e
 
 
 def get_tokens_for_user(db: Session, *, user_id: str) -> List[FCMToken]:
