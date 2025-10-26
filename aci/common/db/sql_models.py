@@ -90,6 +90,7 @@ class SupabaseUser(Base):
         init=False,
     )
 
+
 class UserProfile(Base):
     __tablename__ = "profiles"
 
@@ -689,8 +690,8 @@ class FCMToken(Base):
 
 class UserUsage(Base):
     """
-    Tracks user usage statistics per month.
-    One record per user per month to monitor voice agent usage and automation runs.
+    Tracks a single usage event for a user.
+    One record per event (e.g., one automation run, or one batch of voice minutes).
     """
 
     __tablename__ = "user_usage"
@@ -701,21 +702,17 @@ class UserUsage(Base):
 
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
 
-    # Year and month for the usage period (e.g., 2025, 9 for September 2025)
-    year: Mapped[int] = mapped_column(nullable=False)
-    month: Mapped[int] = mapped_column(nullable=False)
-
-    # Voice agent usage in minutes (user-facing metric)
+    # Voice agent usage in minutes (for this event)
     voice_agent_minutes: Mapped[float] = mapped_column(
         nullable=False, default=0.0, server_default="0.0"
     )
 
-    # Number of automation runs in this month
+    # Number of automation runs (for this event, usually 1)
     automation_runs_count: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default="0"
     )
 
-    # Additional usage metrics
+    # Additional usage metrics (for this event)
     successful_automation_runs: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default="0"
     )
@@ -723,7 +720,7 @@ class UserUsage(Base):
         nullable=False, default=0, server_default="0"
     )
 
-    # Internal cost tracking metrics (from LiveKit usage)
+    # Internal cost tracking metrics (for this event)
     llm_tokens_used: Mapped[int] = mapped_column(
         nullable=False, default=0, server_default="0"
     )
@@ -753,10 +750,7 @@ class UserUsage(Base):
     )
 
     __table_args__ = (
-        # Ensure one record per user per month
-        UniqueConstraint("user_id", "year", "month", name="uq_user_year_month"),
-        # Index for efficient querying
-        Index("ix_user_usage_user_year_month", "user_id", "year", "month"),
+        Index("ix_user_usage_user_id_created_at", "user_id", "created_at"),
     )
 
 

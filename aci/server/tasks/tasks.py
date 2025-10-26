@@ -6,7 +6,7 @@ from .config import huey
 from logging import getLogger
 from aci.server.dependencies import _get_user_limits, get_db_session
 from aci.common.db.crud import automations, automation_runs
-from aci.common.db.crud.usage import increment_automation_runs
+from aci.common.db.crud.usage import create_automation_run_event
 from aci.server.agent.automation_executor import AutomationExecutor
 from aci.common.fcm import FCMManager
 
@@ -17,8 +17,8 @@ logger = getLogger(__name__)
 @huey.periodic_task(crontab(minute="*"))
 def schedule_due_automations():
     """
-    This is the scheduler 'beat'. It finds due automations, checks usage limits,
-    creates a run record to "lock" them, and then enqueues the execution task.
+    This is the scheduler 'beat'. It finds due automations, checks usage limits
+    based on the user's billing period, creates a run record, and enqueues the task.
     """
     logger.info("Scheduler beat: Checking for due automations...")
 
@@ -48,38 +48,37 @@ def schedule_due_automations():
                             )
                             continue
 
-                        # 2. Get user's limits and interval from our shared dependency logic
-                        limits, interval = _get_user_limits(user)
+                        # 2. Get user's total limits (e.g., 200 or 2400)
+                        # _get_user_limits returns ZERO_LIMITS if user is not active.
+                        limits, _ = _get_user_limits(
+                            user
+                        )  # We no longer need the interval
                         limit_value = limits.get("max_automation_runs", 0)
 
-                        # 3. Get user's current usage based on their billing interval
+                        # 3. Get user's current usage *within their billing period*
                         current_usage = 0
                         current_usage_stats = None
-                        if interval == "month":
-                            current_usage_stats = crud.usage.get_current_month_usage(
-                                db_session, user.id
+
+                        # --- SIMPLIFIED LOGIC ---
+                        # We only check usage if the user has an active billing window.
+                        if (
+                            user.subscription_period_starts_at
+                            and user.subscription_expires_at
+                        ):
+                            current_usage_stats = crud.usage.get_usage_between_dates(
+                                db_session,
+                                user.id,
+                                user.subscription_period_starts_at,
+                                user.subscription_expires_at,
                             )
-                        elif interval == "year":
-                            # Use the billing-period-aware function
-                            if (
-                                user.subscription_period_starts_at
-                                and user.subscription_expires_at
-                            ):
-                                current_usage_stats = (
-                                    crud.usage.get_usage_between_dates(
-                                        db_session,
-                                        user.id,
-                                        user.subscription_period_starts_at,
-                                        user.subscription_expires_at,
-                                    )
-                                )
-                            else:
-                                current_usage_stats = crud.usage.get_current_year_usage(
-                                    db_session, user.id
-                                )
+
+                        # If no billing window, current_usage stays 0.
+                        # limit_value will also be 0 (from ZERO_LIMITS),
+                        # so the check (0 >= 0) will correctly deactivate the automation.
 
                         if current_usage_stats:
                             current_usage = current_usage_stats.automation_runs_count
+                        # --- END OF SIMPLIFIED LOGIC ---
 
                         # 4. Enforce the limit
                         if current_usage >= limit_value:
@@ -179,7 +178,7 @@ def execute_automation(run_id: str):
                     )
                     # Track failed automation run in usage
                     try:
-                        increment_automation_runs(
+                        create_automation_run_event(
                             db_session, automation.user_id, success=False
                         )
                         logger.info(
@@ -199,7 +198,7 @@ def execute_automation(run_id: str):
 
                 # Track successful automation run in usage
                 try:
-                    increment_automation_runs(
+                    create_automation_run_event(
                         db_session, automation.user_id, success=True
                     )
                     logger.info(
@@ -268,7 +267,7 @@ def execute_automation(run_id: str):
                 try:
                     automation = automations.get_automation(db_session, automation_id)
                     if automation:
-                        increment_automation_runs(
+                        create_automation_run_event(
                             db_session, automation.user_id, success=False
                         )
                         logger.info(

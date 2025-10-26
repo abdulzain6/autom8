@@ -1220,41 +1220,42 @@ async def entrypoint(ctx: JobContext):
             f"TTS characters: {usage_summary.tts_characters_count}"
         )
 
-        # Save all usage metrics to database
+        # --- CONSOLIDATED SAVING LOGIC ---
         try:
             with create_db_session(DB_FULL_URL) as db_session:
-                # Save voice session minutes
-                if session_duration_minutes > 0:
-                    usage_crud.increment_voice_minutes(
-                        db_session, user_id, session_duration_minutes
-                    )
-                    logger.info(
-                        f"Recorded {session_duration_minutes:.2f} voice minutes for user {user_id}"
-                    )
+                
+                stt_minutes = (
+                    session_metrics["stt_duration"] / 60
+                )  # Convert seconds to minutes
 
-                # Save real-time usage metrics using bulk increment for efficiency
+                # Only save if there is actually something to record
                 if (
-                    session_metrics["llm_tokens"] > 0
-                    or session_metrics["stt_duration"] > 0
+                    session_duration_minutes > 0
+                    or session_metrics["llm_tokens"] > 0
+                    or stt_minutes > 0
                     or session_metrics["tts_characters"] > 0
                 ):
-                    stt_minutes = (
-                        session_metrics["stt_duration"] / 60
-                    )  # Convert seconds to minutes
-
-                    usage_crud.increment_usage_from_livekit_metrics(
+                    
+                    # Create ONE usage event with ALL metrics for the session
+                    usage_crud.create_voice_session_event(
                         db_session,
                         user_id,
+                        voice_agent_minutes=session_duration_minutes, 
                         llm_tokens=session_metrics["llm_tokens"],
                         stt_minutes=stt_minutes,
                         tts_characters=session_metrics["tts_characters"],
                     )
 
                     logger.info(
-                        f"Recorded final metrics for user {user_id}: "
+                        f"Recorded consolidated usage event for user {user_id}: "
+                        f"{session_duration_minutes:.2f} voice minutes, "
                         f"{session_metrics['llm_tokens']} LLM tokens, "
                         f"{stt_minutes:.2f} STT minutes, "
                         f"{session_metrics['tts_characters']} TTS characters"
+                    )
+                else:
+                    logger.info(
+                        f"No usage metrics to record for user {user_id}. Skipping DB call."
                     )
 
         except Exception as e:
