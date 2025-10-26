@@ -150,6 +150,7 @@ def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
         return
 
     # 2. Extract key event data
+    period_start_date = _ms_to_datetime(event.purchased_at_ms)
     expires_at = _ms_to_datetime(event.expiration_date_ms) # Corrected field name
     product_id = event.product_id
     period_type = event.period_type
@@ -191,6 +192,7 @@ def _process_revenuecat_event(event: RevenueCatEvent, db: Session) -> None:
 
         user.subscription_product_id = product_id
         user.subscription_expires_at = expires_at
+        user.subscription_period_starts_at = period_start_date
 
     # User turned off auto-renew. Access is still valid until expires_at.
     elif event_type == "cancellation":

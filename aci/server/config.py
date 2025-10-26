@@ -1,6 +1,7 @@
 import os
 import json
 from pathlib import Path
+from typing import cast
 
 from pydantic import SecretStr
 from aci.common.utils import check_and_get_env_variable, construct_db_url
@@ -76,12 +77,12 @@ def _load_subscription_plans():
         with open(plans_file, 'r') as f:
             data = json.load(f)
 
-        return data.get("plans", [])
+        return data
     except Exception as e:
         print(f"Error loading subscription plans: {e}")
         return []
 
-SUBSCRIPTION_PLANS = _load_subscription_plans()
+SUBSCRIPTION_PLANS = cast(dict[str, dict], _load_subscription_plans())
 
 # 8KB
 MAX_LOG_FIELD_SIZE = 8 * 1024

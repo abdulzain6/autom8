@@ -1,13 +1,15 @@
 from contextlib import contextmanager
+from enum import Enum
 from pydantic import BaseModel, ConfigDict
 from collections.abc import Generator
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Tuple, TypedDict, cast
 from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from aci.common import utils
-from aci.common.db.sql_models import SupabaseUser
+from aci.common.db import crud
+from aci.common.db.sql_models import SupabaseUser, UserUsage
 from aci.common.enums import SubscriptionStatus
 from aci.common.logging_setup import get_logger
 from aci.server import config
@@ -51,14 +53,29 @@ class PaymentRequiredErrorDetail(BaseModel):
     message: str
 
 
-# -----------------------------------
+class PlanLimits(TypedDict):
+    max_automations: int
+    max_automation_runs: int
+    max_voice_agent_minutes: float
+
+
+class PlanDetails(TypedDict):
+    interval: str  # "month" or "year"
+    paid: PlanLimits
+    trial: PlanLimits
 
 
 class RequestContext(BaseModel):
     db_session: Session
     user: User
-
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+ZERO_LIMITS: PlanLimits = {
+    "max_automations": 0,
+    "max_automation_runs": 0,
+    "max_voice_agent_minutes": 0.0,
+}
 
 
 # --- Database Session ---
@@ -258,7 +275,10 @@ def _get_subscribed_context_internal(
     # 2. Check subscription status
     active_statuses = {SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING}
 
-    if db_user.subscription_status not in active_statuses or not db_user.subscription_status:
+    if (
+        db_user.subscription_status not in active_statuses
+        or not db_user.subscription_status
+    ):
         logger.warning(
             f"User {user.id} denied access for premium feature. Status: {db_user.subscription_status}"
         )
@@ -347,12 +367,12 @@ async def verify_revenuecat_signature(
 
 
 def get_request_context(
-    check_subscription: bool = True
+    check_subscription: bool = True,
 ) -> Callable[..., RequestContext]:
     """
     A dependency factory that returns the correct context getter.
 
-    :param check_subscription: If True, returns a dependency that 
+    :param check_subscription: If True, returns a dependency that
                                validates the user's subscription.
     """
     if check_subscription:
@@ -361,3 +381,151 @@ def get_request_context(
     else:
         logger.info("Using standard request context dependency.")
         return _get_request_context_internal
+
+
+def _get_user_limits(user: SupabaseUser) -> Tuple[PlanLimits, str]:
+    """
+    Gets the correct usage limits and interval for a user.
+
+    Safely accesses the untyped config.SUBSCRIPTION_PLANS.
+    Returns (limits, interval)
+    """
+    active_statuses = {SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING}
+
+    # 1. Default to zero limits if user is not active
+    if user.subscription_status not in active_statuses:
+        return (ZERO_LIMITS, "none")
+
+    product_id = user.subscription_product_id
+    if not product_id:
+        logger.warning(
+            f"User {user.id} is active but has no product_id. Returning zero limits."
+        )
+        return (ZERO_LIMITS, "none")
+
+    # 2. Safely get the plan from the untyped SUBSCRIPTION_PLANS dict
+    #    (Assumes SUBSCRIPTION_PLANS is a dict, not a list)
+    plan_details_raw = config.SUBSCRIPTION_PLANS.get(product_id)
+    if not plan_details_raw:
+        logger.error(
+            f"User {user.id} has unknown product_id: {product_id}. Returning zero limits."
+        )
+        return (ZERO_LIMITS, "none")
+
+    # 3. Cast to TypedDict to safely access keys
+    try:
+        plan = cast(PlanDetails, plan_details_raw)
+        interval = plan.get("interval", "month")  # Default to month
+
+        limits_dict = None
+        if user.is_trial:
+            limits_dict = plan.get("trial")
+        else:
+            limits_dict = plan.get("paid")
+
+        if not limits_dict:
+            logger.error(
+                f"Plan {product_id} is missing 'trial' or 'paid' limits. Returning zero limits."
+            )
+            return (ZERO_LIMITS, "none")
+
+        limits = cast(PlanLimits, limits_dict)
+        return (limits, interval)
+
+    except (KeyError, TypeError) as e:
+        logger.error(
+            f"Error parsing plan structure for {product_id}: {e}. Returning zero limits."
+        )
+        return (ZERO_LIMITS, "none")
+
+
+class LimitType(str, Enum):
+    """Defines the specific usage limit to check."""
+
+    AUTOMATION_RUNS = "automation_runs"
+    VOICE_MINUTES = "voice_minutes"
+    AUTOMATIONS_TOTAL = "automations_total"
+
+
+class UsageLimiter:
+    """
+    A class-based dependency to check user-specific usage limits
+    based on their *billing period*.
+    """
+
+    def __init__(self, limit_to_check: LimitType):
+        self.limit_to_check = limit_to_check
+
+    def __call__(self, context: RequestContext = Depends(get_request_context)):
+        db_session = context.db_session
+        user_id = context.user.id
+
+        db_user = (
+            db_session.query(SupabaseUser)
+            .filter(SupabaseUser.id == user_id)
+            .one_or_none()
+        )
+        if not db_user:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+        # 1. Get the user's defined limits from the JSON config
+        # We still use this to know *what* the limits are (e.g., 200 vs 2400)
+        limits, _ = _get_user_limits(db_user)  # We can ignore the interval now
+
+        current_usage = 0.0
+        limit_value = 0.0
+
+        # 2. Check total, lifetime limits (not billing-period-dependent)
+        if self.limit_to_check == LimitType.AUTOMATIONS_TOTAL:
+            current_usage = crud.usage.get_user_total_automations_count(
+                db_session, user_id
+            )
+            limit_value = limits.get("max_automations", 0)
+
+        # 3. Check billing-period-based limits
+        else:
+            # Get the user's billing window
+            start_date = db_user.subscription_period_starts_at
+            end_date = db_user.subscription_expires_at
+
+            # If no billing window, user is unsubscribed. Usage is 0.
+            # The limit_value will be 0 (from ZERO_LIMITS),
+            # so the check (0 >= 0) will correctly raise a 402.
+            current_usage_stats: Optional[UserUsage] = None
+            if start_date and end_date:
+                current_usage_stats = crud.usage.get_usage_between_dates(
+                    db_session, user_id, start_date, end_date
+                )
+
+            if self.limit_to_check == LimitType.AUTOMATION_RUNS:
+                current_usage = (
+                    current_usage_stats.automation_runs_count
+                    if current_usage_stats
+                    else 0
+                )
+                limit_value = limits.get("max_automation_runs", 0)
+
+            elif self.limit_to_check == LimitType.VOICE_MINUTES:
+                current_usage = (
+                    current_usage_stats.voice_agent_minutes
+                    if current_usage_stats
+                    else 0
+                )
+                limit_value = limits.get("max_voice_agent_minutes", 0)
+
+        # 4. Enforce the limit
+        if current_usage >= limit_value:
+            logger.warning(
+                f"User {user_id} exceeded limit for {self.limit_to_check}. "
+                f"Usage: {current_usage}, Limit: {limit_value}"
+            )
+            error_detail = PaymentRequiredErrorDetail(
+                code=ErrorCode.USAGE_LIMIT_EXCEEDED,
+                message=f"You have exceeded your usage limit for {self.limit_to_check.value}.",
+            )
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=error_detail.model_dump(),
+            )
+
+        return True

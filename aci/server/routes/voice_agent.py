@@ -15,6 +15,7 @@ router = APIRouter()
 @router.post("/start-session")
 async def start_session(
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    _limit_check: bool = Depends(deps.UsageLimiter(deps.LimitType.VOICE_MINUTES))
 ):
     """
     Generates a user token AND dispatches a job for an agent using create_dispatch.

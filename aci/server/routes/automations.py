@@ -24,6 +24,7 @@ router = APIRouter()
 def create_new_automation(
     automation_in: AutomationCreate,
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    _limit_check: bool = Depends(deps.UsageLimiter(deps.LimitType.AUTOMATIONS_TOTAL))
 ):
     """
     Create a new automation for the authenticated user.
@@ -166,6 +167,7 @@ def delete_existing_automation(
 def create_automation_from_a_template(
     template_data: AutomationFromTemplateCreate,
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    _limit_check: bool = Depends(deps.UsageLimiter(deps.LimitType.AUTOMATIONS_TOTAL))
 ):
     """
     Create a new automation by rendering a template with the provided variables.
@@ -189,6 +191,7 @@ def create_automation_from_a_template(
 def run_an_automation(
     automation_id: str,
     context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    _limit_check: bool = Depends(deps.UsageLimiter(deps.LimitType.AUTOMATION_RUNS))
 ):
     """
     Manually triggers a run for a specific automation.
