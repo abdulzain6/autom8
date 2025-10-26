@@ -3,6 +3,7 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict
 from collections.abc import Generator
 from typing import Annotated, Optional, Tuple, TypedDict, cast
+from datetime import datetime
 from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -32,6 +33,13 @@ class User(BaseModel):
     email: Optional[str] = None
     app_metadata: Optional[dict] = None
     user_metadata: Optional[dict] = None
+
+    # Subscription fields from database
+    subscription_status: Optional[SubscriptionStatus] = None
+    subscription_product_id: Optional[str] = None
+    subscription_expires_at: Optional[datetime] = None
+    subscription_period_starts_at: Optional[datetime] = None
+    is_trial: bool = False
 
 
 # --- NEW: Structured Error Models ---
@@ -208,9 +216,10 @@ def get_db_session() -> Generator[Session, None, None]:
 # --- Authentication and Authorization ---
 def get_current_user(
     token: Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)],
+    db_session: Annotated[Session, Depends(yield_db_session)],
 ) -> User:
     """
-    Decodes the Supabase JWT token and returns the user data.
+    Decodes the Supabase JWT token and returns the user data with subscription info.
     """
     try:
         payload = jwt.decode(
@@ -228,11 +237,21 @@ def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
+        # Fetch subscription data from database
+        db_user = (
+            db_session.query(SupabaseUser).filter(SupabaseUser.id == user_id).one_or_none()
+        )
+
         return User(
             id=user_id,
             email=payload.get("email"),
             app_metadata=payload.get("app_metadata"),
             user_metadata=payload.get("user_metadata"),
+            subscription_status=db_user.subscription_status if db_user else None,
+            subscription_product_id=db_user.subscription_product_id if db_user else None,
+            subscription_expires_at=db_user.subscription_expires_at if db_user else None,
+            subscription_period_starts_at=db_user.subscription_period_starts_at if db_user else None,
+            is_trial=db_user.is_trial if db_user else False,
         )
     except jwt.PyJWTError as e:
         logger.error(f"JWT decoding error: {e}")

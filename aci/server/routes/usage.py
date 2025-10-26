@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from aci.common.db import crud
 from aci.common.db.crud import usage as usage_crud
 from aci.common.schemas.usage import (
     UserUsageResponse,
@@ -9,7 +10,7 @@ from aci.common.schemas.usage import (
     UserUsageHistory,
     MonthlyUsageStats,
 )
-from aci.server.dependencies import RequestContext, get_request_context
+from aci.server.dependencies import ErrorCode, PaymentRequiredErrorDetail, RequestContext, get_request_context
 
 router = APIRouter()
 
@@ -18,12 +19,46 @@ router = APIRouter()
 def get_current_month_usage(
     context: RequestContext = Depends(get_request_context(check_subscription=False)),
 ):
-    """Get current month usage for the authenticated user."""
-    now = datetime.now(timezone.utc)
-    usage = usage_crud.get_or_create_user_usage(
-        context.db_session, context.user.id, now.month, now.year
+    """Get current subscription period usage for the authenticated user."""
+    start_date = context.user.subscription_period_starts_at
+    end_date = context.user.subscription_expires_at
+
+    # If no billing window, user is unsubscribed
+    if not start_date or not end_date:
+        error_detail = PaymentRequiredErrorDetail(
+            code=ErrorCode.SUBSCRIPTION_REQUIRED,
+            message="User is not subscribed.",
+        )
+        raise HTTPException(
+            status_code=402,
+            detail=error_detail.model_dump(),
+        )
+
+    # Get usage between subscription dates
+    current_usage_stats = usage_crud.get_usage_between_dates(
+        context.db_session, context.user.id, start_date, end_date
     )
-    return UserUsageResponse.model_validate(usage)
+
+    if current_usage_stats:
+        return UserUsageResponse.model_validate(current_usage_stats)
+    else:
+        # Return zero usage if no usage found in the period
+        now = datetime.now(timezone.utc)
+        return UserUsageResponse(
+            id="",
+            user_id=context.user.id,
+            year=now.year,
+            month=now.month,
+            voice_agent_minutes=0.0,
+            automation_runs_count=0,
+            successful_automation_runs=0,
+            failed_automation_runs=0,
+            llm_tokens_used=0,
+            stt_audio_minutes=0.0,
+            tts_characters_used=0,
+            created_at=now,
+            updated_at=now,
+        )
 
 
 @router.get("/stats", response_model=UserUsageStats)
