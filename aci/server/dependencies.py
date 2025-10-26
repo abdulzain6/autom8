@@ -475,7 +475,7 @@ class UsageLimiter:
     def __init__(self, limit_to_check: LimitType):
         self.limit_to_check = limit_to_check
 
-    def __call__(self, context: RequestContext = Depends(get_request_context)):
+    def __call__(self, context: RequestContext = Depends(get_request_context())):
         db_session = context.db_session
         user_id = context.user.id
 
