@@ -467,7 +467,7 @@ class Browser(AppConnectorBase):
                             base_url=config.TOGETHER_BASE_URL,
                         )
                         page_extraction_llm = ChatOpenAI(
-                            model="openai/gpt-oss-120b",
+                            model="Qwen/Qwen3-235B-A22B-fp8-tput",
                             temperature=0.3,
                             api_key=config.TOGETHER_API_KEY,
                             base_url=config.TOGETHER_BASE_URL,
@@ -634,7 +634,7 @@ SECURITY VALIDATION RULES:
 
                     # Setup LLM extraction strategy with required schema
                     llm_config = LLMConfig(
-                        provider="openai/gpt-oss-120b",
+                        provider="Qwen/Qwen3-235B-A22B-fp8-tput",
                         api_token=config.TOGETHER_API_KEY,
                         base_url=config.TOGETHER_BASE_URL,
                     )
