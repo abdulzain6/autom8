@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 
 @router.get("", response_model=list[FunctionDetails])
 def list_functions(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
     query_params: Annotated[FunctionsList, Query()],
 ) -> list[Function]:
     """Get a list of functions and their details. Sorted by function name."""

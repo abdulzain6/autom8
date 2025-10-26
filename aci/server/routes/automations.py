@@ -55,7 +55,7 @@ def create_new_automation(
 
 @router.get("", response_model=List[AutomationPublic])
 def list_my_automations(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
     params: Annotated[AutomationListParams, Depends()],
 ):
     """
@@ -73,7 +73,7 @@ def list_my_automations(
 @router.get("/{automation_id}", response_model=AutomationPublic)
 def get_automation_by_id(
     automation_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Retrieve a specific automation by its ID.
@@ -100,7 +100,7 @@ def get_automation_by_id(
 def update_existing_automation(
     automation_id: str,
     automation_in: AutomationUpdate,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Update an existing automation.
@@ -133,7 +133,7 @@ def update_existing_automation(
 @router.delete("/{automation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_existing_automation(
     automation_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Delete an automation by its ID.

@@ -21,7 +21,7 @@ router = APIRouter()
 )
 @deps.typed_cache(expire=350) 
 def get_all_template_categories(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Retrieve a list of all unique categories (tags) used in automation templates.
@@ -36,7 +36,7 @@ def get_all_template_categories(
 )
 @deps.typed_cache(expire=350) 
 def list_all_templates(
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
     params: Annotated[AutomationTemplateListParams, Depends()],
 ):
     """
@@ -128,7 +128,7 @@ def list_all_templates(
 @deps.typed_cache(expire=350) 
 def get_template_by_id(
     template_id: str,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
 ):
     """
     Retrieve a specific automation template by its ID, with user-specific

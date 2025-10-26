@@ -1,9 +1,7 @@
 # aci/server/routers/profile.py
+import magic
 from typing import Annotated
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
-from fastapi.responses import StreamingResponse
-import magic
-
 from aci.common.db import crud
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.profiles import UserProfileResponse, UserProfileUpdate
