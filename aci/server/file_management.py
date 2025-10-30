@@ -176,6 +176,11 @@ class FileManager:
         path_in_bucket = f"{user_id}/{uuid.uuid4()}-{filename}"
         file_size = self._get_file_size(file_object)
 
+        # Check file size limit (50 MB)
+        max_size_bytes = 50 * 1024 * 1024
+        if file_size > max_size_bytes:
+            raise ValueError(f"File size ({file_size} bytes) exceeds the maximum allowed size of 50 MB.")
+
         # Upload and get MIME type (note: _get_file_size seeks back to 0, so file_object is ready)
         path_in_bucket, detected_mime_type = self._upload_to_supabase(
             bucket=self.ARTIFACT_BUCKET,
@@ -216,6 +221,12 @@ class FileManager:
 
         # 2. Get new file size and upload the new content, overwriting the old file
         new_file_size = self._get_file_size(file_object)
+
+        # Check file size limit (50 MB)
+        max_size_bytes = 50 * 1024 * 1024
+        if new_file_size > max_size_bytes:
+            raise ValueError(f"File size ({new_file_size} bytes) exceeds the maximum allowed size of 50 MB.")
+
         _, new_mime_type = self._upload_to_supabase(
             bucket=self.ARTIFACT_BUCKET,
             path_in_bucket=artifact_record.file_path,
@@ -229,11 +240,19 @@ class FileManager:
         logger.info(f"Successfully updated artifact {artifact_id} in place.")
 
 
-    def read_artifact(self, file_id: str) -> Tuple[Generator[bytes, None, None], str]:
-        """Retrieves a temporary artifact's content via a signed URL."""
+    def read_artifact(self, file_id: str, user_id: str | None = None) -> Tuple[Generator[bytes, None, None], str]:
+        """Retrieves a temporary artifact's content via a signed URL.
+
+        If user_id is provided, this method enforces that the artifact belongs to
+        that user and will raise ValueError if not.
+        """
         file_record = self.db.query(Artifact).filter(Artifact.id == file_id).first()
         if not file_record:
             raise ValueError(f"Artifact with ID {file_id} not found or has expired.")
+
+        # Enforce ownership if caller provided a user_id
+        if user_id is not None and str(file_record.user_id) != str(user_id):
+            raise ValueError(f"Access denied: Artifact {file_id} does not belong to user {user_id}.")
 
         try:
             signed_response = self.client.storage.from_(self.ARTIFACT_BUCKET).create_signed_url(

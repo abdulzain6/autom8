@@ -758,7 +758,7 @@ class Notifyme(AppConnectorBase):
                     )
 
                 # Get file content first to calculate actual size after compression  
-                content_generator, _ = self.file_manager.read_artifact(artifact_id)
+                content_generator, _ = self.file_manager.read_artifact(artifact_id, user_id=self.linked_account.user_id)
                 file_content = b"".join(content_generator)
                 
                 # Check if this is an image file and compress it if needed
@@ -923,7 +923,7 @@ class Notifyme(AppConnectorBase):
                 raise ValueError(f"File {file_record.filename} exceeds the 100MB size limit for WhatsApp attachments")
 
             # Get file content
-            content_generator, _ = self.file_manager.read_artifact(artifact_id)
+            content_generator, _ = self.file_manager.read_artifact(artifact_id, user_id=self.linked_account.user_id)
             file_content = b"".join(content_generator)
             filename = file_record.filename
 

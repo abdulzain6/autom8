@@ -290,8 +290,10 @@ class PdfTools(AppConnectorBase):
             )
             if not artifact:
                 raise ValueError(f"Artifact with ID {artifact_id} not found.")
+            if artifact.user_id != self.user_id:
+                raise ValueError(f"Access denied: Artifact {artifact_id} does not belong to the current user.")
 
-            content_generator, mime_type = file_manager.read_artifact(artifact_id)
+            content_generator, mime_type = file_manager.read_artifact(artifact_id, user_id=self.user_id)
             content = b"".join(content_generator)
             files_to_upload.append(("files", (artifact.filename, content, mime_type)))
         return files_to_upload

@@ -72,7 +72,7 @@ class Wordpress(AppConnectorBase):
                 raise ValueError(f"Artifact with ID {artifact_id} not found or access denied.")
 
             # 2. Read the artifact's content
-            content_generator, mime_type = self.file_manager.read_artifact(artifact_id)
+            content_generator, mime_type = self.file_manager.read_artifact(artifact_id, user_id=self.user_id)
             content = b"".join(content_generator)
 
             # 3. Prepare the multipart/form-data payload

@@ -127,7 +127,7 @@ def download_an_artifact_from_a_run(
     # 3. Use the FileManager to stream the file
     try:
         file_manager = FileManager(context.db_session)
-        content_generator, mime_type = file_manager.read_artifact(artifact_id)
+        content_generator, mime_type = file_manager.read_artifact(artifact_id, user_id=context.user.id)
 
         # 4. Set headers to prompt a download with the original filename
         headers = {"Content-Disposition": f'attachment; filename="{artifact.filename}"'}

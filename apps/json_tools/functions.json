@@ -1,0 +1,73 @@
+[
+  {
+    "name": "JSON_TOOLS__GENERATE_SCHEMA",
+    "description": "Generates a JSON schema from a JSON artifact using genson. The schema describes the structure and types of the JSON data.",
+    "tags": ["json", "schema", "generation", "artifact", "structure", "validation"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "description": "The ID of the JSON artifact to generate a schema from. The artifact must contain valid JSON data."
+        }
+      },
+      "required": ["artifact_id"],
+      "visible": ["artifact_id"],
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "description": "The generated JSON schema describing the structure of the JSON data"
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if schema generation failed"
+        }
+      }
+    }
+  },
+  {
+    "name": "JSON_TOOLS__QUERY_JSON",
+    "description": "Queries a JSON artifact using JMESPath expressions. Allows extracting specific data from JSON structures using powerful query syntax.",
+    "tags": ["json", "query", "jmespath", "artifact", "extraction", "filtering"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "description": "The ID of the JSON artifact to query. The artifact must contain valid JSON data."
+        },
+        "query": {
+          "type": "string",
+          "description": "JMESPath query expression to extract data from the JSON. Examples: 'name', 'items[0].price', 'locations[?state==`CA`].city'"
+        }
+      },
+      "required": ["artifact_id", "query"],
+      "visible": ["artifact_id", "query"],
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "description": "The result of the JMESPath query applied to the JSON data"
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if the query failed or JSON is invalid"
+        }
+      }
+    }
+  }
+]

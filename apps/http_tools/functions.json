@@ -32,5 +32,53 @@
       "visible": ["url", "extraction_instructions", "output_schema"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT",
+    "description": "Fetches JSON content from a URL using CycleTLS and saves it as an artifact if the response is valid JSON.",
+    "tags": ["http", "get", "url", "fetch", "json", "artifact", "api"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "The complete URL of the JSON API endpoint to fetch. Must include protocol (http:// or https://) and return valid JSON. Example: 'https://api.example.com/data.json' or 'https://jsonplaceholder.typicode.com/posts/1'"
+        }
+      },
+      "required": ["url"],
+      "visible": ["url"],
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the operation was successful"
+        },
+        "artifact_id": {
+          "type": "string",
+          "description": "The ID of the created artifact (only present if success is true)"
+        },
+        "url": {
+          "type": "string",
+          "description": "The URL that was fetched (only present if success is true)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Success message (only present if success is true)"
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message (only present if success is false)"
+        }
+      },
+      "required": ["success"]
+    }
   }
 ]

@@ -2,6 +2,8 @@ import re
 import time
 import random
 import socket
+import json
+import io
 from typing import Optional, Dict, Any, List
 from urllib.parse import urlparse, urljoin
 
@@ -13,6 +15,8 @@ from aci.server import config
 from aci.server.app_connectors.base import AppConnectorBase
 from aci.server.config import CYCLE_TLS_SERVER_URL, HTTP_PROXY
 from aci.server.cycletls_client import CycleTlsServerClient
+from aci.server.file_management import FileManager
+from aci.common.utils import create_db_session
 from crawl4ai import LLMConfig, LLMExtractionStrategy
 import html2text
 
@@ -388,3 +392,87 @@ class HttpTools(AppConnectorBase):
                 "success": False,
                 "error": f"Unexpected error: {str(e)}"
             }
+
+    def fetch_json_to_artifact(self, url: str) -> Dict[str, Any]:
+        """
+        Fetches content from a URL using CycleTLS and saves it as an artifact if it's valid JSON.
+        
+        Args:
+            url: The URL to fetch JSON content from.
+            
+        Returns:
+            A dictionary containing the artifact ID if successful, or an error message.
+        """
+        self._before_execute()
+        
+        # Security check: validate URL security
+        try:
+            self._validate_url_security(url)
+        except ValueError as e:
+            return {
+                "success": False,
+                "error": f"URL security validation failed: {str(e)}"
+            }
+        
+        db = None
+        try:
+            # Make GET request using CycleTLS to bypass bot detection
+            content = self.client.get(url)
+            
+            if not content:
+                return {
+                    "success": False,
+                    "error": "Failed to fetch content from URL. The server may be blocking requests."
+                }
+            
+            # Check if the content is valid JSON
+            try:
+                json_data = json.loads(content)
+                logger.info(f"Successfully parsed JSON from {url}")
+            except json.JSONDecodeError as e:
+                return {
+                    "success": False,
+                    "error": f"Content is not valid JSON: {str(e)}"
+                }
+            
+            # Save the JSON as an artifact
+            db = create_db_session(config.DB_FULL_URL)
+            file_manager = FileManager(db)
+            
+            # Convert JSON back to string for storage
+            json_content = json.dumps(json_data, indent=2)
+            file_buffer = io.BytesIO(json_content.encode('utf-8'))
+            
+            # Generate filename from URL
+            parsed_url = urlparse(url)
+            path_parts = parsed_url.path.strip('/').split('/')
+            filename = path_parts[-1] if path_parts and path_parts[-1] else 'data'
+            if not filename.endswith('.json'):
+                filename += '.json'
+            
+            artifact_id = file_manager.upload_artifact(
+                file_object=file_buffer,
+                filename=filename,
+                ttl_seconds=24 * 3600 * 7,  # 7 days
+                user_id=self.user_id,
+                run_id=self.run_id,
+            )
+            
+            logger.info(f"Successfully saved JSON as artifact {artifact_id} from {url}")
+            
+            return {
+                "success": True,
+                "artifact_id": artifact_id,
+                "url": url,
+                "message": f"Successfully fetched JSON from {url} and saved as artifact"
+            }
+            
+        except Exception as e:
+            logger.error(f"Unexpected error fetching JSON from URL {url}: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": f"Unexpected error: {str(e)}"
+            }
+        finally:
+            if db:
+                db.close()

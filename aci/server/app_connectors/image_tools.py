@@ -7,7 +7,7 @@ from aci.server.config import DB_FULL_URL
 from aci.voice_agent.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL
 from typing import Optional, Dict, Any
 from urllib.parse import urlparse, unquote
-from aci.common.db.sql_models import LinkedAccount
+from aci.common.db.sql_models import LinkedAccount, Artifact
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredentials
 from aci.common.utils import create_db_session
@@ -247,9 +247,22 @@ class ImageTools(AppConnectorBase):
             db = create_db_session(DB_FULL_URL)
             file_manager = FileManager(db)
             
+            # Check if artifact exists and belongs to the user
+            artifact = db.query(Artifact).filter(Artifact.id == artifact_id).first()
+            if not artifact:
+                return {
+                    "success": False,
+                    "error": f"Artifact with ID {artifact_id} not found."
+                }
+            if artifact.user_id != self.user_id:
+                return {
+                    "success": False,
+                    "error": f"Access denied: Artifact does not belong to the current user."
+                }
+            
             # Retrieve the artifact
             try:
-                content_generator, mime_type = file_manager.read_artifact(artifact_id)
+                content_generator, mime_type = file_manager.read_artifact(artifact_id, user_id=self.user_id)
             except ValueError as e:
                 return {
                     "success": False,

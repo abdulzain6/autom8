@@ -95,7 +95,7 @@ class CsvTools(AppConnectorBase):
             if not artifact:
                 raise ValueError(f"Artifact with ID {artifact_id} not found for user {self.user_id}.")
 
-            content_generator, _ = file_manager.read_artifact(artifact_id)
+            content_generator, _ = file_manager.read_artifact(artifact_id, user_id=self.user_id)
             content = b"".join(content_generator).decode('utf-8')
             
             string_io = io.StringIO(content)
@@ -140,7 +140,12 @@ class CsvTools(AppConnectorBase):
             db = create_db_session(config.DB_FULL_URL)
             file_manager = FileManager(db)
 
-            content_generator, _ = file_manager.read_artifact(artifact_id)
+            # Verify ownership before streaming the artifact
+            artifact = db.query(Artifact).filter(Artifact.id == artifact_id).first()
+            if not artifact or artifact.user_id != self.user_id:
+                raise ValueError(f"Artifact with ID {artifact_id} not found for user {self.user_id}.")
+
+            content_generator, _ = file_manager.read_artifact(artifact_id, user_id=self.user_id)
             content = b"".join(content_generator).decode('utf-8')
             
             reader = csv.reader(io.StringIO(content))
@@ -180,7 +185,7 @@ class CsvTools(AppConnectorBase):
             if not artifact:
                 raise ValueError(f"Artifact with ID {artifact_id} not found for user {self.user_id}.")
             
-            content_generator, _ = file_manager.read_artifact(artifact_id)
+            content_generator, _ = file_manager.read_artifact(artifact_id, user_id=self.user_id)
             content = b"".join(content_generator).decode('utf-8')
 
             reader = csv.reader(io.StringIO(content))

@@ -108,8 +108,10 @@ class CodeExecutor(AppConnectorBase):
                     artifact = db.query(Artifact).filter(Artifact.id == artifact_id).first()
                     if not artifact:
                         return {"error": f"Artifact with ID {artifact_id} not found."}
+                    if artifact.user_id != self.user_id:
+                        return {"error": f"Access denied: Artifact {artifact_id} does not belong to the current user."}
 
-                    content_generator, _ = file_manager.read_artifact(artifact_id)
+                    content_generator, _ = file_manager.read_artifact(artifact_id, user_id=self.user_id)
                     file_buffer = io.BytesIO(b"".join(content_generator))
 
                     upload_url = f"{self.base_url}/sessions/{session_id}/files"

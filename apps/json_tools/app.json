@@ -1,0 +1,17 @@
+{
+  "name": "JSON_TOOLS",
+  "display_name": "JSON Tools",
+  "logo": "https://raw.githubusercontent.com/abdulzain6/autom8-logos/refs/heads/master/app_logos/json-tools.png",
+  "provider": "Internal",
+  "version": "1.0.0",
+  "description": "JSON manipulation utilities for schema generation and querying JSON data stored in artifacts.",
+  "security_schemes": {
+    "no_auth": {}
+  },
+  "default_security_credentials_by_scheme": {},
+  "categories": [
+    "Utilities"
+  ],
+  "visibility": "public",
+  "active": true
+}
