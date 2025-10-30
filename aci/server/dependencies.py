@@ -412,6 +412,15 @@ def _get_user_limits(user: SupabaseUser) -> Tuple[PlanLimits, str]:
     active_statuses = {SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING}
 
     # 1. Default to zero limits if user is not active
+
+    if not user.subscription_status:
+        # User is a new user, provide minimal limits
+
+        zero_limits_with_one_automation = ZERO_LIMITS.copy()
+        zero_limits_with_one_automation["max_automations"] = 1
+        return (zero_limits_with_one_automation, "none")
+    
+
     if user.subscription_status not in active_statuses:
         return (ZERO_LIMITS, "none")
 
@@ -499,7 +508,7 @@ class UsageLimiter:
             current_usage = crud.usage.get_user_total_automations_count(
                 db_session, user_id
             )
-            limit_value = limits.get("max_automations", 1) # One free automation for everyone
+            limit_value = limits.get("max_automations", 0)
 
         # 3. Check billing-period-based limits
         else:
