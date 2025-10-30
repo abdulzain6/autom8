@@ -425,11 +425,22 @@ class HttpTools(AppConnectorBase):
                     "error": "Failed to fetch content from URL. The server may be blocking requests."
                 }
             
-            # Check if the content is valid JSON
+            # Normalize and parse JSON content. The CycleTLS client may return
+            # already-decoded JSON (dict/list) or a raw string/bytes payload.
             try:
-                json_data = json.loads(content)
+                if isinstance(content, (dict, list)):
+                    json_data = content
+                else:
+                    # Ensure we have a string for json.loads
+                    if isinstance(content, bytes):
+                        content_text = content.decode("utf-8")
+                    else:
+                        content_text = str(content)
+
+                    json_data = json.loads(content_text)
+
                 logger.info(f"Successfully parsed JSON from {url}")
-            except json.JSONDecodeError as e:
+            except (json.JSONDecodeError, UnicodeDecodeError, TypeError) as e:
                 return {
                     "success": False,
                     "error": f"Content is not valid JSON: {str(e)}"
