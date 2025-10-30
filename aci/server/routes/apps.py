@@ -71,6 +71,7 @@ def list_apps(
         limit=query_params.limit,
         offset=query_params.offset,
         return_automation_templates=query_params.return_automation_templates,
+        templates_only=query_params.templates_only,
     )
 
     response: list[AppDetails] = []
@@ -142,6 +143,7 @@ def search_apps(
         limit=query_params.limit,
         offset=query_params.offset,
         return_automation_templates=query_params.return_automation_templates,
+        templates_only=query_params.templates_only,
     )
 
     response: list[AppBasic] = []

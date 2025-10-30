@@ -114,6 +114,9 @@ class AppsSearch(BaseModel):
     return_automation_templates: bool = Field(
         default=False, description="Whether to include related automation templates in the response."
     )
+    templates_only: bool = Field(
+        default=False, description="If true, only return apps that have at least one automation template."
+    )
     limit: int = Field(
         default=100, ge=1, le=1000, description="Maximum number of Apps per response."
     )
@@ -139,6 +142,9 @@ class AppsList(BaseModel):
     )
     return_automation_templates: bool = Field(
         default=False, description="Whether to include related automation templates in the response."
+    )
+    templates_only: bool = Field(
+        default=False, description="If true, only return apps that have at least one automation template."
     )
 
 

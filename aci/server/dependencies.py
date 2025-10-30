@@ -499,7 +499,7 @@ class UsageLimiter:
             current_usage = crud.usage.get_user_total_automations_count(
                 db_session, user_id
             )
-            limit_value = limits.get("max_automations", 0)
+            limit_value = limits.get("max_automations", 1) # One free automation for everyone
 
         # 3. Check billing-period-based limits
         else:

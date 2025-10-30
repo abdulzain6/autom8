@@ -156,6 +156,7 @@ def list_apps_with_user_context(
     limit: int = 100,
     offset: int = 0,
     return_automation_templates: bool = False,
+    templates_only: bool = False,
 ) -> List[Tuple[App, Optional[LinkedAccount], List[AutomationTemplate]]]:
     """
     Efficiently retrieves a list of Apps, optionally including related templates.
@@ -178,6 +179,13 @@ def list_apps_with_user_context(
         stmt = stmt.where(App.configuration.has())
     if app_names:
         stmt = stmt.where(App.name.in_(app_names))
+    if templates_only:
+        # Filter to only apps that have at least one automation template
+        stmt = stmt.where(
+            App.id.in_(
+                select(automation_template_apps.c.app_id).distinct()
+            )
+        )
 
     stmt = stmt.order_by(App.categories[1], App.display_name).limit(limit).offset(offset)
 
@@ -207,6 +215,7 @@ def search_apps(
     limit: int,
     offset: int,
     return_automation_templates: bool = False,
+    templates_only: bool = False,
 ) -> list[tuple[App, Optional[LinkedAccount], float | None, List[AutomationTemplate]]]:
     """
     Efficiently searches for apps, joining with user context and optionally including related templates.
@@ -232,6 +241,13 @@ def search_apps(
         statement = statement.filter(App.configuration.has())
     if categories is not None:
         statement = statement.filter(App.categories.overlap(categories))
+    if templates_only:
+        # Filter to only apps that have at least one automation template
+        statement = statement.where(
+            App.id.in_(
+                select(automation_template_apps.c.app_id).distinct()
+            )
+        )
 
     if intent_embedding is not None:
         similarity_score = App.embedding.cosine_distance(intent_embedding)
