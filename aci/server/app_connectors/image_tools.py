@@ -3,8 +3,7 @@ import os
 import requests
 import base64
 
-from aci.server.config import DB_FULL_URL
-from aci.voice_agent.config import DEEPINFRA_API_KEY, DEEPINFRA_BASE_URL
+from aci.server.config import DB_FULL_URL, TOGETHER_API_KEY, TOGETHER_BASE_URL
 from typing import Optional, Dict, Any
 from urllib.parse import urlparse, unquote
 from aci.common.db.sql_models import LinkedAccount, Artifact
@@ -286,9 +285,9 @@ class ImageTools(AppConnectorBase):
             
             # Initialize the multimodal LLM
             llm = ChatOpenAI(
-                base_url=DEEPINFRA_BASE_URL,
-                api_key=SecretStr(DEEPINFRA_API_KEY),
-                model="google/gemma-3-27b-it",  
+                base_url=TOGETHER_BASE_URL,
+                api_key=SecretStr(TOGETHER_API_KEY),
+                model="Qwen/Qwen3-235B-A22B-fp8-tput",
                 timeout=300,
                 max_retries=3,
             )

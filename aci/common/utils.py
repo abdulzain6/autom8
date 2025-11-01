@@ -149,14 +149,13 @@ def generate_automation_description(
         Generated description string or None if generation fails
     """
     try:
-        from aci.server.config import DEEPINFRA_BASE_URL
-        from aci.voice_agent.config import DEEPINFRA_API_KEY
+        from aci.server.config import TOGETHER_API_KEY, TOGETHER_BASE_URL
         
         # Initialize the LLM
         llm = ChatOpenAI(
-            base_url=DEEPINFRA_BASE_URL,
-            api_key=SecretStr(DEEPINFRA_API_KEY),
-            model="Qwen/Qwen3-235B-A22B-Instruct-2507",
+            base_url=TOGETHER_BASE_URL,
+            api_key=SecretStr(TOGETHER_API_KEY),
+            model="Qwen/Qwen3-235B-A22B-fp8-tput",
             timeout=300,
             max_retries=3,
         )

@@ -1553,6 +1553,181 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "Trending Topic Radar",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/reddit_trending_topics.png?raw=true",
+      "description": "Automatically detects emerging Reddit trends by analyzing hot posts across all subreddits and delivers summarized insights via email.",
+      "tags": [
+        "Reddit"
+      ],
+      "goal": "Detect emerging Reddit trends automatically. STEP 1 - Fetch Reddit Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from 'https://www.reddit.com/r/popular/hot.json?limit=35' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Trending Posts: Use JSON_TOOLS__QUERY_JSON to analyze the JSON data and extract relevant information about trending posts including titles, scores, subreddits, and other key metrics. STEP 4 - Analyze Trends: Analyze the extracted post data to identify trending topics by grouping posts by subreddit, sorting by score to find highest-scoring posts, and identifying common themes or viral content. STEP 5 - Generate Summary: Create a comprehensive trending topics summary including: top 5 highest-scoring posts with titles and subreddits, emerging trends by subreddit popularity, and notable viral content. STEP 6 - Send Alert: Send the trending topics summary via NOTIFYME__SEND_ME_EMAIL with subject 'Trending Topic Radar - Reddit Hot Posts Analysis [Current Date]' including: executive summary of current trends, detailed breakdown of top posts with scores and subreddits, trend analysis by category, and direct links to trending posts for further reading.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "BuzzWatch",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/buzzwatch.png?raw=true",
+      "description": "Instantly alerts you when specific topics or keywords start gaining traction across Reddit's hot feed.",
+      "tags": [
+        "Reddit"
+      ],
+      "goal": "Monitor Reddit for trending keywords and topics. STEP 1 - Fetch Reddit Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from 'https://www.reddit.com/r/popular/hot.json?limit=50' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, and other relevant information from the Reddit data. STEP 4 - Keyword Analysis: Search through the extracted post titles for mentions of the specified keywords '{{ variables['keywords'] }}'. Count occurrences of each keyword across the posts. STEP 5 - Threshold Check: If any keyword appears {{ variables['threshold'] }} or more times in the analyzed posts, trigger an alert. STEP 6 - Send Alert: Send an immediate notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'BuzzWatch Alert! 📈' and message 'Keyword(s) gaining traction: [list keywords that exceeded threshold] - Check your email for details'. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'BuzzWatch Alert - Keywords Gaining Traction [Current Date]' including: keyword frequency analysis, list of matching post titles with subreddits and scores, and direct links to trending posts.",
+      "variable_names": [
+        "keywords",
+        "threshold"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Politics BuzzWatch",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/politics_buzz.png?raw=true",
+      "description": "Monitors r/politics for trending political topics and breaking news gaining traction.",
+      "tags": [
+        "Reddit",
+        "News"
+      ],
+      "goal": "Monitor Reddit's r/politics for trending topics and breaking news. STEP 1 - Fetch Politics Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from 'https://www.reddit.com/r/politics/hot/.json?limit=50' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, and other relevant information from the politics data. STEP 4 - Trend Analysis: Analyze the extracted posts to identify trending political topics, breaking news, and highly discussed issues based on post scores and engagement. STEP 5 - Generate Summary: Create a summary of the top 5-7 trending political topics with their post titles, scores, and key themes. STEP 6 - Send Alert: Send trending politics summary via NOTIFYME__SEND_ME_EMAIL with subject 'Politics BuzzWatch - Trending Topics [Current Date]' including: executive summary of current political trends, detailed breakdown of top posts with scores and themes, emerging political discussions, and direct links to trending posts.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Tech BuzzWatch",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/tech_buzz.jpg?raw=true",
+      "description": "Monitors r/technology for trending tech news, product launches, and industry developments.",
+      "tags": [
+        "Technology",
+        "Reddit"
+      ],
+      "goal": "Monitor Reddit's r/technology for trending tech topics and industry news. STEP 1 - Fetch Tech Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from 'https://www.reddit.com/r/technology/hot/.json?limit=50' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, and other relevant information from the tech data. STEP 4 - Trend Analysis: Analyze the extracted posts to identify trending technology topics, product launches, industry developments, and highly discussed tech issues based on post scores and engagement. STEP 5 - Generate Summary: Create a summary of the top 5-7 trending tech topics with their post titles, scores, and key themes. STEP 6 - Send Alert: Send trending tech summary via NOTIFYME__SEND_ME_EMAIL with subject 'Tech BuzzWatch - Trending Topics [Current Date]' including: executive summary of current tech trends, detailed breakdown of top posts with scores and themes, emerging technology discussions, and direct links to trending posts.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "News BuzzWatch",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/news_buzz.jpg?raw=true",
+      "description": "Monitors r/news for trending news stories and breaking developments across all categories.",
+      "tags": [
+        "News",
+        "Reddit"
+      ],
+      "goal": "Monitor Reddit's r/news for trending news stories and breaking developments. STEP 1 - Fetch News Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from 'https://www.reddit.com/r/news/hot/.json?limit=50' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, and other relevant information from the news data. STEP 4 - Trend Analysis: Analyze the extracted posts to identify trending news stories, breaking developments, and highly discussed current events based on post scores and engagement. STEP 5 - Generate Summary: Create a summary of the top 5-7 trending news topics with their post titles, scores, and key themes. STEP 6 - Send Alert: Send trending news summary via NOTIFYME__SEND_ME_EMAIL with subject 'News BuzzWatch - Trending Topics [Current Date]' including: executive summary of current news trends, detailed breakdown of top posts with scores and themes, emerging news discussions, and direct links to trending posts.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Sports BuzzWatch",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/sports_buzz.jpg?raw=true",
+      "description": "Monitors r/sports for trending sports news, game highlights, and athlete discussions.",
+      "tags": [
+        "Sports",
+        "Reddit"
+      ],
+      "goal": "Monitor Reddit's r/sports for trending sports topics and athlete discussions. STEP 1 - Fetch Sports Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from 'https://www.reddit.com/r/sports/hot/.json?limit=50' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, and other relevant information from the sports data. STEP 4 - Trend Analysis: Analyze the extracted posts to identify trending sports topics, game highlights, athlete discussions, and highly discussed sports events based on post scores and engagement. STEP 5 - Generate Summary: Create a summary of the top 5-7 trending sports topics with their post titles, scores, and key themes. STEP 6 - Send Alert: Send trending sports summary via NOTIFYME__SEND_ME_EMAIL with subject 'Sports BuzzWatch - Trending Topics [Current Date]' including: executive summary of current sports trends, detailed breakdown of top posts with scores and themes, emerging sports discussions, and direct links to trending posts.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Custom Subreddit Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/custom_subreddit.jpg?raw=true",
+      "description": "Monitor any subreddit by providing the URL and get summarized hot posts and trending topics.",
+      "tags": [
+        "Monitoring",
+        "Reddit"
+      ],
+      "goal": "Monitor any custom subreddit for trending topics and hot posts. STEP 1 - Fetch Subreddit Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from '{{ variables['Subreddit URL'] }}/.json?limit=50' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, and other relevant information from the subreddit data. STEP 4 - Trend Analysis: Analyze the extracted posts to identify trending topics, highly discussed content, and popular posts based on scores and engagement. STEP 5 - Generate Summary: Create a comprehensive summary of the top trending topics in the subreddit with post titles, scores, and key themes. STEP 6 - Send Alert: Send subreddit summary via NOTIFYME__SEND_ME_EMAIL with subject 'Custom Subreddit Monitor - {{ variables['Subreddit Name'] }} [Current Date]' including: executive summary of current trends, detailed breakdown of top posts with scores and themes, emerging discussions, and direct links to trending posts.",
+      "variable_names": [
+        "Subreddit URL",
+        "Subreddit Name"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Reddit User Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/reddit_user.jpg?raw=true",
+      "description": "Monitor posts and comments from a specific Reddit user and get notified about their latest activity, trending content, and engagement patterns.",
+      "tags": [
+        "Reddit"
+      ],
+      "goal": "Monitor posts and comments from a specific Reddit user. STEP 1 - Fetch User Posts: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest posts from 'https://www.reddit.com/user/{{ variables['Username'] }}/.json?limit=25' and save as posts artifact. STEP 2 - Fetch User Comments: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest comments from 'https://www.reddit.com/user/{{ variables['Username'] }}/comments/.json?limit=25' and save as comments artifact. STEP 3 - Analyze JSON Structures: Use JSON_TOOLS__GENERATE_SCHEMA on both artifacts to understand the structure and available fields in the Reddit user data. STEP 4 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, timestamps, and other relevant information from the user's posts. STEP 5 - Extract Comment Data: Use JSON_TOOLS__QUERY_JSON to extract comment content, scores, parent posts, subreddits, and timestamps from the user's comments. STEP 6 - Activity Analysis: Analyze the user's recent posting and commenting activity, identify trending content based on scores, and categorize activity by subreddit. STEP 7 - Generate Summary: Create a comprehensive summary of the user's recent activity including top posts, most engaging comments, posting patterns, and subreddit activity breakdown. STEP 8 - Send Alert: Send user activity summary via NOTIFYME__SEND_ME_EMAIL with subject 'Reddit User Monitor - {{ variables['Username'] }} Activity [Current Date]' including: overview of recent posts and comments, top-performing content, subreddit activity breakdown, engagement metrics, and direct links to user's content.",
+      "variable_names": [
+        "Username"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Reddit Search Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/reddit_search.jpg?raw=true",
+      "description": "Search Reddit for specific keywords and get hot posts results with comprehensive summaries delivered via email.",
+      "tags": [
+        "Reddit"
+      ],
+      "goal": "Search Reddit for specific keywords and analyze hot results. STEP 1 - Perform Search: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch search results from 'https://www.reddit.com/search/.json?q={{ variables['Search Keyword'] }}&type=posts&sort=hot&limit=25' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit search JSON data. STEP 3 - Extract Search Results: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, authors, timestamps, and other relevant information from the search results. STEP 4 - Content Analysis: Analyze the search results to identify trending posts, popular subreddits for the keyword, top authors, and engagement patterns. STEP 5 - Generate Summary: Create a comprehensive summary of the search results including top 10 hot posts, subreddit distribution, author activity, and trending themes. STEP 6 - Send Alert: Send search results summary via NOTIFYME__SEND_ME_EMAIL with subject 'Reddit Search Monitor - \"{{ variables['Search Keyword'] }}\" Results [Current Date]' including: executive summary of search findings, detailed breakdown of top posts with scores and subreddits, subreddit popularity analysis, author insights, and direct links to trending posts.",
+      "variable_names": [
+        "Search Keyword"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "JSON_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Jira Project Overview",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/jira-project-overview.png?raw=true",
+      "description": "Generate a comprehensive summary of all accessible Jira projects across Atlassian sites, including project details, keys, leads, and descriptions in a structured markdown table format.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Generate a full summary of all Jira projects.\nSTEP 1 - Fetch Accessible Sites: Use JIRA__GET_ACCESSIBLE_RESOURCES to retrieve all Atlassian sites.\nSTEP 2 - Fetch Projects: For each site, call JIRA__GET_PROJECTS using the cloudid.\nSTEP 3 - Extract Project Details: extract project names, keys, leads, and descriptions.\nSTEP 4 - Format Report: to structure the extracted data into a readable format.\nSTEP 5 - Send Report: Send the summary via NOTIFYME__SEND_ME_EMAIL with subject 'Jira Project Overview - [Current Date]' including project details in a markdown table.",
+      "variable_names": [],
+      "required_app_names": [
+        "PDF_TOOLS",
+        "JIRA",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }
