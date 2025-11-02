@@ -348,9 +348,9 @@ class HttpTools(AppConnectorBase):
             logger.info(f"Successfully fetched content from {url} ({len(text_content)} characters)")
             
             llm_config = LLMConfig(
-                provider="together_ai/Qwen/Qwen3-235B-A22B-fp8-tput",
-                api_token=config.TOGETHER_API_KEY,
-                base_url=config.TOGETHER_BASE_URL,
+                provider="openrouter/minimax/minimax-m2:free",
+                api_token=config.OPENROUTER_API_KEY,
+                base_url=config.OPENROUTER_BASE_URL,
             )
 
             extraction_kwargs = {

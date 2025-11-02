@@ -7,7 +7,7 @@ from aci.common.db.sql_models import Automation, Function, AutomationRun
 from aci.common.enums import RunStatus
 from langchain_core.tools import StructuredTool
 from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
-from aci.server.config import TOGETHER_API_KEY, TOGETHER_BASE_URL
+from aci.server.config import OPENROUTER_BASE_URL, OPENROUTER_API_KEY
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     format_function_definition,
@@ -303,9 +303,9 @@ class AutomationExecutor:
 
     def create_agent(self):
         model = BaseChatOpenAI(
-            base_url=TOGETHER_BASE_URL,
-            api_key=SecretStr(TOGETHER_API_KEY),
-            model="Qwen/Qwen3-235B-A22B-fp8-tput",
+            base_url=OPENROUTER_BASE_URL,
+            api_key=SecretStr(OPENROUTER_API_KEY),
+            model="minimax/minimax-m2:free",
             timeout=300,
             max_retries=3,
         )

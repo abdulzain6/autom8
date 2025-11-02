@@ -239,24 +239,6 @@
       "is_deep": false
     },
     {
-      "name": "Weekly Team Progress Report",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/jira_team_report.jpeg?raw=true",
-      "description": "Generates a comprehensive weekly team progress report from JIRA with project status, issue summaries, and team performance insights.",
-      "tags": [
-        "Productivity"
-      ],
-      "goal": "Generate a comprehensive weekly team progress report from JIRA for '{{ variables['Project Key'] }}'. STEP 1 - Setup: Use JIRA__GET_ACCESSIBLE_RESOURCES to get the cloud ID, then JIRA__GET_PROJECTS to verify project access. STEP 2 - Collect Data: Use JIRA__SEARCH_ISSUES with JQL queries to gather: a) Issues completed this week (status changed to Done), b) Issues currently in progress, c) High priority issues, d) Issues assigned to each team member. STEP 3 - Analyze Metrics: Calculate completion rates, identify blockers, track sprint progress, and summarize team workload distribution. STEP 4 - Generate Report: Create a structured document with executive summary, team achievements, current focus areas, upcoming deadlines, and key metrics. STEP 5 - Distribute: Send via email with subject 'Weekly Team Progress Report - {{ variables['Project Key'] }} - [Current Date]' including charts and actionable insights for stakeholders.",
-      "variable_names": [
-        "Project Key"
-      ],
-      "required_app_names": [
-        "JIRA",
-        "PDF_TOOLS",
-        "NOTIFYME"
-      ],
-      "is_deep": true
-    },
-    {
       "name": "Website Monitor & Alert",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/website_monitor.jpeg?raw=true",
       "description": "Monitors website availability and performance with instant alerts when issues are detected.",
@@ -1720,11 +1702,64 @@
       "tags": [
         "Productivity"
       ],
-      "goal": "Generate a full summary of all Jira projects.\nSTEP 1 - Fetch Accessible Sites: Use JIRA__GET_ACCESSIBLE_RESOURCES to retrieve all Atlassian sites.\nSTEP 2 - Fetch Projects: For each site, call JIRA__GET_PROJECTS using the cloudid.\nSTEP 3 - Extract Project Details: extract project names, keys, leads, and descriptions.\nSTEP 4 - Format Report: to structure the extracted data into a readable format.\nSTEP 5 - Send Report: Send the summary via NOTIFYME__SEND_ME_EMAIL with subject 'Jira Project Overview - [Current Date]' including project details in a markdown table.",
+      "goal": "Generate a full summary of all Jira projects.\nSTEP 1 - Fetch Accessible Sites: Use JIRA__GET_ACCESSIBLE_RESOURCES to retrieve all Atlassian sites.\nSTEP 2 - Fetch Projects: For each site, call JIRA__GET_PROJECTS using the cloudid.\nSTEP 3 - Extract Project Details: extract project names, keys, leads, and descriptions.\nSTEP 4 - Format Report: Structure the extracted data into a comprehensive markdown report with proper headers, tables, and sections for each site.\nSTEP 5 - Generate PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the markdown report into a professional PDF document.\nSTEP 6 - Send Report: Send the PDF report via NOTIFYME__SEND_ME_EMAIL with subject 'Jira Project Overview - [Current Date]' and artifact_id for the PDF attachment.",
       "variable_names": [],
       "required_app_names": [
         "PDF_TOOLS",
         "JIRA",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Jira Issue Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/jira-issue-monitor.png?raw=true",
+      "description": "Monitor open and in-progress issues for a specific Jira project and receive summaries of top blockers or overdue tasks.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Monitor open and in-progress issues for a specific Jira project and receive summaries of top blockers or overdue tasks. STEP 1 - Fetch Project Issues: Use JIRA__GET_ISSUES to retrieve all issues for project '{{ variables['Project Key'] }}' with status in ('Open', 'In Progress'). STEP 2 - Analyze Issues: Identify top blockers (high priority issues), overdue tasks (past due dates), and critical issues based on priority and due dates. STEP 3 - Generate Summary: Create a summary of issue counts by status and priority, list of overdue tasks, and top blockers with details. STEP 4 - Format Report: Structure the extracted data into a comprehensive markdown report with sections for issue statistics, priority breakdown, overdue tasks, and blocker analysis. STEP 5 - Generate PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the markdown report into a professional PDF document. STEP 6 - Send Alert: Send the PDF report via NOTIFYME__SEND_ME_EMAIL with subject 'Jira Issue Monitor - {{ variables['Project Key'] }} [Current Date]' and artifact_id for the PDF attachment.",
+      "variable_names": [
+        "Project Key"
+      ],
+      "required_app_names": [
+        "JIRA",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Jira Weekly Issue Updates Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/jira-weekly-report.jpeg?raw=true",
+      "description": "Automatically generate a weekly report of all Jira issue updates since last week, summarizing completed work, progress, blockers, and overdue tasks.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Automatically generate a weekly report of Jira issue updates for a specific project since last week. STEP 1 - Get Previous Context: Use GET_PREVIOUS_RUN_OUTPUTS to retrieve the last run's data including issue states and timestamps for '{{ variables['Project Key'] }}' comparison. STEP 2 - Fetch Project Issues: Use JIRA__GET_ISSUES to retrieve all issues for project '{{ variables['Project Key'] }}' that have been updated since the last run timestamp (or last 7 days if no previous data). STEP 3 - Analyze Changes: Compare current issue states with previous run data to identify: completed work (issues moved to Done/Closed), progress updates (status changes), new blockers (issues with blocker priority or flagged), overdue tasks (past due dates). STEP 4 - Generate Summary: Create a comprehensive summary including: total issues updated, completion rate, progress metrics, blocker analysis, overdue task count, and key highlights for the project. STEP 5 - Format Report: Structure the analysis into a detailed markdown report with sections for issue breakdowns, status changes, blockers, overdue items, and executive summary. STEP 6 - Create PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the markdown report into a professional PDF document. STEP 7 - Send Report: Send the PDF report via NOTIFYME__SEND_ME_EMAIL with subject 'Jira Weekly Updates Report - {{ variables['Project Key'] }} [Current Date]' and artifact_id for the PDF attachment. STEP 8 - Store Context: Output current issue states and timestamps as structured data for the next run's comparison.",
+      "variable_names": [
+        "Project Key"
+      ],
+      "required_app_names": [
+        "JIRA",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "GameSpot Weekly Game Releases",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/gamespot_releases.png?raw=true",
+      "description": "Weekly digest of upcoming game releases from GameSpot, filtered by genre if specified, with release dates and platform information.",
+      "tags": [
+        "Gaming"
+      ],
+      "goal": "Get weekly game releases from GameSpot and notify via email. STEP 1 - Fetch GameSpot Page: Use HTTP_TOOLS__GET_URL to fetch content from 'https://www.gamespot.com/new-games/'. STEP 2 - Extract This Week's Releases: Parse the HTML to find games releasing this week, extracting: game title, release date, platforms, genre, developer/publisher, and GameSpot URL for each game. STEP 3 - Filter by Genre (Optional): If '{{ variables['Genre'] }}' is provided, filter the extracted games to only include those matching the specified genre. STEP 4 - Format Release Digest: Create a comprehensive weekly gaming digest with sections for: upcoming releases this week, game details with platforms and genres, notable titles, and direct GameSpot links. STEP 5 - Send Weekly Digest: Send the game releases digest via NOTIFYME__SEND_ME_EMAIL with subject 'GameSpot Weekly Releases - [Current Date]' including: list of games releasing this week, platform availability, genre breakdown, developer information, and direct links to GameSpot game pages for more details.",
+      "variable_names": [
+        "Genre"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
         "NOTIFYME"
       ],
       "is_deep": false

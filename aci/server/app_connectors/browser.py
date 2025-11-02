@@ -461,16 +461,16 @@ class Browser(AppConnectorBase):
 
                         # 4️⃣ Init LLMs
                         llm = ChatOpenAI(
-                            model="Qwen/Qwen3-235B-A22B-fp8-tput",
+                            model="minimax/minimax-m2:free",
                             temperature=0.3,
-                            api_key=config.TOGETHER_API_KEY,
-                            base_url=config.TOGETHER_BASE_URL,
+                            api_key=config.OPENROUTER_API_KEY,
+                            base_url=config.OPENROUTER_BASE_URL,
                         )
                         page_extraction_llm = ChatOpenAI(
-                            model="Qwen/Qwen3-235B-A22B-fp8-tput",
+                            model="minimax/minimax-m2:free",
                             temperature=0.3,
-                            api_key=config.TOGETHER_API_KEY,
-                            base_url=config.TOGETHER_BASE_URL,
+                            api_key=config.OPENROUTER_API_KEY,
+                            base_url=config.OPENROUTER_BASE_URL,
                             reasoning_effort="low",
                         )
                         browser_session_for_this_agent = BrowserSession(browser=browser)
@@ -634,9 +634,9 @@ SECURITY VALIDATION RULES:
 
                     # Setup LLM extraction strategy with required schema
                     llm_config = LLMConfig(
-                        provider="together_ai/Qwen/Qwen3-235B-A22B-fp8-tput",
-                        api_token=config.TOGETHER_API_KEY,
-                        base_url=config.TOGETHER_BASE_URL,
+                        provider="openrouter/minimax/minimax-m2:free",
+                        api_token=config.OPENROUTER_API_KEY,
+                        base_url=config.OPENROUTER_BASE_URL,
                     )
 
                     # Build extraction strategy with required schema

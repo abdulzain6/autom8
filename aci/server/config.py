@@ -114,6 +114,9 @@ HTTP_PROXY = os.getenv("SERVER_HTTP_PROXY")
 TOGETHER_API_KEY = check_and_get_env_variable("SERVER_TOGETHER_API_KEY")
 TOGETHER_BASE_URL = check_and_get_env_variable("SERVER_TOGETHER_BASE_URL")
 
+OPENROUTER_API_KEY = check_and_get_env_variable("SERVER_OPENROUTER_API_KEY")
+OPENROUTER_BASE_URL = check_and_get_env_variable("SERVER_OPENROUTER_BASE_URL")
+
 GOTENBERG_URL = check_and_get_env_variable("SERVER_GOTENBERG_URL")
 
 # Browser Automation

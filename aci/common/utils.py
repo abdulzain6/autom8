@@ -149,13 +149,13 @@ def generate_automation_description(
         Generated description string or None if generation fails
     """
     try:
-        from aci.server.config import TOGETHER_API_KEY, TOGETHER_BASE_URL
+        from aci.server.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL
         
         # Initialize the LLM
         llm = ChatOpenAI(
-            base_url=TOGETHER_BASE_URL,
-            api_key=SecretStr(TOGETHER_API_KEY),
-            model="Qwen/Qwen3-235B-A22B-fp8-tput",
+            base_url=OPENROUTER_BASE_URL,
+            api_key=SecretStr(OPENROUTER_API_KEY),
+            model="minimax/minimax-m2:free",
             timeout=300,
             max_retries=3,
         )

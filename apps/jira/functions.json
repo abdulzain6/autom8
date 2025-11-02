@@ -150,7 +150,7 @@
     "protocol": "rest",
     "protocol_data": {
       "method": "GET",
-      "path": "/ex/jira/{cloudid}/rest/api/3/search",
+      "path": "/ex/jira/{cloudid}/rest/api/3/search/jql",
       "server_url": "https://api.atlassian.com"
     },
     "security_schemes": [
