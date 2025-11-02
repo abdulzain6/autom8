@@ -325,7 +325,7 @@ class AutomationExecutor:
                 "messages": [
                     {
                         "role": "user",
-                        "content": f"Execute the automation: {self.automation.name}\nGoal: {self.automation.goal}. Think step by step.",
+                        "content": f"Execute the automation: {self.automation.name}\nGoal: {self.automation.goal}. Ensure you format the result according to the schema in the end.",
                     }
                 ]
             }

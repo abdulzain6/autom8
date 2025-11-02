@@ -1182,22 +1182,6 @@
       "is_deep": false
     },
     {
-      "name": "Barchart Unusual Options Fetcher",
-      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/barchart_options.png?raw=true",
-      "description": "Fetches the daily unusual options activity for a specified stock symbol from Barchart and saves the raw data to a JSON file artifact.",
-      "tags": [
-        "Finance"
-      ],
-      "goal": "Use the `BROWSER__RUN_JS_AND_RETURN_RESULT` tool to fetch the daily unusual options activity for the `Stock Symbol` and save it to an artifact. The tool must be called with these exact parameters:\n- `url`: 'https://www.barchart.com/options/unusual-activity/stocks'\n- `output_filename`: 'unusual_options_{{ variables['Stock Symbol'] }}.json'\n- `js_code`: \"(async function() { function getXsrfToken() { const cookies = document.cookie.split(';'); for (let cookie of cookies) { cookie = cookie.trim(); if (cookie.startsWith('XSRF-TOKEN=')) { return decodeURIComponent(cookie.substring('XSRF-TOKEN='.length)); } } return null; } const token = getXsrfToken(); if (!token) { throw new Error('XSRF-TOKEN cookie not found.'); } const url = 'https://www.barchart.com/proxies/core-api/v1/options/get'; const params = new URLSearchParams(); function formatDate(date) { const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, '0'); const day = String(date.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; } const today = new Date(); const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1); const todayStr = formatDate(today); const tomorrowStr = formatDate(tomorrow); params.append('fields', 'symbol,baseSymbol,baseLastPrice,symbolType,expirationDate,strikePrice,lastPrice,priceChange,percentChange,volume,openInterest,volumeOpenInterestRatio,tradeTime'); params.append('baseSymbol', '{{ variables['Stock Symbol'] }}'); params.append('baseSymbolTypes', 'stock'); params.append('between(tradeTime,' + todayStr + ',' + tomorrowStr + ')', ''); params.append('between(volume,500,)', ''); params.append('between(openInterest,100,)', ''); params.append('in(exchange,(AMEX,NYSE,NASDAQ,INDEX-CBOE))', ''); params.append('orderBy', 'volumeOpenInterestRatio'); params.append('orderDir', 'desc'); params.append('limit', '1000'); params.append('raw', '1'); const finalUrl = `${url}?${params.toString()}`; const response = await fetch(finalUrl, { method: 'GET', headers: { 'accept': 'application/json', 'x-xsrf-token': token }, credentials: 'include' }); if (!response.ok) { throw new Error(`API request failed with status: ${response.status} ${response.statusText}`); } return await response.json(); })()\"\n**Important:** If the tool call fails with an API error (like 400 or 404), assume the `Stock Symbol` is invalid and stop the automation. If the tool succeeds but the resulting file artifact contains no data (e.g., `\"count\": 0`), this is also a final result, and the automation should stop.",
-      "variable_names": [
-        "Stock Symbol"
-      ],
-      "required_app_names": [
-        "BROWSER"
-      ],
-      "is_deep": false
-    },
-    {
       "name": "Windy Weather Screenshot",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/windy_weather_screenshot.png?raw=true",
       "description": "Takes a screenshot of Windy.com weather map for any city by first geocoding the location to coordinates.",
@@ -1760,6 +1744,114 @@
       ],
       "required_app_names": [
         "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Numbeo Price Trends Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/numbeo_price_trends.jpeg?raw=true",
+      "description": "Weekly breakdown of all price trends in the cost-of-living data — what got cheaper or more expensive this week using Numbeo data.",
+      "tags": [
+        "Finance"
+      ],
+      "goal": "Monitor weekly price trends for all cost-of-living categories in a specific country using Numbeo data. Note: The 'Country' variable should be the full country name (e.g., 'United States', 'United Kingdom', 'Pakistan'). Spaces will be automatically converted to '+' for URL encoding. STEP 1 - Get Previous Data: Use GET_PREVIOUS_RUN_OUTPUTS to retrieve last week's price data for '{{ variables['Country'] }}' comparison. STEP 2 - Fetch Current Prices: Use HTTP_TOOLS__GET_URL to fetch data from 'https://www.numbeo.com/cost-of-living/country_result.jsp?country={{ variables['Country']|replace(' ', '+') }}'. STEP 3 - Extract Price Data: Parse the HTML to extract all prices from the cost-of-living table, including all categories and sub-items. STEP 4 - Compare with Previous: Compare current prices with last week's data to calculate percentage changes for each item and identify what got cheaper (negative change) or more expensive (positive change). STEP 5 - Generate Trends Report: Create a comprehensive weekly price trends report with sections for: price changes by all categories, biggest price increases and decreases, trend analysis, and key insights. STEP 6 - Format Report: Structure the data into a readable markdown report with tables showing price changes, percentages, and trends for {{ variables['Country'] }}. STEP 7 - Create PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the markdown report into a professional PDF document. STEP 8 - Send Weekly Report: Send the PDF price trends report via NOTIFYME__SEND_ME_EMAIL with subject 'Numbeo Price Trends - {{ variables['Country'] }} [Current Date]' and artifact_id for the PDF attachment. STEP 9 - Store Current Data: Output current price data as structured JSON for next week's comparison.",
+      "variable_names": [
+        "Country"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Numbeo Food Prices Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/numbeo_food_prices.jpeg?raw=true",
+      "description": "Weekly breakdown of food price trends — what got cheaper or more expensive this week using Numbeo food prices data.",
+      "tags": [
+        "Finance",
+        "Economics",
+        "Food"
+      ],
+      "goal": "Monitor weekly food price trends in a specific country using Numbeo data. Note: The 'Country' variable should be the full country name (e.g., 'United States', 'United Kingdom', 'Pakistan'). Spaces will be automatically converted to '+' for URL encoding. STEP 1 - Get Previous Data: Use GET_PREVIOUS_RUN_OUTPUTS to retrieve last week's food price data for '{{ variables['Country'] }}' comparison. STEP 2 - Fetch Current Prices: Use HTTP_TOOLS__GET_URL to fetch data from 'https://www.numbeo.com/food-prices/country_result.jsp?country={{ variables['Country']|replace(' ', '+') }}'. STEP 3 - Extract Price Data: Parse the HTML to extract all prices from the food prices table, including all food items. STEP 4 - Compare with Previous: Compare current prices with last week's data to calculate percentage changes for each food item and identify what got cheaper (negative change) or more expensive (positive change). STEP 5 - Generate Trends Report: Create a comprehensive weekly food price trends report with sections for: price changes by all food categories, biggest price increases and decreases, trend analysis, and key insights. STEP 6 - Format Report: Structure the data into a readable markdown report with tables showing price changes, percentages, and trends for {{ variables['Country'] }}. STEP 7 - Create PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the markdown report into a professional PDF document. STEP 8 - Send Weekly Report: Send the PDF food price trends report via NOTIFYME__SEND_ME_EMAIL with subject 'Numbeo Food Prices - {{ variables['Country'] }} [Current Date]' and artifact_id for the PDF attachment. STEP 9 - Store Current Data: Output current food price data as structured JSON for next week's comparison.",
+      "variable_names": [
+        "Country"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Numbeo Travel Assessment",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/numbeo_travel_assessment.jpeg?raw=true",
+      "description": "AI-powered assessment of a country's suitability for relocation using multiple Numbeo metrics including quality of life, crime, health care, pollution, and traffic.",
+      "tags": [
+        "Travel"
+      ],
+      "goal": "Evaluate a country's suitability for relocation using comprehensive Numbeo data. Note: The 'Country' variable should be the full country name (e.g., 'United States', 'United Kingdom', 'Pakistan'). Spaces will be automatically converted to '+' for URL encoding. STEP 1 - Fetch Quality of Life Data: Use HTTP_TOOLS__GET_URL to fetch 'https://www.numbeo.com/quality-of-life/country_result.jsp?country={{ variables['Country']|replace(' ', '+') }}' and extract quality of life metrics. STEP 2 - Fetch Crime Data: Use HTTP_TOOLS__GET_URL to fetch 'https://www.numbeo.com/crime/country_result.jsp?country={{ variables['Country']|replace(' ', '+') }}' and extract crime statistics. STEP 3 - Fetch Health Care Data: Use HTTP_TOOLS__GET_URL to fetch 'https://www.numbeo.com/health-care/country_result.jsp?country={{ variables['Country']|replace(' ', '+') }}' and extract health care metrics. STEP 4 - Fetch Pollution Data: Use HTTP_TOOLS__GET_URL to fetch 'https://www.numbeo.com/pollution/country_result.jsp?country={{ variables['Country']|replace(' ', '+') }}' and extract pollution levels. STEP 5 - Fetch Traffic Data: Use HTTP_TOOLS__GET_URL to fetch 'https://www.numbeo.com/traffic/country_result.jsp?country={{ variables['Country']|replace(' ', '+') }}' and extract traffic congestion metrics. STEP 6 - AI Analysis: Use AI to analyze all the collected data from the five categories and provide a comprehensive assessment of whether {{ variables['Country'] }} is worth moving to, considering factors like safety, healthcare quality, environmental conditions, quality of life, and transportation. STEP 7 - Generate Assessment Report: Create a detailed relocation assessment report with sections for each metric, overall score, pros/cons analysis, and final recommendation. STEP 8 - Format Report: Structure the analysis into a professional markdown report with clear sections, ratings, and insights. STEP 9 - Create PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the markdown report into a professional PDF document. STEP 10 - Send Assessment: Send the PDF assessment report via NOTIFYME__SEND_ME_EMAIL with subject 'Numbeo Travel Assessment - {{ variables['Country'] }} [Current Date]' and artifact_id for the PDF attachment.",
+      "variable_names": [
+        "Country"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Global Stress Barometer",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/global_stress_barometer.jpeg?raw=true",
+      "description": "AI-driven emotional barometer that measures global stress levels from news sentiment and generates daily mindfulness reflections to help people stay calm and centered.",
+      "tags": [
+        "News"
+      ],
+      "goal": "Generate a daily mindfulness antidote based on global stress levels measured from news sentiment. STEP 1 - Fetch BBC News: Use BBC_NEWS__GET_TOP_HEADLINES with limit=20 to retrieve today's top headlines. STEP 2 - Fetch Google News: Use GOOGLE_NEWS__SEARCH_TOPIC with query='world news' and period='1d' to get recent global news headlines. STEP 3 - Analyze Sentiment: Use AI to analyze the sentiment of all collected news headlines and summaries, calculating a negativity score (0-100) based on the proportion of negative/tense content. STEP 4 - Calculate Global Stress Index: Aggregate the sentiment scores from all sources to create a Global Stress Index (GSI) from 0-100, where higher scores indicate more global tension. STEP 5 - Generate Mindfulness Reflection: Use AI with prompt: 'Today's global stress index is {GSI}/100. Generate a 2-paragraph mindfulness reflection to help people stay calm, centered, and positive. Reference global events indirectly. Tone: compassionate, grounded, optimistic.' STEP 6 - Format Daily Antidote: Create a beautiful daily antidote message including the GSI score, the mindfulness reflection, and a simple breathing exercise or positivity note. STEP 7 - Send Daily Antidote: Send the daily mindfulness antidote via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Mindfulness Antidote - Global Stress Level: {GSI}/100 [Current Date]' including the full reflection and any additional wellness tips.",
+      "variable_names": [],
+      "required_app_names": [
+        "BBC_NEWS",
+        "GOOGLE_NEWS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Nutrition Nudge of the Day",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/nutrition_nudge.jpeg?raw=true",
+      "description": "Daily nutrition insights from ScienceDaily with key findings and practical tips to improve your diet.",
+      "tags": [
+        "Science"
+      ],
+      "goal": "Generate a daily nutrition nudge with key findings from ScienceDaily. STEP 1 - Fetch Nutrition News: Use HTTP_TOOLS__GET_URL to fetch 'https://www.sciencedaily.com/news/health_medicine/nutrition/'. STEP 2 - Extract Articles: Parse the HTML to extract the latest 5-7 nutrition articles, including titles, summaries, and URLs. STEP 3 - Summarize Each Article: For each article, use AI to summarize into one key finding (e.g., 'High-fiber diets linked to lower anxiety in women'). STEP 4 - Generate Tips: For each key finding, generate a practical nutrition tip based on the finding. STEP 5 - Format Daily Nudge: Create a 'Nutrition Nudge of the Day' digest with an overall title, individual article summaries (title + key finding + tip), and a motivational closing. STEP 6 - Send Notification: Send the daily nutrition nudge via NOTIFYME__SEND_ME_EMAIL with subject 'Nutrition Nudge of the Day [Current Date]' including the full digest with all key findings and tips.",
+      "variable_names": [],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Startup Investment Scout",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/startup_scout.jpeg?raw=true",
+      "description": "Find and rank promising live startup investments from crowdfunding sites, filtered by user-defined funding progress and enriched with buzz and founder credibility.",
+      "tags": [
+        "Finance",
+        "Investing",
+        "Startups"
+      ],
+      "goal": "STEP 0 - CATEGORY MAP: { 'technology': '16', 'design': '7', 'games': '12', 'film': '11', 'music': '14' }. Default = '16' (technology). STEP 1 - For pages 1–4, scrape https://www.kickstarter.com/discover/advanced?state=live&sort=most_funded&category=CATEGORY_NUMBER_HERE_FROM_MAP&raised=CALULATE_THIS,  raised param can be 0,1,2 - for projects under 75% raised 1 for 75-100 2 for over 100%, the user wants this %age : 'variables['MinFundedPercent']'    using BROWSER__SCRAPE_WITH_BROWSER to extract project: name, raised, goal, category, location, URL, and summary. STEP 2 - Filter projects where (raised/goal)*100 >= variables['MinFundedPercent'] (default 30). STEP 3 - Scrape Republic live projects (https://republic.com/companies?filter=live) with same fields. STEP 4 - Use SEARXNG__SEARCH_NEWS and SEARXNG__SEARCH_SOCIAL for 'PROJECT_NAME_HERE startup' and 'PROJECT_NAME_HERE site:reddit.com' to estimate buzz. STEP 5 - Rank top 5–10 by funding velocity, buzz, and credibility mentions. STEP 6 - Send via NOTIFYME__SEND_ME_EMAIL subject 'Top Live Startup Investment Picks - {{ variables['Category'] }} [Current Date]' with ranked summary including name, raised %, location, URL, and short note on buzz and credibility.",
+      "variable_names": [
+        "Category",
+        "MinFundedPercent"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "SEARXNG",
         "NOTIFYME"
       ],
       "is_deep": false
