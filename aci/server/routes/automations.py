@@ -23,7 +23,7 @@ router = APIRouter()
 @router.post("", response_model=AutomationPublic, status_code=status.HTTP_201_CREATED)
 def create_new_automation(
     automation_in: AutomationCreate,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
     _limit_check: bool = Depends(deps.UsageLimiter(deps.LimitType.AUTOMATIONS_TOTAL))
 ):
     """
@@ -166,7 +166,7 @@ def delete_existing_automation(
 )
 def create_automation_from_a_template(
     template_data: AutomationFromTemplateCreate,
-    context: Annotated[deps.RequestContext, Depends(deps.get_request_context())],
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
     _limit_check: bool = Depends(deps.UsageLimiter(deps.LimitType.AUTOMATIONS_TOTAL))
 ):
     """
