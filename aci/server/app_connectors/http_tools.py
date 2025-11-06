@@ -342,8 +342,16 @@ class HttpTools(AppConnectorBase):
                     "success": False,
                     "error": "Failed to fetch content from URL. The server may be blocking requests."
                 }
-            # Convert HTML to text
-            text_content = self._html_to_text(content)
+            
+            # Handle different content types
+            if isinstance(content, (dict, list)):
+                # Content is already parsed JSON, convert to string for text processing
+                text_content = json.dumps(content, indent=2)
+            else:
+                # Content is HTML/text, convert to clean text
+                if isinstance(content, bytes):
+                    content = content.decode("utf-8")
+                text_content = self._html_to_text(content)
             
             logger.info(f"Successfully fetched content from {url} ({len(text_content)} characters)")
             

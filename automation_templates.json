@@ -1855,6 +1855,40 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Medium Author Post Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/medium_monitor.jpeg?raw=true",
+      "description": "Monitors Medium authors for new posts and sends summaries of their latest articles directly to your email.",
+      "tags": [
+        "Content"
+      ],
+      "goal": "Monitor Medium author for new posts and summarize them. STEP 1 - Get Previous Data: Use GET_PREVIOUS_RUN_OUTPUTS to retrieve the last run data containing previously seen article titles for comparison. STEP 2 - Fetch RSS Feed: Use HTTP_TOOLS__GET_URL to fetch the RSS feed from 'https://medium.com/feed/{{ variables['Medium Username'] }}' and extract the raw XML content. STEP 3 - Parse Feed: Analyze the XML/RSS content to extract article information including: post titles, publication dates, article URLs, and brief descriptions/summaries. Look for <item> tags in the RSS feed containing <title>, <link>, <pubDate>, and <description> elements. STEP 4 - Identify New Posts: Compare the current article titles with the previously seen titles from STEP 1. Filter out articles that were already processed in previous runs to identify only new posts. STEP 5 - Summarize New Articles: For each new article found, create a concise summary including: article title, publication date, direct Medium URL, and a brief description or excerpt. If no new articles are found, note that there are no updates. STEP 6 - Generate Report: Create a comprehensive digest of new articles formatted as an email-friendly summary with clear sections for each new post, making it easy to read and navigate. STEP 7 - Send Notification: Send the new articles digest via NOTIFYME__SEND_ME_EMAIL with subject 'New Medium Posts from {{ variables['Medium Username'] }} [Current Date]' including: list of new articles with titles and summaries, publication dates, direct links to read each post, and total count of new articles. If no new articles, send a brief message indicating the author hasn't posted anything new. STEP 8 - Store Current State: Output the current list of all article titles (both old and new) as a simple comma-separated string or JSON array for comparison in the next run. This ensures we can track what's been seen across multiple runs.",
+      "variable_names": [
+        "Medium Username"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Patent Tracker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/patent_tracker.jpeg?raw=true",
+      "description": "Monitors patent databases (USPTO, WIPO, Google Patents) for new filings matching your keywords, assignees, or inventors and sends comprehensive digests via email.",
+      "tags": [
+        "Research"
+      ],
+      "goal": "Monitor patent databases for new filings matching your keywords and send simple email digests. STEP 1 - Get Previous Run Data: Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previously seen patent titles for comparison. STEP 2 - Fetch Patent Data: Use HTTP_TOOLS__GET_URL to fetch patent data from Google Patents RSS feed at 'https://patents.google.com/xhr/query?url=q={{ variables['Keywords']|replace(' ', '+') }}&format=RSS'. Check if the response is JSON (dict) or XML. If JSON, extract the RSS content from the response. If XML, parse it directly. STEP 3 - Parse and Extract: Extract patent details including: Title, Publication Date, Assignee/Applicant, and URL to full patent from the RSS feed. STEP 4 - Identify New Patents: Compare extracted patent titles against previous run data. Filter out patents that were already seen to identify only new filings. STEP 5 - Summarize New Patents: For each new patent, create a simple summary: patent title, publication date, assignee, and direct URL link. STEP 6 - Generate Digest Report: Create a simple email digest listing all new patents found with their details. STEP 7 - Send Notification: Send the patent digest via NOTIFYME__SEND_ME_EMAIL with subject 'Patent Tracker Update: {{ variables['Keywords'] }} - {{ new_patent_count }} New Filings [Current Date]' including the list of new patents. If no new patents found, send brief email stating 'No new patents matching your keywords since last run.' STEP 8 - Store Current State: Output the current list of all patent titles (both old and new) as a simple comma-separated list for comparison in the next run.",
+      "variable_names": [
+        "Keywords"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }
