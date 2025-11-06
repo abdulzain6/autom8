@@ -417,12 +417,15 @@ def _get_user_limits(user: SupabaseUser) -> Tuple[PlanLimits, str]:
         # User is a new user, provide minimal limits
 
         zero_limits_with_one_automation = ZERO_LIMITS.copy()
-        zero_limits_with_one_automation["max_automations"] = 1
-        return (zero_limits_with_one_automation, "none")
+        zero_limits_with_one_automation['max_automations'] = 1
+        return (zero_limits_with_one_automation, 'none')
     
 
     if user.subscription_status not in active_statuses:
-        return (ZERO_LIMITS, "none")
+        # User has an inactive subscription, but still allow 1 automation
+        zero_limits_with_one_automation = ZERO_LIMITS.copy()
+        zero_limits_with_one_automation['max_automations'] = 1
+        return (zero_limits_with_one_automation, 'none')
 
     product_id = user.subscription_product_id
     if not product_id:
@@ -481,10 +484,11 @@ class UsageLimiter:
     based on their *billing period*.
     """
 
-    def __init__(self, limit_to_check: LimitType):
+    def __init__(self, limit_to_check: LimitType, check_subscription: bool = True):
         self.limit_to_check = limit_to_check
+        self.check_subscription = check_subscription
 
-    def __call__(self, context: RequestContext = Depends(get_request_context())):
+    def __call__(self, context: RequestContext = Depends(get_request_context(check_subscription=False))):
         db_session = context.db_session
         user_id = context.user.id
 

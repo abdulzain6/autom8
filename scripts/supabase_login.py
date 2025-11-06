@@ -41,5 +41,5 @@ def upsert_user_and_get_jwt(email: str, password: str) -> Optional[str]:
 
 # Example usage
 if __name__ == "__main__":
-    token = upsert_user_and_get_jwt("demoo@example.com", "securePassword123")
+    token = upsert_user_and_get_jwt("demoo1@example.com", "securePassword123")
     print("JWT Token:", token)
