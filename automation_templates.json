@@ -1889,6 +1889,53 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Daily Calendar Summary",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/daily_calendar.jpeg?raw=true",
+      "description": "Get a morning digest of your day's calendar events delivered via email with event details, times, and meeting links.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Send a daily morning summary of today's calendar events. STEP 1 - Get Today's Events: Use GOOGLE_CALENDAR__EVENTS_LIST with calendarId='primary', timeMin=today at midnight, timeMax=today at 11:59pm, orderBy='startTime', singleEvents=true to fetch all events for today. STEP 2 - Format Summary: Create a clean email-friendly summary listing each event with: event title, start time, end time, location (if any), description (if any), and Google Meet link (if any). Group events by time and include total count. STEP 3 - Send Email: Send the daily summary via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Calendar Summary - {{ event_count }} Events Today [Current Date]' including the formatted event list. If no events, send a brief message 'No events scheduled for today - enjoy your free day!'",
+      "variable_names": [],
+      "required_app_names": [
+        "GOOGLE_CALENDAR",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Auto-Schedule Focus Time",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/focus_time.jpeg?raw=true",
+      "description": "Automatically find and block free time slots in your calendar for focused work sessions.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Find free time slots and create focus time blocks automatically. STEP 1 - Get This Week's Events: Use GOOGLE_CALENDAR__EVENTS_LIST with calendarId='primary', timeMin=today, timeMax=7 days from now, orderBy='startTime', singleEvents=true. STEP 2 - Analyze Free Slots: Identify free time blocks of at least {{ variables['Duration (hours)'] }} hours during working hours (9 AM - 6 PM on weekdays). Look for gaps between meetings. STEP 3 - Create Focus Blocks: For each identified free slot, use GOOGLE_CALENDAR__EVENTS_INSERT to create a focus time event with summary='🎯 Focus Time', description='Blocked for focused work - Do Not Disturb', eventType='focusTime', visibility='private', start and end times for the {{ variables['Duration (hours)'] }} hour block. STEP 4 - Send Summary: Send confirmation via NOTIFYME__SEND_ME_EMAIL with subject 'Focus Time Scheduled - {{ block_count }} Sessions Created' listing when each focus block was scheduled.",
+      "variable_names": [
+        "Duration (hours)"
+      ],
+      "required_app_names": [
+        "GOOGLE_CALENDAR",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Meeting Analytics Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/meeting_analytics.jpeg?raw=true",
+      "description": "Weekly analytics on your meeting habits including total hours, patterns, and productivity insights.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Generate weekly meeting analytics and productivity insights. STEP 1 - Get Past Week's Events: Use GOOGLE_CALENDAR__EVENTS_LIST with calendarId='primary', timeMin=7 days ago, timeMax=today, singleEvents=true to fetch last week's events. STEP 2 - Analyze Patterns: Calculate: total meeting hours, number of meetings, average meeting duration, busiest day, most common meeting times, meetings by type (with attendees vs solo), recurring vs one-off meetings. STEP 3 - Generate Insights: Use AI to analyze meeting patterns and provide insights like: 'You spent {{ total_hours }} hours in meetings last week', 'Your busiest day was {{ day }}', 'Most meetings happen in {{ time_block }}', 'Consider blocking {{ suggestion }} for focus time'. STEP 4 - Send Report: Send analytics via NOTIFYME__SEND_ME_EMAIL with subject 'Weekly Meeting Analytics - {{ total_meetings }} Meetings Last Week' including statistics, visualizations (text-based), and actionable recommendations.",
+      "variable_names": [],
+      "required_app_names": [
+        "GOOGLE_CALENDAR",
+        "NOTIFYME"
+      ],
+      "is_deep": false
     }
   ]
 }
