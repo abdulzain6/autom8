@@ -524,3 +524,26 @@ class FrontendQaAgentError(ACIException):
             message=message,
             error_code=status.HTTP_400_BAD_REQUEST,
         )
+
+
+class InvalidPhoneNumberError(ACIException):
+    """
+    Exception raised when a phone number does not match the E.164 format
+    """
+
+    def __init__(self, phone_number: str | None = None, message: str | None = None):
+        if message is None:
+            if phone_number is None:
+                default_message = "Phone number cannot be None"
+            elif phone_number == "":
+                default_message = "Phone number cannot be empty"
+            else:
+                default_message = f"Phone number must be in E.164 format (e.g., +1234567890). Invalid value: '{phone_number}'"
+        else:
+            default_message = message
+            
+        super().__init__(
+            title="Invalid phone number",
+            message=default_message,
+            error_code=status.HTTP_400_BAD_REQUEST,
+        )

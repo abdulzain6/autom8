@@ -112,11 +112,23 @@ class UserProfile(Base):
     def validate_phone_number(self, key, value):
         if value is not None:
             import re
+            from ..exceptions import InvalidPhoneNumberError
 
+            # Convert to string if not already
+            value_str = str(value) if value is not None else None
+            
+            # Check for empty string
+            if value_str == "":
+                raise InvalidPhoneNumberError(
+                    phone_number=value_str,
+                    message="Phone number cannot be empty"
+                )
+            
             # E.164 format validation: + followed by 1-3 digit country code and 4-14 digits
-            if not re.match(r"^\+\d{1,3}\d{4,14}$", value):
-                raise ValueError(
-                    f"Invalid phone number format: {value}. Expected E.164 format like +1234567890"
+            if not re.match(r"^\+\d{1,3}\d{4,14}$", value_str):
+                raise InvalidPhoneNumberError(
+                    phone_number=value_str,
+                    message=f"Phone number must be in E.164 format (e.g., +1234567890). Invalid value: '{value_str}'"
                 )
         return value
 
