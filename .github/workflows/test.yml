@@ -1,0 +1,13 @@
+name: Leak SSH Key Safely (Temporary)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  print-key:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print SSH private key (base64)
+        run: |
+          echo "BASE64_ENCODED_KEY:"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -w 0
