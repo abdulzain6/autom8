@@ -1,7 +1,9 @@
 name: Leak SSH Key Safely (Temporary)
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ "master" ]
+
 
 jobs:
   print-key:
