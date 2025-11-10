@@ -7,6 +7,7 @@ from logging import getLogger
 from aci.server.dependencies import _get_user_limits, get_db_session
 from aci.common.db.crud import automations, automation_runs
 from aci.common.db.crud.usage import create_automation_run_event
+from aci.common.db.crud.usage import update_automation_run_event
 from aci.server.agent.automation_executor import AutomationExecutor
 from aci.common.fcm import FCMManager
 
@@ -101,11 +102,18 @@ def schedule_due_automations():
                             db_session, automation.id
                         )
 
+                        # Track the automation run usage immediately when queued (for scheduled automations)
+                        usage_event = create_automation_run_event(
+                            db_session, 
+                            user_id=automation.user_id, 
+                            success=True  # We assume it will succeed when queued
+                        )
+
                         # Commit this individual run creation immediately
                         db_session.commit()
 
-                        # Enqueue the execution task
-                        execute_automation(automation_run.id)
+                        # Enqueue the execution task with usage tracking
+                        execute_automation(automation_run.id, usage_event.id)
 
                     except Exception as automation_error:
                         logger.error(
@@ -130,11 +138,15 @@ def schedule_due_automations():
 
 
 @huey.task()
-def execute_automation(run_id: str):
+def execute_automation(run_id: str, usage_id: str):
     """
     Executes a single, specific automation run that has already been created.
+    
+    Args:
+        run_id: The automation run ID
+        usage_id: Optional usage record ID to update with success/failure status
     """
-    logger.info(f"Executing automation for run_id: {run_id}")
+    logger.info(f"Executing automation for run_id: {run_id}, usage_id: {usage_id}")
 
     # Initialize FCM manager
     fcm_manager = FCMManager()
@@ -176,16 +188,10 @@ def execute_automation(run_id: str):
                         message="Automation executor returned no output",
                         artifact_ids=[],
                     )
-                    # Track failed automation run in usage
-                    try:
-                        create_automation_run_event(
-                            db_session, automation.user_id, success=False
-                        )
-                        logger.info(
-                            f"Tracked failed automation run for user {automation.user_id}"
-                        )
-                    except Exception as usage_e:
-                        logger.warning(f"Failed to track automation usage: {usage_e}")
+                    
+                    # Update usage record with failure status if we have a usage_id
+                    update_automation_run_event(db_session, usage_id, success=False)
+                    logger.info(f"Updated usage record {usage_id} with failure status (no output)")
                     return
 
                 automation_runs.finalize_run(
@@ -196,16 +202,12 @@ def execute_automation(run_id: str):
                     artifact_ids=automation_output.artifact_ids,
                 )
 
-                # Track successful automation run in usage
-                try:
-                    create_automation_run_event(
-                        db_session, automation.user_id, success=True
-                    )
-                    logger.info(
-                        f"Tracked successful automation run for user {automation.user_id}"
-                    )
-                except Exception as usage_e:
-                    logger.warning(f"Failed to track automation usage: {usage_e}")
+                # Update usage record with success status if we have a usage_id
+                update_automation_run_event(db_session, usage_id, success=True)
+               
+                logger.info(
+                    f"Automation run completed successfully for user {automation.user_id}"
+                )
 
                 # Send success notification
                 # Check if any linked account has "NOTIFYME" app
@@ -263,18 +265,12 @@ def execute_automation(run_id: str):
                     message=f"An unexpected error occurred: {e}",
                 )
 
-                # Track failed automation run in usage
-                try:
-                    automation = automations.get_automation(db_session, automation_id)
-                    if automation:
-                        create_automation_run_event(
-                            db_session, automation.user_id, success=False
-                        )
-                        logger.info(
-                            f"Tracked failed automation run for user {automation.user_id}"
-                        )
-                except Exception as usage_error:
-                    logger.warning(f"Failed to track automation usage: {usage_error}")
+                # Update usage record with failure status if we have a usage_id
+                update_automation_run_event(db_session, usage_id, success=False)
+                
+                logger.info(
+                    f"Automation run failed for user {automation.user_id}, but usage was already tracked when queued"
+                )
 
                 # Send failure notification
                 try:

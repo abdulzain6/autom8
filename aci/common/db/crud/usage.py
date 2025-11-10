@@ -31,6 +31,30 @@ def create_automation_run_event(
     return new_usage_event
 
 
+def update_automation_run_event(
+    session: Session,
+    usage_id: str,
+    success: bool,
+) -> UserUsage:
+    """
+    Updates an existing usage record to reflect the actual outcome of an automation run.
+    """
+    usage_event = session.get(UserUsage, usage_id)
+    if not usage_event:
+        raise ValueError(f"Usage event {usage_id} not found")
+    
+    if success:
+        usage_event.successful_automation_runs = 1
+        usage_event.failed_automation_runs = 0
+    else:
+        usage_event.successful_automation_runs = 0
+        usage_event.failed_automation_runs = 1
+    
+    session.commit()
+    session.refresh(usage_event)
+    return usage_event
+
+
 def create_voice_session_event(
     session: Session,
     user_id: str,

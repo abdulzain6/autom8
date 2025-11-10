@@ -2,6 +2,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from aci.common.db import crud
 from aci.common.db.crud.automations import _validate_and_fetch_linked_accounts
+from aci.common.db.crud.usage import create_automation_run_event
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.automations import (
     AutomationCreate,
@@ -212,10 +213,17 @@ def run_an_automation(
     # Create the run record first to get a run_id and "lock" the automation
     automation_run = crud.automation_runs.create_run(context.db_session, automation_id)
     
+    # Track the automation run usage immediately when queued
+    usage_event = create_automation_run_event(
+        context.db_session, 
+        user_id=context.user.id, 
+        success=True  # We assume it will succeed when queued
+    )
+   
     context.db_session.commit()
     
-    # Enqueue the task with the specific run_id
-    execute_automation(automation_run.id)
+    # Enqueue the task with the specific run_id and usage_id
+    execute_automation(automation_run.id, usage_event.id)
     
     return {
         "message": "Automation run has been successfully queued.",
