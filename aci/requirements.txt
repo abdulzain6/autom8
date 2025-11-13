@@ -348,3 +348,4 @@ youtube-transcript-api==1.2.3
 yt-dlp==2024.12.23
 zipp==3.23.0
 zstandard==0.24.0
+langchain-xai==1.0.0
