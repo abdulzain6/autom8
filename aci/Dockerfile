@@ -4,10 +4,9 @@ WORKDIR /app
 
 # Only copy requirements first so Docker can cache pip install step
 COPY requirements.txt ./
-COPY constraints.txt ./
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt -c constraints.txt --use-deprecated=legacy-resolver && \
+    pip install --no-cache-dir -r requirements.txt  --use-deprecated=legacy-resolver && \
     pip install pygooglenews --no-deps
 
 RUN apt-get update && apt-get install -y libmagic1
