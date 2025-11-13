@@ -116,9 +116,22 @@ def _get_oauth2_credentials(
             f"Access token expired, trying to refresh linked_account_id={linked_account.id}, "
             f"security_scheme={linked_account.security_scheme}, app={app.name}"
         )
-        token_response: Dict[str, Any] = _run_coro_sync(
-            _refresh_oauth2_access_token(app.name, oauth2_scheme, oauth2_scheme_credentials)
-        )
+
+        try:
+            token_response: Dict[str, Any] = _run_coro_sync(
+                _refresh_oauth2_access_token(app.name, oauth2_scheme, oauth2_scheme_credentials)
+            )
+        except OAuth2Error as e:
+            logger.error(
+                f"Failed to refresh OAuth2 token, re-authentication required. "
+                f"linked_account_id={linked_account.id}, app={app.name}. Error: {e}"
+            )
+            # Re-raise the error with a clear message. The caller (e.g., agent)
+            # should catch this and inform the user they need to re-link their account.
+            raise OAuth2Error(
+                "OAuth2 token refresh failed. The refresh token is likely expired or "
+                "invalid. Please re-authenticate the account."
+            ) from e
 
         expires_at: Optional[int] = None
         if "expires_at" in token_response:
@@ -128,11 +141,12 @@ def _get_oauth2_credentials(
 
         if not token_response.get("access_token") or not expires_at:
             logger.error(
-                f"Failed to refresh access token, token_response={token_response}, "
+                f"Failed to refresh access token (invalid response), token_response={token_response}, "
                 f"app={app.name}, linked_account_id={linked_account.id}, "
                 f"security_scheme={linked_account.security_scheme}"
             )
-            raise OAuth2Error("failed to refresh access token")
+            # This is a different failure: the refresh *worked* but returned bad data.
+            raise OAuth2Error("failed to refresh access token (invalid response from provider)")
 
         fields_to_update: Dict[str, Any] = {
             "access_token": token_response["access_token"],
@@ -149,7 +163,6 @@ def _get_oauth2_credentials(
         credentials=oauth2_scheme_credentials,
         is_updated=is_updated,
     )
-
 
 async def _refresh_oauth2_access_token(
     app_name: str, oauth2_scheme: OAuth2Scheme, oauth2_scheme_credentials: OAuth2SchemeCredentials

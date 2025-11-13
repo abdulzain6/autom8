@@ -434,14 +434,18 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
             logger.info(f"Executing function: {function_name} with parameters: {parameters}")
             
             # Use the existing execute_function from function_utils
-            result = await asyncio.to_thread(
-                execute_function,
-                db_session=self.db_session,
-                function_name=function_name,
-                user_id=self.user_id,
-                function_input=parameters,
-                run_id=None,
-            )
+            try:
+                result = await asyncio.to_thread(
+                    execute_function,
+                    db_session=self.db_session,
+                    function_name=function_name,
+                    user_id=self.user_id,
+                    function_input=parameters,
+                    run_id=None,
+                )
+            except Exception as e:
+                logger.error(f"Error executing function {function_name}: {e}", exc_info=True)
+                raise ToolError(f"Error executing function: {str(e)}") from e
             
             logger.info(f"Function {function_name} executed successfully")
             
