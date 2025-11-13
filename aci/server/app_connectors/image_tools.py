@@ -3,7 +3,7 @@ import os
 import requests
 import base64
 
-from aci.server.config import DB_FULL_URL, OPENROUTER_API_KEY, OPENROUTER_BASE_URL
+from aci.server.config import DB_FULL_URL, XAI_API_KEY
 from typing import Optional, Dict, Any
 from urllib.parse import urlparse, unquote
 from aci.common.db.sql_models import LinkedAccount, Artifact
@@ -13,7 +13,7 @@ from aci.common.utils import create_db_session
 from aci.server.app_connectors.base import AppConnectorBase
 from aci.server.file_management import FileManager
 from sqlalchemy.orm import Session
-from langchain_openai import ChatOpenAI
+from langchain_xai import ChatXAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from pydantic import SecretStr
@@ -39,7 +39,7 @@ INTERNAL_SERVICE_NAMES = {
     "caddy", "nginx", "apache", "traefik",
     "gotenberg", "searxng", "livekit", "voice_agent",
     "huey_worker", "cycletls-server", "steel-browser-api",
-    "skyvern", "skyvern-ui", "code-executor"
+    "code-executor"
 }
 
 class ImageTools(AppConnectorBase):
@@ -284,10 +284,9 @@ class ImageTools(AppConnectorBase):
             base64_image = base64.b64encode(image_content).decode('utf-8')
             
             # Initialize the multimodal LLM
-            llm = ChatOpenAI(
-                base_url=OPENROUTER_BASE_URL,
-                api_key=SecretStr(OPENROUTER_API_KEY),
-                model="minimax/minimax-m2:free",
+            llm = ChatXAI(
+                api_key=SecretStr(XAI_API_KEY),
+                model="grok-4-fast-non-reasoning-latest",
                 timeout=300,
                 max_retries=3,
             )

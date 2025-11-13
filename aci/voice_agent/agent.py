@@ -1,11 +1,9 @@
 import asyncio
-from datetime import datetime, timezone
-import httpx
-from openai import OpenAI, AsyncOpenAI
 import json
 import logging
+from datetime import datetime, timezone
 from time import time
-from typing import Any, Dict, cast, Optional
+from typing import cast, Optional
 from livekit.agents import (
     Agent,
     AgentSession,
@@ -23,7 +21,6 @@ from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from aci.common.enums import FunctionDefinitionFormat
 from aci.common.schemas.function import OpenAIFunctionDefinition
-from aci.server.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     execute_function,
@@ -194,12 +191,10 @@ Timezone: Call get_user_timezone, convert to UTC, explain conversion.
 Voice: Brief (1-2 sentences), conversational, summarize results. Match user's language.
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
-            llm=openai.LLM(
-                model="minimax/minimax-m2:free",
-                base_url=OPENROUTER_BASE_URL,
-                api_key=OPENROUTER_API_KEY,
-                reasoning_effort="low", # type: ignore
+            llm=openai.LLM.with_x_ai(
+                model="grok-4-fast-non-reasoning-latest",
                 temperature=0,
+                api_key=XAI_API_KEY
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",

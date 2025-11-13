@@ -171,5 +171,4 @@ tmp/
 
 creds.json
 
-skyvern/
 .env.prod

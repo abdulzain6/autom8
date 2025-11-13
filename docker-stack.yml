@@ -92,7 +92,7 @@ services:
       timeout: 10s
     environment:
       - CHROMIUM_PROXY_SERVER=http://local-proxy:3000
-      - CHROMIUM_DENY_LIST="^http://(server|postgres|redis|huey_worker|headless-browser|local-proxy|skyvern).*"
+      - CHROMIUM_DENY_LIST="^http://(server|postgres|redis|huey_worker|headless-browser|local-proxy).*"
     networks:
       - services_network
     deploy:
@@ -175,46 +175,6 @@ services:
       - PROXY_INTERNAL_BYPASS=headless-browser
     deploy:
       replicas: 1 # Start with 2 replicas, you can scale this number
-      restart_policy:
-        condition: any
-
-  skyvern:
-    image: public.ecr.aws/skyvern/skyvern:latest
-    env_file:
-      - .env.skyvern
-    volumes:
-      - ./artifacts:/data/artifacts
-      - ./videos:/data/videos
-      - ./har:/data/har
-      - ./log:/data/log
-      - ./.streamlit:/app/.streamlit
-    networks:
-      - services_network  # Connect to your existing network
-    healthcheck:
-      test: ["CMD", "test", "-f", "/app/.streamlit/secrets.toml"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    deploy:
-      replicas: 0
-      restart_policy:
-        condition: any
-
-  skyvern-ui:
-    image: public.ecr.aws/skyvern/skyvern-ui:latest
-    env_file:
-      - .env.skyvern
-    volumes:
-      - ./artifacts:/data/artifacts
-      - ./videos:/data/videos
-      - ./har:/data/har
-      - ./.streamlit:/app/.streamlit
-    networks:
-      - services_network  # Connect to your existing network
-    depends_on:
-      - skyvern
-    deploy:
-      replicas: 0
       restart_policy:
         condition: any
 

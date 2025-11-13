@@ -24,7 +24,6 @@ from aci.server import config
 from aci.server.app_connectors.base import AppConnectorBase
 from browser_use import Agent, BrowserSession
 from browser_use.llm import ChatOpenAI
-from skyvern import Skyvern
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.async_configs import BrowserConfig, CrawlerRunConfig, CacheMode, LLMConfig
 from crawl4ai import UndetectedAdapter
@@ -82,7 +81,7 @@ DISALLOWED_DOCKER_SERVICES = {
     'caddy', 'server', 'huey_worker', 'livekit', 'voice_agent',
     'gotenberg', 'code-executor', 'searxng', 'cycletls-server',
     'steel-browser-api', 'headless-browser', 'local-proxy',
-    'skyvern', 'skyvern-ui', 'postgres', 'redis'
+    'postgres', 'redis'
 }
 
 class Browser(AppConnectorBase):
@@ -400,32 +399,6 @@ class Browser(AppConnectorBase):
 
         logger.info(f"Submitting browser task to executor: {task[:100]}...")
 
-        if config.USE_SKYVERN:
-            # Use Skyvern for browser automation
-            async def _run_skyvern_task():
-                skyvern = Skyvern(
-                    base_url=config.SKYVERN_BASE_URL, api_key=config.SKYVERN_API_KEY
-                )
-                task_result = await skyvern.run_task(
-                    prompt=task,
-                    wait_for_completion=True,
-                    max_steps=10,
-                    model={"reasoning": {"enabled": False}},
-                )
-                return {"result": task_result.output, "success": True}
-
-            async def _run_skyvern_with_timeout():
-                try:
-                    # Wrap the task with a 10-minute timeout
-                    return await asyncio.wait_for(_run_skyvern_task(), timeout=600)
-                except Exception as e:
-                    logger.error(f"Skyvern task failed: {e}", exc_info=True)
-                    return {"result": None, "error": str(e), "success": False}
-
-            result = asyncio.run(_run_skyvern_with_timeout())
-            # Small delay to prevent connection conflicts when semaphore is released
-            time.sleep(1)
-            return result
 
         def _setup_and_run_agent():
             async def _run_agent():
@@ -461,17 +434,16 @@ class Browser(AppConnectorBase):
 
                         # 4️⃣ Init LLMs
                         llm = ChatOpenAI(
-                            model="minimax/minimax-m2:free",
+                            model="grok-4-fast-non-reasoning-latest",
                             temperature=0.3,
-                            api_key=config.OPENROUTER_API_KEY,
-                            base_url=config.OPENROUTER_BASE_URL,
+                            api_key=config.XAI_API_KEY,
+                            base_url="https://api.x.ai/v1"
                         )
                         page_extraction_llm = ChatOpenAI(
-                            model="minimax/minimax-m2:free",
+                            model="grok-4-fast-non-reasoning-latest",
                             temperature=0.3,
-                            api_key=config.OPENROUTER_API_KEY,
-                            base_url=config.OPENROUTER_BASE_URL,
-                            reasoning_effort="low",
+                            api_key=config.XAI_API_KEY,
+                            base_url="https://api.x.ai/v1"
                         )
                         browser_session_for_this_agent = BrowserSession(browser=browser)
 
@@ -634,9 +606,8 @@ SECURITY VALIDATION RULES:
 
                     # Setup LLM extraction strategy with required schema
                     llm_config = LLMConfig(
-                        provider="openrouter/minimax/minimax-m2:free",
-                        api_token=config.OPENROUTER_API_KEY,
-                        base_url=config.OPENROUTER_BASE_URL,
+                        provider="xai/grok-4-fast-non-reasoning-latest",
+                        api_token=config.XAI_API_KEY,
                     )
 
                     # Build extraction strategy with required schema

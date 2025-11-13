@@ -6,10 +6,12 @@ from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from aci.common.logging_setup import get_logger
 from typing import Optional
-from langchain_openai import ChatOpenAI
+from langchain_xai import ChatXAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from pydantic import SecretStr
+
+from aci.server.config import XAI_API_KEY
 
 
 
@@ -143,19 +145,15 @@ def generate_automation_description(
         name: The automation name
         goal: The automation goal/instruction
         app_names: List of app names used in the automation
-        openai_api_key: OpenAI API key
-
+    
     Returns:
         Generated description string or None if generation fails
     """
-    try:
-        from aci.server.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL
-        
+    try:        
         # Initialize the LLM
-        llm = ChatOpenAI(
-            base_url=OPENROUTER_BASE_URL,
-            api_key=SecretStr(OPENROUTER_API_KEY),
-            model="minimax/minimax-m2:free",
+        llm = ChatXAI(
+            api_key=SecretStr(XAI_API_KEY),
+            model="grok-4-fast-non-reasoning-latest",
             timeout=300,
             max_retries=3,
         )

@@ -6,6 +6,7 @@ OPENAI_API_KEY = check_and_get_env_variable("AGENT_OPENAI_API_KEY")
 LIVEKIT_API_SECRET = check_and_get_env_variable("AGENT_LIVEKIT_API_SECRET")
 LIVEKIT_URL = check_and_get_env_variable("AGENT_LIVEKIT_URL")
 LIVEKIT_API_KEY = check_and_get_env_variable("AGENT_LIVEKIT_API_KEY")
+XAI_API_KEY = check_and_get_env_variable("AGENT_XAI_API_KEY")
 
 DB_SCHEME = check_and_get_env_variable("AGENT_DB_SCHEME")
 DB_USER = check_and_get_env_variable("AGENT_DB_USER")

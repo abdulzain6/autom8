@@ -34,7 +34,7 @@ DISALLOWED_DOCKER_SERVICES = {
     'caddy', 'server', 'huey_worker', 'livekit', 'voice_agent',
     'gotenberg', 'code-executor', 'searxng', 'cycletls-server',
     'steel-browser-api', 'headless-browser', 'local-proxy',
-    'skyvern', 'skyvern-ui', 'postgres', 'redis'
+    'postgres', 'redis'
 }
 
 class HttpTools(AppConnectorBase):
@@ -356,9 +356,8 @@ class HttpTools(AppConnectorBase):
             logger.info(f"Successfully fetched content from {url} ({len(text_content)} characters)")
             
             llm_config = LLMConfig(
-                provider="openrouter/minimax/minimax-m2:free",
-                api_token=config.OPENROUTER_API_KEY,
-                base_url=config.OPENROUTER_BASE_URL,
+                provider="xai/grok-4-fast-non-reasoning-latest",
+                api_token=config.XAI_API_KEY,
             )
 
             extraction_kwargs = {

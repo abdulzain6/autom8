@@ -111,11 +111,7 @@ CYCLE_TLS_SERVER_URL = check_and_get_env_variable("SERVER_CYCLE_TLS_SERVER_URL")
 HTTP_PROXY = os.getenv("SERVER_HTTP_PROXY")
 
 # LLM
-TOGETHER_API_KEY = check_and_get_env_variable("SERVER_TOGETHER_API_KEY")
-TOGETHER_BASE_URL = check_and_get_env_variable("SERVER_TOGETHER_BASE_URL")
-
-OPENROUTER_API_KEY = check_and_get_env_variable("SERVER_OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = check_and_get_env_variable("SERVER_OPENROUTER_BASE_URL")
+XAI_API_KEY = check_and_get_env_variable("SERVER_XAI_API_KEY")
 
 GOTENBERG_URL = check_and_get_env_variable("SERVER_GOTENBERG_URL")
 
@@ -134,9 +130,6 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH = check_and_get_env_variable("SERVER_FIREBASE_
 WHATSAPP_API_TOKEN = check_and_get_env_variable("SERVER_WHATSAPP_API_TOKEN")
 WHATSAPP_PHONE_NUMBER_ID = check_and_get_env_variable("SERVER_WHATSAPP_PHONE_NUMBER_ID")
 
-SKYVERN_BASE_URL = check_and_get_env_variable("SERVER_SKYVERN_BASE_URL")
-SKYVERN_API_KEY = check_and_get_env_variable("SERVER_SKYVERN_API_KEY")
-USE_SKYVERN = os.getenv("SERVER_USE_SKYVERN", "false").lower() == "true"
 BROWSER_POOL_REFRESH_INTERVAL = int(os.getenv("SERVER_BROWSER_POOL_REFRESH_INTERVAL", "30"))
 BROWSER_SERVICE_NAME = os.getenv("SERVER_BROWSER_SERVICE_NAME", "headless-browser")
 

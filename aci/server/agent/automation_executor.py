@@ -7,14 +7,14 @@ from aci.common.db.sql_models import Automation, Function, AutomationRun
 from aci.common.enums import RunStatus
 from langchain_core.tools import StructuredTool
 from aci.common.schemas.function import OpenAIFunction, OpenAIFunctionDefinition
-from aci.server.config import OPENROUTER_BASE_URL, OPENROUTER_API_KEY
+from aci.server.config import XAI_API_KEY
 from aci.server.dependencies import get_db_session
 from aci.server.function_executors.function_utils import (
     format_function_definition,
     FunctionDefinitionFormat,
     execute_function,
 )
-from langchain_openai.chat_models.base import BaseChatOpenAI
+from langchain_xai import ChatXAI
 from logging import getLogger
 import logging
 
@@ -302,10 +302,10 @@ class AutomationExecutor:
         return tools
 
     def create_agent(self):
-        model = BaseChatOpenAI(
-            base_url=OPENROUTER_BASE_URL,
-            api_key=SecretStr(OPENROUTER_API_KEY),
-            model="minimax/minimax-m2:free",
+        model = ChatXAI(
+            api_key=SecretStr(XAI_API_KEY),
+            model="grok-4-fast-reasoning-latest",
+            reasoning_effort="low",
             timeout=300,
             max_retries=3,
         )

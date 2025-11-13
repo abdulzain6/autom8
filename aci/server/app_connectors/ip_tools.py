@@ -23,7 +23,7 @@ DISALLOWED_DOCKER_SERVICES = {
     'caddy', 'server', 'huey_worker', 'livekit', 'voice_agent',
     'gotenberg', 'code-executor', 'searxng', 'cycletls-server',
     'steel-browser-api', 'headless-browser', 'local-proxy',
-    'skyvern', 'skyvern-ui', 'postgres', 'redis'
+    'postgres', 'redis'
 }
 
 
