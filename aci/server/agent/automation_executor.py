@@ -305,7 +305,6 @@ class AutomationExecutor:
         model = ChatXAI(
             api_key=SecretStr(XAI_API_KEY),
             model="grok-4-fast-reasoning-latest",
-            reasoning_effort="low",
             timeout=300,
             max_retries=3,
         )
