@@ -4,7 +4,6 @@ from aci.common.schemas.security_scheme import NoAuthScheme, NoAuthSchemeCredent
 from aci.server.app_connectors.base import AppConnectorBase
 import yfinance as yf
 from typing import List, Dict, Any
-from aci.server.config import HTTP_PROXY
 from aci.common.logging_setup import get_logger
 
 
@@ -29,15 +28,6 @@ class YahooFinance(AppConnectorBase):
         Note: Authentication details are not required for yfinance.
         """
         super().__init__(linked_account, security_scheme, security_credentials, run_id=run_id)
-        
-        # Configure proxy for yfinance if available
-        self.proxy = None
-        if HTTP_PROXY:
-            self.proxy = {"http": HTTP_PROXY, "https": HTTP_PROXY}
-            logger.info(f"YahooFinance connector initialized with proxy: {HTTP_PROXY}")
-        else:
-            logger.info("YahooFinance connector initialized without proxy.")
-            
         logger.info("YahooFinance connector initialized.")
 
     def _before_execute(self) -> None:
@@ -46,16 +36,6 @@ class YahooFinance(AppConnectorBase):
         Not required for yfinance, but included for structural consistency.
         """
         pass
-
-    def _get_session(self):
-        """
-        Creates a requests session with proxy configuration if available.
-        """
-        import requests
-        session = requests.Session()
-        if self.proxy:
-            session.proxies.update(self.proxy)
-        return session
 
 
     def get_current_stock_price(self, tickers: List[str]) -> Dict[str, Any]:
@@ -70,11 +50,10 @@ class YahooFinance(AppConnectorBase):
             current price, day high, day low, and volume.
         """
         logger.info(f"Fetching current stock prices for tickers: {tickers}")
-        if self.proxy:
-            logger.info(f"Using proxy for stock price request: {HTTP_PROXY}")
         results = {}
         try:
-            ticker_data = yf.Tickers(" ".join(tickers), session=self._get_session())
+            # Don't pass session - let yfinance handle its own session management
+            ticker_data = yf.Tickers(" ".join(tickers))
             
             if not ticker_data.tickers:
                 raise Exception("No data returned from yfinance Tickers call.")
@@ -124,15 +103,14 @@ class YahooFinance(AppConnectorBase):
             A list of dictionaries, each representing one year of historical data.
         """
         logger.info(f"Fetching monthly historical data for {ticker} over period {period}")
-        if self.proxy:
-            logger.info(f"Using proxy for historical data request: {HTTP_PROXY}")
         
         valid_periods = [f"{i}y" for i in range(1, 21)]
         if period not in valid_periods:
             raise ValueError(f"Invalid period '{period}'. Please use a value like '1y', '5y', up to '20y'.")
 
         try:
-            stock = yf.Ticker(ticker, session=self._get_session())
+            # Don't pass session - let yfinance handle its own session management
+            stock = yf.Ticker(ticker)
             hist_df = stock.history(period=period, interval="1mo")
 
             if hist_df.empty:
@@ -166,10 +144,9 @@ class YahooFinance(AppConnectorBase):
             P/E ratio, and market capitalization.
         """
         logger.info(f"Fetching fundamental info for ticker: {ticker}")
-        if self.proxy:
-            logger.info(f"Using proxy for fundamental info request: {HTTP_PROXY}")
         try:
-            stock = yf.Ticker(ticker, session=self._get_session())
+            # Don't pass session - let yfinance handle its own session management
+            stock = yf.Ticker(ticker)
             info = stock.info
 
             if not info or info.get('longName') is None:
@@ -203,10 +180,9 @@ class YahooFinance(AppConnectorBase):
             with its title, publisher, and link.
         """
         logger.info(f"Fetching latest news for ticker: {ticker}")
-        if self.proxy:
-            logger.info(f"Using proxy for company news request: {HTTP_PROXY}")
         try:
-            stock = yf.Ticker(ticker, session=self._get_session())
+            # Don't pass session - let yfinance handle its own session management
+            stock = yf.Ticker(ticker)
             news = stock.news
 
             if not news:
