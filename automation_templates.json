@@ -42,7 +42,7 @@
       "tags": [
         "Security"
       ],
-      "goal": "Perform a comprehensive DNS security audit for the domain '{{ variables['Domain Name'] }}'. Conduct multiple DNS record lookups including A, AAAA, MX, TXT, NS, CNAME, and SOA records. Analyze the results for security vulnerabilities, misconfigurations, and best practices compliance. Check for SPF, DKIM, and DMARC email authentication records. Verify SSL certificate status and expiration dates. Assess subdomain enumeration and potential exposure risks. Compile findings into a professional cybersecurity assessment report with risk ratings, remediation recommendations, and compliance status. Format the report as a PDF and send it via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'DNS Security Audit Report 📋 - Domain: {{ variables['Domain Name'] }} - Comprehensive security assessment completed' and artifact_id for the PDF attachment. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_EMAIL with subject 'Professional DNS Security Assessment - {{ variables['Domain Name'] }}' and the PDF attachment.",
+      "goal": "Perform a comprehensive DNS security audit for the domain '{{ variables['Domain Name'] }}'. Conduct multiple DNS record lookups including A, AAAA, MX, TXT, NS, CNAME, and SOA records. Analyze the results for security vulnerabilities, misconfigurations, and best practices compliance. Check for SPF, DKIM, and DMARC email authentication records. Verify SSL certificate status and expiration dates. Assess subdomain enumeration and potential exposure risks. Compile findings into a professional cybersecurity assessment report with risk ratings, remediation recommendations, and compliance status. Format the report as a PDF and send it via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'DNS Security Audit Report \ud83d\udccb - Domain: {{ variables['Domain Name'] }} - Comprehensive security assessment completed' and artifact_id for the PDF attachment. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_EMAIL with subject 'Professional DNS Security Assessment - {{ variables['Domain Name'] }}' and the PDF attachment.",
       "variable_names": [
         "Domain Name"
       ],
@@ -128,7 +128,7 @@
       "tags": [
         "Reminders"
       ],
-      "goal": "Send a hydration reminder via mobile push notification: 'Time to hydrate! 💧 Drink a glass of water to stay healthy and energized. Your body needs regular hydration to function at its best.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with an encouraging message about hydration benefits.",
+      "goal": "Send a hydration reminder via mobile push notification: 'Time to hydrate! \ud83d\udca7 Drink a glass of water to stay healthy and energized. Your body needs regular hydration to function at its best.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with an encouraging message about hydration benefits.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -142,7 +142,7 @@
       "tags": [
         "Reminders"
       ],
-      "goal": "Send an encouraging break reminder via mobile push notification: 'Time for a quick break! 🧘 Stand up, stretch, or step away from your screen for 5 minutes. Taking regular breaks helps maintain focus and prevents eye strain.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with suggestions for break activities.",
+      "goal": "Send an encouraging break reminder via mobile push notification: 'Time for a quick break! \ud83e\uddd8 Stand up, stretch, or step away from your screen for 5 minutes. Taking regular breaks helps maintain focus and prevents eye strain.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with suggestions for break activities.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -156,7 +156,7 @@
       "tags": [
         "Reminders"
       ],
-      "goal": "Send a gratitude reminder via mobile push notification: 'What are you grateful for today? ✨ Take a moment to appreciate three good things that happened. Practicing gratitude helps improve mental wellness and cultivate a positive mindset.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with mindfulness prompts.",
+      "goal": "Send a gratitude reminder via mobile push notification: 'What are you grateful for today? \u2728 Take a moment to appreciate three good things that happened. Practicing gratitude helps improve mental wellness and cultivate a positive mindset.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with mindfulness prompts.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -170,7 +170,7 @@
       "tags": [
         "Reminders"
       ],
-      "goal": "Send a motivational fitness reminder via mobile push notification: 'Time to move your body! 💪 Even 10 minutes of activity makes a difference. Whether it's a quick walk, some stretches, or a full workout, your body will thank you.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with encouraging fitness motivation.",
+      "goal": "Send a motivational fitness reminder via mobile push notification: 'Time to move your body! \ud83d\udcaa Even 10 minutes of activity makes a difference. Whether it's a quick walk, some stretches, or a full workout, your body will thank you.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with encouraging fitness motivation.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -184,7 +184,7 @@
       "tags": [
         "Reminders"
       ],
-      "goal": "Send a critical medication reminder for '{{ variables['Medication Name'] }}'. Use NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '💊 MEDICATION REMINDER: Time to take your {{ variables['Medication Name'] }}. Don't skip your dose! Consistent medication adherence is important for your health. Take care!'. If WhatsApp fails, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Medication Reminder 💊' and body '⚕️ MEDICATION REMINDER: Time to take your {{ variables['Medication Name'] }}. Don't skip your dose!'",
+      "goal": "Send a critical medication reminder for '{{ variables['Medication Name'] }}'. Use NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '\ud83d\udc8a MEDICATION REMINDER: Time to take your {{ variables['Medication Name'] }}. Don't skip your dose! Consistent medication adherence is important for your health. Take care!'. If WhatsApp fails, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Medication Reminder \ud83d\udc8a' and body '\u2695\ufe0f MEDICATION REMINDER: Time to take your {{ variables['Medication Name'] }}. Don't skip your dose!'",
       "variable_names": [
         "Medication Name"
       ],
@@ -200,7 +200,7 @@
       "tags": [
         "Reminders"
       ],
-      "goal": "Send a goal check-in prompt via mobile push notification: 'How are your goals coming along today? 🎯 Take a moment to review your progress and plan your next steps. Small daily actions lead to big achievements!' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with motivational productivity messages.",
+      "goal": "Send a goal check-in prompt via mobile push notification: 'How are your goals coming along today? \ud83c\udfaf Take a moment to review your progress and plan your next steps. Small daily actions lead to big achievements!' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with motivational productivity messages.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -214,7 +214,7 @@
       "tags": [
         "Reminders"
       ],
-      "goal": "Send a posture awareness reminder via mobile push notification: 'Posture check! 🪑 Sit up straight, relax your shoulders, and adjust your screen height. Good posture prevents back pain and helps you stay comfortable during work.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with ergonomic health tips.",
+      "goal": "Send a posture awareness reminder via mobile push notification: 'Posture check! \ud83e\ude91 Sit up straight, relax your shoulders, and adjust your screen height. Good posture prevents back pain and helps you stay comfortable during work.' Use NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with ergonomic health tips.",
       "variable_names": [],
       "required_app_names": [
         "NOTIFYME"
@@ -245,7 +245,7 @@
       "tags": [
         "Monitoring"
       ],
-      "goal": "Monitor the website '{{ variables['Website URL'] }}' for availability and performance issues. Use IP_TOOLS functions to perform regular health checks including: 1) HTTP response status verification, 2) Response time measurement, 3) SSL certificate validation, 4) DNS resolution checks. If any issues are detected (site down, slow response >5 seconds, SSL expiring within 30 days), immediately send alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '🚨 Website Alert: {{ variables['Website URL'] }} is experiencing issues. Status: [status], Response time: [time]ms. Check immediately!' If WhatsApp fails, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Website Down Alert 🚨' and body 'Site issues detected for {{ variables['Website URL'] }}'.",
+      "goal": "Monitor the website '{{ variables['Website URL'] }}' for availability and performance issues. Use IP_TOOLS functions to perform regular health checks including: 1) HTTP response status verification, 2) Response time measurement, 3) SSL certificate validation, 4) DNS resolution checks. If any issues are detected (site down, slow response >5 seconds, SSL expiring within 30 days), immediately send alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '\ud83d\udea8 Website Alert: {{ variables['Website URL'] }} is experiencing issues. Status: [status], Response time: [time]ms. Check immediately!' If WhatsApp fails, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Website Down Alert \ud83d\udea8' and body 'Site issues detected for {{ variables['Website URL'] }}'.",
       "variable_names": [
         "Website URL"
       ],
@@ -294,7 +294,7 @@
       "tags": [
         "Entertainment"
       ],
-      "goal": "Fetch a random joke from JOKES_API and deliver it via mobile push notification. Use JOKES_API to get a clean, family-friendly joke. Keep the notification short. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Daily Joke 😄' and the joke content formatted concisely with emojis.",
+      "goal": "Fetch a random joke from JOKES_API and deliver it via mobile push notification. Use JOKES_API to get a clean, family-friendly joke. Keep the notification short. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Daily Joke \ud83d\ude04' and the joke content formatted concisely with emojis.",
       "variable_names": [],
       "required_app_names": [
         "JOKE_API",
@@ -355,7 +355,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Fetch live cricket matches and scores using CRICBUZZ__GET_LIVE_MATCHES. Format the results into an engaging summary including match status, current scores, key player performances, and match highlights. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Live Cricket Updates 🏏' and comprehensive score updates with team names, overs played, and match situation for immediate awareness of ongoing cricket action.",
+      "goal": "Fetch live cricket matches and scores using CRICBUZZ__GET_LIVE_MATCHES. Format the results into an engaging summary including match status, current scores, key player performances, and match highlights. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Live Cricket Updates \ud83c\udfcf' and comprehensive score updates with team names, overs played, and match situation for immediate awareness of ongoing cricket action.",
       "variable_names": [],
       "required_app_names": [
         "CRICBUZZ",
@@ -385,7 +385,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Find current live matches using CRICBUZZ__GET_LIVE_MATCHES and get squad information using CRICBUZZ__GET_SQUADS for the most recent match. If no live matches, use SEARXNG to search for 'latest cricket squad announcements' as backup. Create a summary of team selections, key players, and any squad changes. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Cricket Squad Update 🏏' and player lineup information.",
+      "goal": "Find current live matches using CRICBUZZ__GET_LIVE_MATCHES and get squad information using CRICBUZZ__GET_SQUADS for the most recent match. If no live matches, use SEARXNG to search for 'latest cricket squad announcements' as backup. Create a summary of team selections, key players, and any squad changes. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Cricket Squad Update \ud83c\udfcf' and player lineup information.",
       "variable_names": [],
       "required_app_names": [
         "CRICBUZZ",
@@ -401,7 +401,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Find recent matches using CRICBUZZ__GET_LIVE_MATCHES and get detailed scorecard using CRICBUZZ__GET_FULL_SCORECARD for the most recent completed match. If no recent matches found, use SEARXNG to search for 'latest cricket match results scorecard' as backup. Extract batting and bowling statistics, key performances, and match highlights. Send comprehensive scorecard summary via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Latest Cricket Scorecard 🏏' including top performers and match result.",
+      "goal": "Find recent matches using CRICBUZZ__GET_LIVE_MATCHES and get detailed scorecard using CRICBUZZ__GET_FULL_SCORECARD for the most recent completed match. If no recent matches found, use SEARXNG to search for 'latest cricket match results scorecard' as backup. Extract batting and bowling statistics, key performances, and match highlights. Send comprehensive scorecard summary via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Latest Cricket Scorecard \ud83c\udfcf' including top performers and match result.",
       "variable_names": [],
       "required_app_names": [
         "CRICBUZZ",
@@ -433,7 +433,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Get the next upcoming international match using CRICBUZZ__GET_UPCOMING_SCHEDULE. If no matches found, use SEARXNG to search for 'next international cricket match' as backup. Create alert about the upcoming match including teams, format, venue, and start time. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Next Cricket Match 🏏' and message containing match details with teams, format, and timing. Include series context for engaging cricket alerts.",
+      "goal": "Get the next upcoming international match using CRICBUZZ__GET_UPCOMING_SCHEDULE. If no matches found, use SEARXNG to search for 'next international cricket match' as backup. Create alert about the upcoming match including teams, format, venue, and start time. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Next Cricket Match \ud83c\udfcf' and message containing match details with teams, format, and timing. Include series context for engaging cricket alerts.",
       "variable_names": [],
       "required_app_names": [
         "CRICBUZZ",
@@ -467,7 +467,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Find upcoming matches for '{{ variables['Team Name'] }}' using CRICBUZZ__GET_UPCOMING_SCHEDULE. Search through the schedule to identify matches where {{ variables['Team Name'] }} is playing. If no matches found in Cricbuzz, use SEARXNG to search for '{{ variables['Team Name'] }} next cricket match' as backup. Create personalized match reminder with opponent, match format, venue, date and time. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Team Name'] }} Match Alert 🏏' and message containing next match details, countdown, and viewing information.",
+      "goal": "Find upcoming matches for '{{ variables['Team Name'] }}' using CRICBUZZ__GET_UPCOMING_SCHEDULE. Search through the schedule to identify matches where {{ variables['Team Name'] }} is playing. If no matches found in Cricbuzz, use SEARXNG to search for '{{ variables['Team Name'] }} next cricket match' as backup. Create personalized match reminder with opponent, match format, venue, date and time. Send via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Team Name'] }} Match Alert \ud83c\udfcf' and message containing next match details, countdown, and viewing information.",
       "variable_names": [
         "Team Name"
       ],
@@ -485,7 +485,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Check if '{{ variables['Favorite Team'] }}' is currently playing using CRICBUZZ__GET_LIVE_MATCHES. Filter live matches to find games involving {{ variables['Favorite Team'] }}. If team is playing, get detailed match information and current score. If not currently playing, use SEARXNG to search for '{{ variables['Favorite Team'] }} latest match result' for recent performance. Send focused team update via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Favorite Team'] }} Live Update 🏏' including current score, match situation, key performances, and match status specifically for your team.",
+      "goal": "Check if '{{ variables['Favorite Team'] }}' is currently playing using CRICBUZZ__GET_LIVE_MATCHES. Filter live matches to find games involving {{ variables['Favorite Team'] }}. If team is playing, get detailed match information and current score. If not currently playing, use SEARXNG to search for '{{ variables['Favorite Team'] }} latest match result' for recent performance. Send focused team update via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Favorite Team'] }} Live Update \ud83c\udfcf' including current score, match situation, key performances, and match status specifically for your team.",
       "variable_names": [
         "Favorite Team"
       ],
@@ -503,7 +503,7 @@
       "tags": [
         "Sports"
       ],
-      "goal": "Generate detailed performance report for '{{ variables['Team Name'] }}' by searching recent matches in CRICBUZZ__GET_UPCOMING_SCHEDULE and checking current status in CRICBUZZ__GET_LIVE_MATCHES. Use SEARXNG to search for '{{ variables['Team Name'] }} cricket recent performance statistics' to get additional context. Analyze recent form, key player performances, win-loss record, and upcoming challenges. Create comprehensive team report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Recent Match Results, ## Key Player Stats, ## Team Strengths/Weaknesses, ## Upcoming Fixtures, and ## Performance Trends. Format the report as a PDF and send it via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Cricket Team Performance Report 🏏 - {{ variables['Team Name'] }} analysis completed' and artifact_id for the PDF attachment. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_EMAIL with subject '{{ variables['Team Name'] }} Performance Report' and the PDF attachment.",
+      "goal": "Generate detailed performance report for '{{ variables['Team Name'] }}' by searching recent matches in CRICBUZZ__GET_UPCOMING_SCHEDULE and checking current status in CRICBUZZ__GET_LIVE_MATCHES. Use SEARXNG to search for '{{ variables['Team Name'] }} cricket recent performance statistics' to get additional context. Analyze recent form, key player performances, win-loss record, and upcoming challenges. Create comprehensive team report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for: # Recent Match Results, ## Key Player Stats, ## Team Strengths/Weaknesses, ## Upcoming Fixtures, and ## Performance Trends. Format the report as a PDF and send it via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Cricket Team Performance Report \ud83c\udfcf - {{ variables['Team Name'] }} analysis completed' and artifact_id for the PDF attachment. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_EMAIL with subject '{{ variables['Team Name'] }} Performance Report' and the PDF attachment.",
       "variable_names": [
         "Team Name"
       ],
@@ -556,7 +556,7 @@
       "tags": [
         "YouTube"
       ],
-      "goal": "Monitor trending YouTube topics and content for real-time viral alerts. STEP 1 - Trend Discovery: Use YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS with trending parameters to identify currently popular videos and topics. STEP 2 - Viral Detection: Analyze view velocity, comment engagement, and sharing patterns to identify truly viral content. STEP 3 - Category Analysis: Categorize trending content by topic areas (entertainment, technology, news, gaming, etc.) to understand trend patterns. STEP 4 - Instant Alerts: Send immediate notifications via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Viral YouTube Alert 🔥 - {video_title} - {view_count} views - {trend_category} - {video_url}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Viral YouTube Alert 🔥' including view count, trend category, and direct link. STEP 5 - Daily Summary: Send comprehensive trending report via NOTIFYME__SEND_ME_EMAIL with subject 'Daily YouTube Trends Report' including top trending videos, emerging topics, and trend analysis insights.",
+      "goal": "Monitor trending YouTube topics and content for real-time viral alerts. STEP 1 - Trend Discovery: Use YOUTUBE_UNOFFICIAL__SEARCH_VIDEOS with trending parameters to identify currently popular videos and topics. STEP 2 - Viral Detection: Analyze view velocity, comment engagement, and sharing patterns to identify truly viral content. STEP 3 - Category Analysis: Categorize trending content by topic areas (entertainment, technology, news, gaming, etc.) to understand trend patterns. STEP 4 - Instant Alerts: Send immediate notifications via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Viral YouTube Alert \ud83d\udd25 - {video_title} - {view_count} views - {trend_category} - {video_url}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Viral YouTube Alert \ud83d\udd25' including view count, trend category, and direct link. STEP 5 - Daily Summary: Send comprehensive trending report via NOTIFYME__SEND_ME_EMAIL with subject 'Daily YouTube Trends Report' including top trending videos, emerging topics, and trend analysis insights.",
       "variable_names": [],
       "required_app_names": [
         "YOUTUBE_UNOFFICIAL",
@@ -589,7 +589,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/tanki-news.png?raw=true",
       "description": "Creates a daily digest of the latest Tanki Online game news and updates, summarizing the top stories for players.",
       "tags": [
-        "Gaming"
+        "Gaming",
+        "Browser Automation"
       ],
       "goal": "Visit https://tankionline.com/en/news/ and extract the top 3 latest news articles. For each news item, gather the title, publication date, and a brief summary of the content. Create a comprehensive digest that includes: 1) Overview of current game updates and events, 2) Detailed summaries of each of the top 3 news items with key highlights, 3) Any upcoming events or important announcements. Format this as an engaging email digest and send it to the user via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Tanki Online News Digest - [Current Date]' including game update highlights and player-relevant information. USE run_browser_automation to perform the web scraping.",
       "variable_names": [],
@@ -604,7 +605,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/tanki-patch.png?raw=true",
       "description": "Checks the Tanki Online forums for the latest patch updates from this week and sends a comprehensive summary of new features, changes, and fixes.",
       "tags": [
-        "Gaming"
+        "Gaming",
+        "Browser Automation"
       ],
       "goal": "Visit https://en.tankiforum.com/search/?&q=patch%20update&type=forums_topic&quick=1&nodes=118&start_after=week&sortby=relevancy to find the latest patch update threads from this week. Extract the most recent patch update post including: 1) Patch version number and release date, 2) Major new features and additions, 3) Balance changes and gameplay modifications, 4) Bug fixes and technical improvements, 5) Known issues and upcoming fixes. Create a comprehensive summary highlighting the most important changes for players. Send the patch update summary via NOTIFYME__SEND_ME_EMAIL with subject 'Tanki Online Weekly Patch Update - [Current Date]' including detailed breakdown of all changes and player impact assessment. Use run_browser_automation to perform the web scraping.",
       "variable_names": [],
@@ -619,7 +621,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/amazon_price_alert.png?raw=true",
       "description": "Monitor an Amazon product price and get notified when it drops below your target price",
       "tags": [
-        "Shopping"
+        "Shopping",
+        "Browser Automation"
       ],
       "goal": "You are monitoring an Amazon product for price drops. The product URL is '{{ variables['Product URL'] }}' and the target price is '{{ variables['Target Price'] }}'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape the Amazon product page with extraction_instructions: 'Extract the product name, current price (main price element in the product details section), any discount information, and availability status. Focus on the primary price displayed prominently near the buy button.' Compare the extracted current price to the target price. If the current price is below the target, use the NOTIFYME app to send an immediate email notification and mobile notification, with the product name, current price, URL, and savings amount. If the price is not below target, do nothing. Log the current price for tracking. Run this check daily.",
       "variable_names": [
@@ -637,7 +640,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/daraz_price_alert.jpg?raw=true",
       "description": "Monitor a Daraz.pk product price and get notified when it drops below your target price",
       "tags": [
-        "Shopping"
+        "Shopping",
+        "Browser Automation"
       ],
       "goal": "You are monitoring a Daraz.pk product for price drops. The product URL is '{{ variables['Product URL'] }}' and the target price is '{{ variables['Target Price'] }}'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape the Daraz product page with extraction_instructions: 'Extract the product name, current price (prominently displayed near the title, marked with Rs.), any discount percentage, original price if on sale, and stock availability. Focus on the main price element in Pakistani Rupees.' Compare the extracted current price to the target price. If the current price is below the target, use the NOTIFYME app to send an immediate email notification and mobile notification, with the product name, current price, URL, and savings amount. If the price is not below target, do nothing. Log the current price for tracking. Run this check daily.",
       "variable_names": [
@@ -655,7 +659,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/noon_price_alert.jpg?raw=true",
       "description": "Monitor a Noon.com product price and get notified when it drops below your target price",
       "tags": [
-        "Shopping"
+        "Shopping",
+        "Browser Automation"
       ],
       "goal": "You are monitoring a Noon.com product for price drops. The product URL is '{{ variables['Product URL'] }}' and the target price is '{{ variables['Target Price'] }}'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape the Noon product page with extraction_instructions: 'Extract the product name, current price (displayed in large font with local currency like AED, SAR, or EGP), any promotional pricing, discount percentage, and stock status. Focus on the primary price element with the local currency symbol.' Compare the extracted current price to the target price. If the current price is below the target, use the NOTIFYME app to send an immediate email notification and mobile notification, with the product name, current price, URL, and savings amount. If the price is not below target, do nothing. Log the current price for tracking. Run this check daily.",
       "variable_names": [
@@ -673,9 +678,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/amazon_deals_digest.png?raw=true",
       "description": "Get a daily digest of Amazon deals tailored to your chosen keywords or category.",
       "tags": [
-        "Shopping"
+        "Shopping",
+        "Browser Automation"
       ],
-      "goal": "You are fetching Amazon's deal page from 'https://www.amazon.com/gp/goldbox'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape the page with extraction_instructions: 'Extract all deals that match the keyword {{ variables['Deal Keyword'] }}. For each relevant deal, extract the deal title, current price, original price, discount percentage, deal duration/time remaining, and product link. Focus on deals with the highest discounts and best relevance to the keyword.' From the extracted deals, select the top 3–5 best deals based on highest discount and relevance. Format them into a short digest-style summary and send email with the NOTIFYME app. If no relevant deals are found, send a brief email saying no new deals today.",
+      "goal": "You are fetching Amazon's deal page from 'https://www.amazon.com/gp/goldbox'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape the page with extraction_instructions: 'Extract all deals that match the keyword {{ variables['Deal Keyword'] }}. For each relevant deal, extract the deal title, current price, original price, discount percentage, deal duration/time remaining, and product link. Focus on deals with the highest discounts and best relevance to the keyword.' From the extracted deals, select the top 3\u20135 best deals based on highest discount and relevance. Format them into a short digest-style summary and send email with the NOTIFYME app. If no relevant deals are found, send a brief email saying no new deals today.",
       "variable_names": [
         "Deal Keyword"
       ],
@@ -688,9 +694,10 @@
     {
       "name": "Air Quality Tracker",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/air_quality_tracker.jpeg?raw=true",
-      "description": "Track your city’s air quality index (AQI) daily and get a digest of the latest status (Good, Moderate, Unhealthy, etc.).",
+      "description": "Track your city\u2019s air quality index (AQI) daily and get a digest of the latest status (Good, Moderate, Unhealthy, etc.).",
       "tags": [
-        "Environment"
+        "Environment",
+        "Browser Automation"
       ],
       "goal": "Go to https://aqicn.org/search/#q={{ variables['City Name'] }} and search for the city '{{ variables['City Name'] }}'. From the resulting page, extract the current AQI value and status label (e.g., 'Good', 'Moderate', 'Unhealthy'). Create a nicely formatted email with subject 'Daily Air Quality Report for {{ variables['City Name'] }}' and body including: a header with the city name, the AQI value prominently displayed, the status with appropriate color coding (green for Good, yellow for Moderate, red for Unhealthy), and a brief explanation of what the status means. If data cannot be retrieved, send an email with subject 'Air Quality Data Unavailable' and a polite message explaining the issue. Use the NOTIFYME app to send the daily email to the user.",
       "variable_names": [
@@ -707,9 +714,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/weather_snapshot.png?raw=true",
       "description": "Get daily weather updates (temperature, condition, humidity) for your chosen city.",
       "tags": [
-        "Environment"
+        "Environment",
+        "Browser Automation"
       ],
-      "goal": "Go to https://openweathermap.org/find?q={{ variables['City Name'] }}. From the resulting page, extract the city’s current temperature, weather condition (e.g., 'Sunny', 'Cloudy'), and humidity. Summarize the info'. Use the NOTIFYME app to send a daily email with this info and also send a short notification like 'Weather in X: Y°C, Z'. If data cannot be retrieved, notify the user that no weather data is available today.",
+      "goal": "Go to https://openweathermap.org/find?q={{ variables['City Name'] }}. From the resulting page, extract the city\u2019s current temperature, weather condition (e.g., 'Sunny', 'Cloudy'), and humidity. Summarize the info'. Use the NOTIFYME app to send a daily email with this info and also send a short notification like 'Weather in X: Y\u00b0C, Z'. If data cannot be retrieved, notify the user that no weather data is available today.",
       "variable_names": [
         "City Name"
       ],
@@ -724,7 +732,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/earthquake_alert.png?raw=true",
       "description": "Get daily earthquake updates for your chosen city and country.",
       "tags": [
-        "Environment"
+        "Environment",
+        "Browser Automation"
       ],
       "goal": "Go to https://earthquaketrack.com/search?q={{ variables['Country'] }},{{ variables['City'] }}. From the resulting page, extract the earthquakes reported in the last 24 hours, including magnitude, location, and time. Summarize in plain text: 'X earthquakes near City, Country in last 24h: [list]'. Use the NOTIFYME app to send a daily email with the summary and also a short notification like 'Latest quake near City: Mx.x at Time'. If data cannot be retrieved, notify the user that no earthquake data is available for today.",
       "variable_names": [
@@ -742,7 +751,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/package_tracking.png?raw=true",
       "description": "Track your packages from USPS, FedEx, DHL, or DHL eCommerce using the tracking number without needing to log in.",
       "tags": [
-        "Shopping"
+        "Shopping",
+        "Browser Automation"
       ],
       "goal": "Track packages using the tracking number {{ variables['Tracking Number'] }} for carrier {{ variables['Carrier'] }}. Build the appropriate tracking URL based on the carrier: USPS - https://tools.usps.com/go/TrackConfirmAction_input?origTrackNum={{ variables['Tracking Number'] }}, FedEx - https://www.fedex.com/apps/fedextrack/?tracknumbers={{ variables['Tracking Number'] }}, DHL - https://www.dhl.com/global-en/home/tracking.html?tracking-id={{ variables['Tracking Number'] }}, DHL eCommerce - https://webtrack.dhlglobalmail.com/?trackingnumber={{ variables['Tracking Number'] }}. Use BROWSER__SCRAPE_WITH_BROWSER to scrape the tracking page with extraction_instructions: 'Extract package tracking information including current status (delivered, in transit, out for delivery, etc.), current location, estimated delivery date, tracking history with timestamps, sender and recipient information if available, and any delivery exceptions or delays. Focus on the main tracking details and status updates.' Parse the extracted information to identify the most recent status and location. Use the NOTIFYME app to send a notification with the latest tracking update including status, location, and estimated delivery. If tracking data cannot be retrieved, notify the user that tracking information is unavailable.",
       "variable_names": [
@@ -775,7 +785,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/generic_shopping_alert.png?raw=true",
       "description": "Monitor any product on almost any e-commerce site. Get an instant notification the moment an out-of-stock item is available to buy.",
       "tags": [
-        "Shopping"
+        "Shopping",
+        "Browser Automation"
       ],
       "goal": "You are an expert e-commerce analyst. Your task is to determine the real-time stock status of a product on any given retail website using its URL. Use BROWSER__SCRAPE_WITH_BROWSER to scrape the provided 'Product URL' with extraction_instructions: 'Extract stock availability information from the main buy box area near the product title, images, and price. Look for explicit stock indicators such as Out of Stock, Sold Out, Currently Unavailable, In Stock, Available, or Add to Cart buttons. Also extract button states (enabled/disabled/greyed out), quantity selectors, delivery availability, and any stock-related messages. IGNORE stock mentions in user reviews, Q&A sections, or related products to avoid false positives. Focus only on the primary product purchase area.' Analyze the extracted content to determine if the item is definitively 'In Stock' (active purchase options available) or 'Out of Stock' (no purchase options or explicit unavailability messages). Maintain a memory of the item's last known status. If the previous status was 'Out of Stock' and the current status is now definitively 'In Stock', send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Restock Alert! The item is back in stock! {{ variables['Product URL'] }}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Restock Alert!' and message 'The item is back in stock! {{ variables['Product URL'] }}'. If the status has not changed, do nothing.",
       "variable_names": [
@@ -808,7 +819,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/github_trending.png?raw=true",
       "description": "Daily digest of today's trending GitHub repositories with descriptions, stars, and programming languages.",
       "tags": [
-        "Developer Tools"
+        "Developer Tools",
+        "Browser Automation"
       ],
       "goal": "Use the BROWSER__SCRAPE_WITH_BROWSER function to scrape 'https://github.com/trending' with extraction_instructions focused on extracting trending repository data. Extract the top 10-15 repositories with details including: repository name, author/organization, description, programming language, current star count, stars gained today, number of forks, and GitHub URL. Organize this data into a comprehensive digest and use the NOTIFYME app to send an email with the subject 'GitHub Trending Today - [Current Date]'. The email should include: 1) A brief introduction about today's trending repositories, 2) A well-formatted list of repositories with complete details for each (name, language, stars, today's growth, description), 3) Clickable GitHub URLs for each repository, 4) A footer encouraging exploration of interesting projects. Highlight the most promising and innovative repositories with additional context about their potential impact.",
       "variable_names": [],
@@ -825,7 +837,7 @@
       "tags": [
         "Education"
       ],
-      "goal": "Use the HTTP_TOOLS app to fetch content from 'https://www.brainyquote.com/quote_of_the_day' and extract the daily featured quote. From the fetched content, identify and extract the quote text and the author's name. Look for the main quote section which typically contains the quote text and attribution. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Daily Brainy Quote 💭 - \"{quote}\" - {author}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with the title 'Daily Brainy Quote 💭' and include the quote text followed by the author's name in a clean, readable format like: '[Quote text]' - Author Name. Keep the notification concise and inspiring. If the quote extraction fails, send a brief notification saying 'Quote of the day unavailable today' with an encouraging backup message.",
+      "goal": "Use the HTTP_TOOLS app to fetch content from 'https://www.brainyquote.com/quote_of_the_day' and extract the daily featured quote. From the fetched content, identify and extract the quote text and the author's name. Look for the main quote section which typically contains the quote text and attribution. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Daily Brainy Quote \ud83d\udcad - \"{quote}\" - {author}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with the title 'Daily Brainy Quote \ud83d\udcad' and include the quote text followed by the author's name in a clean, readable format like: '[Quote text]' - Author Name. Keep the notification concise and inspiring. If the quote extraction fails, send a brief notification saying 'Quote of the day unavailable today' with an encouraging backup message.",
       "variable_names": [],
       "required_app_names": [
         "HTTP_TOOLS",
@@ -877,7 +889,7 @@
       "tags": [
         "Monitoring"
       ],
-      "goal": "Perform comprehensive uptime and performance monitoring for your website '{{ variables['Your Website URL'] }}' and competitor websites. STEP 1 - Primary Site Check: Use IP_TOOLS__CHECK_WEBSITE_STATUS to monitor your main website '{{ variables['Your Website URL'] }}', recording HTTP status code, response time, and availability status. Set timeout to 10 seconds for reliable testing. STEP 2 - Competitor Analysis: Parse the comma-separated list '{{ variables['Competitor URLs'] }}' to extract individual competitor URLs. For each competitor website, use IP_TOOLS__CHECK_WEBSITE_STATUS to gather comparative performance data including status codes, load times, and uptime status. Handle cases where no competitor URLs are provided. STEP 3 - Performance Comparison: Analyze response times across all monitored sites to identify performance leaders and laggers. Calculate average response times and identify any sites experiencing issues (4xx/5xx status codes or timeouts). Compare your website's performance against competitors. STEP 4 - Professional Report Generation: Create comprehensive uptime report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown syntax including: # Executive Summary, ## Your Website Performance (with status, response time, analysis), ## Competitor Performance Analysis (table format with | Site | Status | Response Time | Analysis |), ## Performance Comparison (rankings and insights), ## Issues Detected (any problems found), and ## Recommendations (performance improvement suggestions). Use proper Markdown headers, tables, and formatting. STEP 5 - Alert Generation: If your website shows issues (status code ≠ 200 or response time > 5 seconds), send immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '🚨 Website Down Alert: {{ variables['Your Website URL'] }} is experiencing issues. Status: {status_code}, Response time: {response_time}ms. Check immediately!'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with urgent status update including the specific issue detected. STEP 6 - Comprehensive Report: Send detailed uptime monitoring report via NOTIFYME__SEND_ME_EMAIL with subject 'Website Uptime Report - {{ variables['Your Website URL'] }}' including: status summary for all sites tested, performance comparison analysis with specific metrics, competitive insights and rankings, issues detected with actionable recommendations, and note that the complete professionally formatted PDF report is available for download in the app artifacts for detailed performance tracking and competitive analysis.",
+      "goal": "Perform comprehensive uptime and performance monitoring for your website '{{ variables['Your Website URL'] }}' and competitor websites. STEP 1 - Primary Site Check: Use IP_TOOLS__CHECK_WEBSITE_STATUS to monitor your main website '{{ variables['Your Website URL'] }}', recording HTTP status code, response time, and availability status. Set timeout to 10 seconds for reliable testing. STEP 2 - Competitor Analysis: Parse the comma-separated list '{{ variables['Competitor URLs'] }}' to extract individual competitor URLs. For each competitor website, use IP_TOOLS__CHECK_WEBSITE_STATUS to gather comparative performance data including status codes, load times, and uptime status. Handle cases where no competitor URLs are provided. STEP 3 - Performance Comparison: Analyze response times across all monitored sites to identify performance leaders and laggers. Calculate average response times and identify any sites experiencing issues (4xx/5xx status codes or timeouts). Compare your website's performance against competitors. STEP 4 - Professional Report Generation: Create comprehensive uptime report using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown syntax including: # Executive Summary, ## Your Website Performance (with status, response time, analysis), ## Competitor Performance Analysis (table format with | Site | Status | Response Time | Analysis |), ## Performance Comparison (rankings and insights), ## Issues Detected (any problems found), and ## Recommendations (performance improvement suggestions). Use proper Markdown headers, tables, and formatting. STEP 5 - Alert Generation: If your website shows issues (status code \u2260 200 or response time > 5 seconds), send immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '\ud83d\udea8 Website Down Alert: {{ variables['Your Website URL'] }} is experiencing issues. Status: {status_code}, Response time: {response_time}ms. Check immediately!'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with urgent status update including the specific issue detected. STEP 6 - Comprehensive Report: Send detailed uptime monitoring report via NOTIFYME__SEND_ME_EMAIL with subject 'Website Uptime Report - {{ variables['Your Website URL'] }}' including: status summary for all sites tested, performance comparison analysis with specific metrics, competitive insights and rankings, issues detected with actionable recommendations, and note that the complete professionally formatted PDF report is available for download in the app artifacts for detailed performance tracking and competitive analysis.",
       "variable_names": [
         "Your Website URL",
         "Competitor URLs"
@@ -980,7 +992,7 @@
       "tags": [
         "Education"
       ],
-      "goal": "Get Merriam-Webster's daily word and definition. Use HTTP_TOOLS__GET_URL to fetch content from 'https://www.merriam-webster.com/word-of-the-day' and extract the featured word and its definition. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Word of the Day 📚 - {word}: {definition}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Word of the Day 📚' including just the word and its meaning in a simple, clean format for quick vocabulary learning.",
+      "goal": "Get Merriam-Webster's daily word and definition. Use HTTP_TOOLS__GET_URL to fetch content from 'https://www.merriam-webster.com/word-of-the-day' and extract the featured word and its definition. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Word of the Day \ud83d\udcda - {word}: {definition}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Word of the Day \ud83d\udcda' including just the word and its meaning in a simple, clean format for quick vocabulary learning.",
       "variable_names": [],
       "required_app_names": [
         "HTTP_TOOLS",
@@ -995,7 +1007,7 @@
       "tags": [
         "Education"
       ],
-      "goal": "Discover fascinating historical events that occurred on today's date. Use HTTP_TOOLS__GET_URL to fetch content from 'https://www.onthisday.com' and extract the day's historical events, including major happenings, notable births, deaths, and significant milestones. Parse the content to identify the most interesting and educational events from various categories like politics, science, culture, and world events. Format the findings into an engaging and informative summary highlighting 5-7 key historical events with brief descriptions and their historical significance. STEP 1 - Send Quick Alert: Identify the most historically significant event from the extracted content and send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'On This Day 📅 - {date}: {event_summary}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'On This Day 📅 {date}' and a concise one-line summary of the most important event. STEP 2 - Detailed Email: Send a comprehensive historical digest via NOTIFYME__SEND_ME_EMAIL with subject 'On This Day in History - [Current Date]' including: a curated selection of the most fascinating events, brief context for each event's importance, diverse categories covering politics, science, culture, and world events, exact dates and years for historical accuracy, and educational insights about how these events shaped history. Keep the content engaging, educational, and well-formatted for an enriching daily history lesson.",
+      "goal": "Discover fascinating historical events that occurred on today's date. Use HTTP_TOOLS__GET_URL to fetch content from 'https://www.onthisday.com' and extract the day's historical events, including major happenings, notable births, deaths, and significant milestones. Parse the content to identify the most interesting and educational events from various categories like politics, science, culture, and world events. Format the findings into an engaging and informative summary highlighting 5-7 key historical events with brief descriptions and their historical significance. STEP 1 - Send Quick Alert: Identify the most historically significant event from the extracted content and send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'On This Day \ud83d\udcc5 - {date}: {event_summary}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'On This Day \ud83d\udcc5 {date}' and a concise one-line summary of the most important event. STEP 2 - Detailed Email: Send a comprehensive historical digest via NOTIFYME__SEND_ME_EMAIL with subject 'On This Day in History - [Current Date]' including: a curated selection of the most fascinating events, brief context for each event's importance, diverse categories covering politics, science, culture, and world events, exact dates and years for historical accuracy, and educational insights about how these events shaped history. Keep the content engaging, educational, and well-formatted for an enriching daily history lesson.",
       "variable_names": [],
       "required_app_names": [
         "HTTP_TOOLS",
@@ -1009,9 +1021,10 @@
       "description": "Real-time flight tracking with status updates including departure, arrival, delays, and gate information delivered via mobile notification.",
       "tags": [
         "Travel",
-        "Transportation"
+        "Transportation",
+        "Browser Automation"
       ],
-      "goal": "Track real-time flight status and provide instant updates. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.flightaware.com/live/flight/{{ variables['Flight Number'] }}' with extraction_instructions: 'Extract key flight information including current status (on time, delayed, cancelled), departure time, arrival time, gate numbers, delay duration if any, aircraft location, and flight phase (boarding, departed, en route, landed). Focus on the most critical status information for passenger alerts.' Parse the extracted content to identify the most important flight information. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Flight Update ✈️ - {{ variables['Flight Number'] }}: {status} - {details}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Flight {{ variables['Flight Number'] }} ✈️' and a very brief summary with only the most critical info (e.g., 'On time - Gate A12' or 'Delayed 30min - Gate B5'). Keep the notification extremely short and focused on just the essential status.",
+      "goal": "Track real-time flight status and provide instant updates. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.flightaware.com/live/flight/{{ variables['Flight Number'] }}' with extraction_instructions: 'Extract key flight information including current status (on time, delayed, cancelled), departure time, arrival time, gate numbers, delay duration if any, aircraft location, and flight phase (boarding, departed, en route, landed). Focus on the most critical status information for passenger alerts.' Parse the extracted content to identify the most important flight information. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Flight Update \u2708\ufe0f - {{ variables['Flight Number'] }}: {status} - {details}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Flight {{ variables['Flight Number'] }} \u2708\ufe0f' and a very brief summary with only the most critical info (e.g., 'On time - Gate A12' or 'Delayed 30min - Gate B5'). Keep the notification extremely short and focused on just the essential status.",
       "variable_names": [
         "Flight Number"
       ],
@@ -1026,9 +1039,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/football_transfers.jpeg?raw=true",
       "description": "Monitors transfer rumors and news for specific football players, tracking potential moves between clubs and providing instant updates.",
       "tags": [
-        "Sports"
+        "Sports",
+        "Browser Automation"
       ],
-      "goal": "Monitor football transfer rumors for specific players using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.espn.in/football/transfers-news-and-features/' with extraction_instructions focused on finding transfer news about {{ variables['Player Names'] }}. Extract player names, current clubs, rumored destinations, transfer fees, source reliability, and article headlines. Look for recent credible transfer rumors and news. Send comprehensive transfer updates via NOTIFYME__SEND_ME_EMAIL with subject 'Transfer Alert: {{ variables['Player Names'] }} 🔄' including all relevant transfer details, source credibility, and potential move timelines. Focus on reliable sources and significant developments only.",
+      "goal": "Monitor football transfer rumors for specific players using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.espn.in/football/transfers-news-and-features/' with extraction_instructions focused on finding transfer news about {{ variables['Player Names'] }}. Extract player names, current clubs, rumored destinations, transfer fees, source reliability, and article headlines. Look for recent credible transfer rumors and news. Send comprehensive transfer updates via NOTIFYME__SEND_ME_EMAIL with subject 'Transfer Alert: {{ variables['Player Names'] }} \ud83d\udd04' including all relevant transfer details, source credibility, and potential move timelines. Focus on reliable sources and significant developments only.",
       "variable_names": [
         "Player Names"
       ],
@@ -1043,9 +1057,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/football_schedule.jpeg?raw=true",
       "description": "Checks today's football matches and sends notifications for specific teams or leagues you're following.",
       "tags": [
-        "Sports"
+        "Sports",
+        "Browser Automation"
       ],
-      "goal": "Check today's football matches using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.espn.com/soccer/schedule' with extraction_instructions to find all matches scheduled for today. Look for matches involving {{ variables['Team/League Name'] }} if specified, or get all today's matches. Extract match details including teams, kick-off times, league/competition, and match status. If matches are found for the specified team/league or if no filter is specified and there are matches today, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Football Today ⚽ - {count} matches scheduled - {brief summary of key matches with times}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Football Today ⚽' and a concise summary of relevant matches with times and teams. Keep the notification short and focused on today's action only.",
+      "goal": "Check today's football matches using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.espn.com/soccer/schedule' with extraction_instructions to find all matches scheduled for today. Look for matches involving {{ variables['Team/League Name'] }} if specified, or get all today's matches. Extract match details including teams, kick-off times, league/competition, and match status. If matches are found for the specified team/league or if no filter is specified and there are matches today, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Football Today \u26bd - {count} matches scheduled - {brief summary of key matches with times}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Football Today \u26bd' and a concise summary of relevant matches with times and teams. Keep the notification short and focused on today's action only.",
       "variable_names": [
         "Team/League Name"
       ],
@@ -1060,9 +1075,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/stock_dividend.jpeg?raw=true",
       "description": "Checks if your stock paid dividends today and sends instant notifications with dividend amount and payment details.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Check if stock {{ variables['Stock Symbol'] }} paid dividends today using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://dividendhistory.org/payout/{{ variables['Stock Symbol'] }}/' with extraction_instructions to find recent dividend payments. Look specifically for today's date in the dividend payment table and extract dividend amount, ex-dividend date, and payment date if a dividend was paid today. Also check the dividend announcement section for any dividends with payment dates matching today. If a dividend payment is found for today, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Dividend Alert: {{ variables['Stock Symbol'] }} 💰 - Dividend amount: {dividend_amount}, Payment date: {payment_date}, Ex-dividend date: {ex_dividend_date}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Dividend Alert: {{ variables['Stock Symbol'] }} 💰' and details including dividend amount per share and payment confirmation. If no dividend was paid today, do nothing to avoid unnecessary notifications.",
+      "goal": "Check if stock {{ variables['Stock Symbol'] }} paid dividends today using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://dividendhistory.org/payout/{{ variables['Stock Symbol'] }}/' with extraction_instructions to find recent dividend payments. Look specifically for today's date in the dividend payment table and extract dividend amount, ex-dividend date, and payment date if a dividend was paid today. Also check the dividend announcement section for any dividends with payment dates matching today. If a dividend payment is found for today, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Dividend Alert: {{ variables['Stock Symbol'] }} \ud83d\udcb0 - Dividend amount: {dividend_amount}, Payment date: {payment_date}, Ex-dividend date: {ex_dividend_date}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Dividend Alert: {{ variables['Stock Symbol'] }} \ud83d\udcb0' and details including dividend amount per share and payment confirmation. If no dividend was paid today, do nothing to avoid unnecessary notifications.",
       "variable_names": [
         "Stock Symbol"
       ],
@@ -1077,9 +1093,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/insider_trading.png?raw=true",
       "description": "Monitors insider trading activity for specific stocks and sends alerts when executives, directors, or major shareholders buy or sell shares today.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Check if there were insider trades for stock {{ variables['Stock Symbol'] }} today using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.quiverquant.com/stock/{{ variables['Stock Symbol'] }}/insiders/' with extraction_instructions to find recent insider trading activity. Look specifically for today's date in the insider transactions table and extract insider name, position/title, transaction type (buy/sell), number of shares, transaction value, and filing date if any insider trades occurred today. Focus on the most recent transactions table and any trades with today's date. If insider trading activity is found for today, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Insider Alert: {{ variables['Stock Symbol'] }} 📊 - Insider: {insider_name}, Position: {position}, Type: {transaction_type}, Shares: {share_count}, Value: {transaction_value}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Insider Alert: {{ variables['Stock Symbol'] }} 📊' and details including insider name, transaction type, share count, and transaction value. If no insider trades occurred today, do nothing to avoid unnecessary notifications.",
+      "goal": "Check if there were insider trades for stock {{ variables['Stock Symbol'] }} today using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.quiverquant.com/stock/{{ variables['Stock Symbol'] }}/insiders/' with extraction_instructions to find recent insider trading activity. Look specifically for today's date in the insider transactions table and extract insider name, position/title, transaction type (buy/sell), number of shares, transaction value, and filing date if any insider trades occurred today. Focus on the most recent transactions table and any trades with today's date. If insider trading activity is found for today, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Insider Alert: {{ variables['Stock Symbol'] }} \ud83d\udcca - Insider: {insider_name}, Position: {position}, Type: {transaction_type}, Shares: {share_count}, Value: {transaction_value}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Insider Alert: {{ variables['Stock Symbol'] }} \ud83d\udcca' and details including insider name, transaction type, share count, and transaction value. If no insider trades occurred today, do nothing to avoid unnecessary notifications.",
       "variable_names": [
         "Stock Symbol"
       ],
@@ -1094,7 +1111,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/product_hunt_digest.png?raw=true",
       "description": "Daily digest of the top 5 product launches from Product Hunt with summaries, voting counts, and direct links to help you discover innovative new products.",
       "tags": [
-        "Productivity"
+        "Productivity",
+        "Browser Automation"
       ],
       "goal": "Visit Product Hunt daily to discover the top 5 product launches using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.producthunt.com/' with extraction_instructions to find today's top 5 featured products. Extract product name, description/tagline, number of upvotes, maker/company name, product category, and Product Hunt URL for each of the top 5 launches. Focus on the main product listings that appear on the homepage with voting counts and brief descriptions. Organize this information into a comprehensive daily digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Product Hunt Daily Digest - Top 5 Launches [Current Date]' including: structured product summaries with names and taglines, upvote counts and popularity metrics, maker information and company details, direct Product Hunt links for each product, category classifications, and brief analysis of trending product types. Format as an engaging email that highlights the most innovative and interesting launches of the day for product discovery and tech trend awareness.",
       "variable_names": [],
@@ -1109,7 +1127,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/huggingface_trending.png?raw=true",
       "description": "Daily digest of the top 10 trending AI models from Hugging Face with descriptions, download counts, and direct links to keep you updated on the latest AI breakthroughs.",
       "tags": [
-        "Technology"
+        "Technology",
+        "Browser Automation"
       ],
       "goal": "Visit Hugging Face to discover the top 10 trending AI models using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://huggingface.co/models?sort=trending' with extraction_instructions to find the top 10 trending models. Extract model name, author/organization, model description, model type/task (text generation, image classification, etc.), download count, likes count, and Hugging Face URL for each of the top 10 trending models. Focus on the main model listings with popularity metrics and brief descriptions. Organize this information into a comprehensive AI models digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Hugging Face Trending Models - Top 10 AI Breakthroughs [Current Date]' including: structured model summaries with names and descriptions, popularity metrics (downloads and likes), author/organization information, model capabilities and use cases, direct Hugging Face links for each model, categorization by AI task type, and brief analysis of trending AI technologies. Format as an engaging email that highlights the most innovative and popular AI models for researchers, developers, and AI enthusiasts.",
       "variable_names": [],
@@ -1124,9 +1143,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/stock_buybacks.png?raw=true",
       "description": "Tracks companies announcing stock buybacks in the past 10 days, extracts buyback details, and generates a CSV report for investment analysis.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Monitor recent stock buyback announcements using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.rttnews.com/corpinfo/stockbuybacks.aspx?PageNum=1' with extraction_instructions to find all buyback announcements from the past 10 days. Extract the following data for each announcement: date, company name, stock symbol, buyback amount, outstanding shares info, and news status. Look specifically for the table rows containing Date, Company, Symbol, Buyback, Outstanding, and News columns. Filter results to include only announcements from the last 10 days based on the date column. Use CSV_TOOLS to create a comprehensive buyback report with columns for Date, Company_Name, Stock_Symbol, Buyback_Amount, Outstanding_Shares, News_Status, and Analysis_Notes. Format the CSV data properly with headers and save as 'stock_buybacks_last_10_days.csv' for easy analysis and tracking. Send a brief notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Buyback Report Ready 📈' and message 'CSV report of recent stock buybacks is available for download in app artifacts' to alert when the report is generated. Focus on providing actionable investment intelligence about companies returning capital to shareholders.",
+      "goal": "Monitor recent stock buyback announcements using BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://www.rttnews.com/corpinfo/stockbuybacks.aspx?PageNum=1' with extraction_instructions to find all buyback announcements from the past 10 days. Extract the following data for each announcement: date, company name, stock symbol, buyback amount, outstanding shares info, and news status. Look specifically for the table rows containing Date, Company, Symbol, Buyback, Outstanding, and News columns. Filter results to include only announcements from the last 10 days based on the date column. Use CSV_TOOLS to create a comprehensive buyback report with columns for Date, Company_Name, Stock_Symbol, Buyback_Amount, Outstanding_Shares, News_Status, and Analysis_Notes. Format the CSV data properly with headers and save as 'stock_buybacks_last_10_days.csv' for easy analysis and tracking. Send a brief notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Buyback Report Ready \ud83d\udcc8' and message 'CSV report of recent stock buybacks is available for download in app artifacts' to alert when the report is generated. Focus on providing actionable investment intelligence about companies returning capital to shareholders.",
       "variable_names": [],
       "required_app_names": [
         "BROWSER",
@@ -1155,7 +1175,8 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/ai_leaderboard.png?raw=true",
       "description": "Weekly digest of top AI models across all LMSYS Arena leaderboards including text, vision, web development, and multimodal categories.",
       "tags": [
-        "Technology"
+        "Technology",
+        "Browser Automation"
       ],
       "goal": "Get comprehensive AI model rankings from LMSYS Arena leaderboards across all categories. STEP 1 - Text Models: Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://lmarena.ai/leaderboard/text' with extraction_instructions: 'Extract the top 10 text generation models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and any other performance metrics shown.' STEP 2 - Web Development: Scrape 'https://lmarena.ai/leaderboard/webdev' with extraction_instructions: 'Extract the top 10 web development AI models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and performance metrics.' STEP 3 - Vision Models: Scrape 'https://lmarena.ai/leaderboard/vision' with extraction_instructions: 'Extract the top 10 computer vision models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and capabilities.' STEP 4 - Text-to-Image: Scrape 'https://lmarena.ai/leaderboard/text-to-image' with extraction_instructions: 'Extract the top 10 image generation models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and generation capabilities.' STEP 5 - Image Editing: Scrape 'https://lmarena.ai/leaderboard/image-edit' with extraction_instructions: 'Extract the top 10 image editing models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and editing capabilities.' STEP 6 - Text-to-Video: Scrape 'https://lmarena.ai/leaderboard/text-to-video' with extraction_instructions: 'Extract the top 10 video generation models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and video generation capabilities.' STEP 7 - Image-to-Video: Scrape 'https://lmarena.ai/leaderboard/image-to-video' with extraction_instructions: 'Extract the top 10 video editing models from the leaderboard table. For each model, capture: rank, model name, organization/company, Elo score, number of votes, and video editing capabilities.' STEP 8 - Report Generation: Create comprehensive AI leaderboard digest using PDF_TOOLS__MARKDOWN_TO_PDF with proper Markdown formatting including sections for each category with top 10 rankings, performance metrics, trending models analysis, and category comparisons. STEP 9 - Distribution: Send weekly AI models digest via NOTIFYME__SEND_ME_EMAIL with subject 'AI Models Leaderboard - Top Performers [Current Date]' including: summary of top models across all categories, notable ranking changes and emerging models, category highlights and cross-category comparisons, direct LMSYS Arena links for each leaderboard, and note that the complete professional PDF report is available for download in the app artifacts for comprehensive AI model analysis and research.",
       "variable_names": [],
@@ -1186,9 +1207,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/windy_weather_screenshot.png?raw=true",
       "description": "Takes a screenshot of Windy.com weather map for any city by first geocoding the location to coordinates.",
       "tags": [
-        "Environment"
+        "Environment",
+        "Browser Automation"
       ],
-      "goal": "Take a weather screenshot for any city using Windy.com. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Windy: Construct the URL https://www.windy.com/?{latitude},{longitude},9 using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Windy URL, set full_page=true, delay_seconds=5, and output_filename='windy_weather_{{ variables['City'] }}_{{ variables['Country'] }}.png'. STEP 4 - Notification: Send completion notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Weather Screenshot Ready 🌤️' and message 'Windy weather map screenshot for {{ variables['City'] }}, {{ variables['Country'] }} is now available in app artifacts.'",
+      "goal": "Take a weather screenshot for any city using Windy.com. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Windy: Construct the URL https://www.windy.com/?{latitude},{longitude},9 using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Windy URL, set full_page=true, delay_seconds=5, and output_filename='windy_weather_{{ variables['City'] }}_{{ variables['Country'] }}.png'. STEP 4 - Notification: Send completion notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Weather Screenshot Ready \ud83c\udf24\ufe0f' and message 'Windy weather map screenshot for {{ variables['City'] }}, {{ variables['Country'] }} is now available in app artifacts.'",
       "variable_names": [
         "City",
         "Country"
@@ -1207,7 +1229,7 @@
       "tags": [
         "Finance"
       ],
-      "goal": "Monitor the crypto fear and greed index from Alternative.me. Use HTTP_TOOLS__GET_URL to fetch content from 'https://alternative.me/crypto/fear-and-greed-index/' and extract the current fear and greed index value (number between 0-100), the current sentiment label (Extreme Fear, Fear, Neutral, Greed, Extreme Greed), and the last updated timestamp from the HTML content. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Crypto Fear & Greed Index 📈 - Current: {value} - {sentiment} (Updated: {time})'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Crypto Fear & Greed Index 📈' and a short message like 'Current: {value} - {sentiment} (Updated: {time})'. Keep the notification brief and informative.",
+      "goal": "Monitor the crypto fear and greed index from Alternative.me. Use HTTP_TOOLS__GET_URL to fetch content from 'https://alternative.me/crypto/fear-and-greed-index/' and extract the current fear and greed index value (number between 0-100), the current sentiment label (Extreme Fear, Fear, Neutral, Greed, Extreme Greed), and the last updated timestamp from the HTML content. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Crypto Fear & Greed Index \ud83d\udcc8 - Current: {value} - {sentiment} (Updated: {time})'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Crypto Fear & Greed Index \ud83d\udcc8' and a short message like 'Current: {value} - {sentiment} (Updated: {time})'. Keep the notification brief and informative.",
       "variable_names": [],
       "required_app_names": [
         "HTTP_TOOLS",
@@ -1236,9 +1258,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/flight_radar.png?raw=true",
       "description": "Takes a screenshot of a specific flight's FlightRadar24 page showing real-time flight tracking and status.",
       "tags": [
-        "Transportation"
+        "Transportation",
+        "Browser Automation"
       ],
-      "goal": "Take a screenshot of a specific flight's FlightRadar24 page. Visit https://www.flightradar24.com/{{ variables['Flight Code'] }}. Use BROWSER__TAKE_SCREENSHOT with full_page=true, delay_seconds=5, js_script=\"document.getElementById('didomi-notice-agree-button')?.click();\", js_delay_seconds=5, and output_filename='flightradar24_{{ variables['Flight Code'] }}_screenshot.png'. Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'FlightRadar24 Screenshot Ready ✈️' and message 'Screenshot of flight {{ variables['Flight Code'] }} is now available in app artifacts.'",
+      "goal": "Take a screenshot of a specific flight's FlightRadar24 page. Visit https://www.flightradar24.com/{{ variables['Flight Code'] }}. Use BROWSER__TAKE_SCREENSHOT with full_page=true, delay_seconds=5, js_script=\"document.getElementById('didomi-notice-agree-button')?.click();\", js_delay_seconds=5, and output_filename='flightradar24_{{ variables['Flight Code'] }}_screenshot.png'. Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'FlightRadar24 Screenshot Ready \u2708\ufe0f' and message 'Screenshot of flight {{ variables['Flight Code'] }} is now available in app artifacts.'",
       "variable_names": [
         "Flight Code"
       ],
@@ -1253,9 +1276,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/google_maps_traffic.png?raw=true",
       "description": "Takes a traffic view screenshot of Google Maps for any latitude and longitude coordinates.",
       "tags": [
-        "Transportation"
+        "Transportation",
+        "Browser Automation"
       ],
-      "goal": "Take a traffic screenshot of Google Maps for the specified coordinates. Visit https://www.google.com/maps/@{{ variables['Latitude'] }},{{ variables['Longitude'] }},14z?hl=en. Use BROWSER__TAKE_SCREENSHOT with full_page=false, delay_seconds=5, js_script=\"document.querySelector('[aria-label*=\"Accept all\"]')?.click();\", js_delay_seconds=3, and output_filename='traffic_{{ variables['Latitude'] }}_{{ variables['Longitude'] }}_screenshot.png'. Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Traffic Screenshot Ready 🚗' and message 'Google Maps traffic screenshot for coordinates {{ variables['Latitude'] }}, {{ variables['Longitude'] }} is now available in app artifacts.'",
+      "goal": "Take a traffic screenshot of Google Maps for the specified coordinates. Visit https://www.google.com/maps/@{{ variables['Latitude'] }},{{ variables['Longitude'] }},14z?hl=en. Use BROWSER__TAKE_SCREENSHOT with full_page=false, delay_seconds=5, js_script=\"document.querySelector('[aria-label*=\"Accept all\"]')?.click();\", js_delay_seconds=3, and output_filename='traffic_{{ variables['Latitude'] }}_{{ variables['Longitude'] }}_screenshot.png'. Send a notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Traffic Screenshot Ready \ud83d\ude97' and message 'Google Maps traffic screenshot for coordinates {{ variables['Latitude'] }}, {{ variables['Longitude'] }} is now available in app artifacts.'",
       "variable_names": [
         "Latitude",
         "Longitude"
@@ -1271,9 +1295,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/google_maps_traffic.jpeg?raw=true",
       "description": "Takes a traffic view screenshot of Google Maps for any latitude and longitude coordinates, analyzes it with AI, and sends intelligent traffic condition notifications.",
       "tags": [
-        "Transportation"
+        "Transportation",
+        "Browser Automation"
       ],
-      "goal": "Take a traffic screenshot of Google Maps for the specified coordinates and analyze it with AI for traffic conditions. STEP 1 - Capture Screenshot: Visit https://www.google.com/maps/@{{ variables['Latitude'] }},{{ variables['Longitude'] }},14z?hl=en. Use BROWSER__TAKE_SCREENSHOT with full_page=false, delay_seconds=5, js_script=\"document.querySelector('[aria-label*=\"Accept all\"]')?.click();\", js_delay_seconds=3, and output_filename='traffic_analysis_{{ variables['Latitude'] }}_{{ variables['Longitude'] }}_screenshot.png'. STEP 2 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the screenshot with prompt: 'Analyze this Google Maps traffic screenshot and provide a detailed assessment of current traffic conditions. Identify areas with heavy traffic (red), moderate traffic (orange/yellow), light traffic (green), and any traffic incidents, construction, or road closures visible. Give an overall traffic status summary and specific recommendations for drivers.' STEP 3 - Smart Notification: Based on the AI analysis, send an intelligent notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Traffic Analysis: {{ variables['Latitude'] }}, {{ variables['Longitude'] }} 🚗' and a concise summary of traffic conditions including overall status, key congestion areas, and driving recommendations.",
+      "goal": "Take a traffic screenshot of Google Maps for the specified coordinates and analyze it with AI for traffic conditions. STEP 1 - Capture Screenshot: Visit https://www.google.com/maps/@{{ variables['Latitude'] }},{{ variables['Longitude'] }},14z?hl=en. Use BROWSER__TAKE_SCREENSHOT with full_page=false, delay_seconds=5, js_script=\"document.querySelector('[aria-label*=\"Accept all\"]')?.click();\", js_delay_seconds=3, and output_filename='traffic_analysis_{{ variables['Latitude'] }}_{{ variables['Longitude'] }}_screenshot.png'. STEP 2 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the screenshot with prompt: 'Analyze this Google Maps traffic screenshot and provide a detailed assessment of current traffic conditions. Identify areas with heavy traffic (red), moderate traffic (orange/yellow), light traffic (green), and any traffic incidents, construction, or road closures visible. Give an overall traffic status summary and specific recommendations for drivers.' STEP 3 - Smart Notification: Based on the AI analysis, send an intelligent notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Traffic Analysis: {{ variables['Latitude'] }}, {{ variables['Longitude'] }} \ud83d\ude97' and a concise summary of traffic conditions including overall status, key congestion areas, and driving recommendations.",
       "variable_names": [
         "Latitude",
         "Longitude"
@@ -1290,9 +1315,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/maps_availability.jpeg?raw=true",
       "description": "Checks if a business or place is currently open on Google Maps and extracts availability information including opening hours and current status.",
       "tags": [
-        "Travel"
+        "Travel",
+        "Browser Automation"
       ],
-      "goal": "Check the availability and opening hours for '{{ variables['Place Name'] }}' in '{{ variables['City'] }}, {{ variables['Country'] }}' on Google Maps. Build the search URL: https://www.google.com/maps/search/{{ variables['Place Name']|replace(' ', '+') }},+{{ variables['City']|replace(' ', '+') }},+{{ variables['Country']|replace(' ', '+') }}/ Use BROWSER__SCRAPE_WITH_BROWSER with extraction_instructions='Extract the business name, current open/closed status, opening hours for today, and any special notes about availability or closures', output_schema={'type': 'object', 'properties': {'business_name': {'type': 'string'}, 'current_status': {'type': 'string'}, 'today_hours': {'type': 'string'}, 'special_notes': {'type': 'string'}}}, js_script='setTimeout(() => { const results = document.querySelectorAll(\"a[href^=\"https://www.google.com/maps/place/\"]\"); if (results && results.length > 0) results[0].click(); }, 5000);', js_delay_seconds=10. Send a mobile notification with the availability information via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION.",
+      "goal": "Check the availability and opening hours for '{{ variables['Place Name'] }}' in '{{ variables['City'] }}, {{ variables['Country'] }}' on Google Maps. Build the search URL: https://www.google.com/maps/search/{{ variables['Place Name']|replace(' ', '+') }},+{{ variables['City']|replace(' ', '+') }},+{{ variables['Country']|replace(' ', '+') }}/ Use BROWSER__SCRAPE_WITH_BROWSER with extraction_instructions='Extract the business name, current open/closed status, opening hours for today, and any special notes about availability or closures', output_schema={'type': 'object', 'properties': {'business_name': {'type': 'string'}, 'current_status': {'type': 'string'}, 'today_hours': {'type': 'string'}, 'special_notes': {'type': 'string'}}}, js_script='setTimeout(() => { const results = document.querySelectorAll(''a[href^=\"https://www.google.com/maps/place/\"]''); if (results && results.length > 0) { results[0].click(); } }, 5000);', js_delay_seconds=10. Send a mobile notification with the availability information via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION.",
       "variable_names": [
         "Place Name",
         "City",
@@ -1309,9 +1335,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/zoom_earth_temp_analysis.jpeg?raw=true",
       "description": "Analyzes temperature conditions for any city using Zoom Earth satellite data and sends intelligent temperature notifications.",
       "tags": [
-        "Environment"
+        "Environment",
+        "Browser Automation"
       ],
-      "goal": "Analyze temperature conditions for a specific location using Zoom Earth satellite data. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Zoom Earth: Construct the URL https://zoom.earth/maps/temperature/#view={latitude},{longitude},12z/place={latitude},{longitude}/model=icon using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Zoom Earth URL, set full_page=false, delay_seconds=10, and output_filename='zoom_earth_temp_{{ variables['City'] }}_{{ variables['Country'] }}_analysis.png'. STEP 4 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the temperature screenshot with prompt: 'Analyze this Zoom Earth temperature map screenshot and provide a concise one-line summary of current temperature conditions specifically for {{ variables['City'] }}, {{ variables['Country'] }}. Focus on the city's temperature range, any temperature variations within the city, and notable temperature patterns affecting the urban area.' STEP 5 - Temperature Notification: Send a concise one-line notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Temperature Analysis: {{ variables['City'] }}, {{ variables['Country'] }} 🌡️' and the AI-generated temperature summary.",
+      "goal": "Analyze temperature conditions for a specific location using Zoom Earth satellite data. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Zoom Earth: Construct the URL https://zoom.earth/maps/temperature/#view={latitude},{longitude},12z/place={latitude},{longitude}/model=icon using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Zoom Earth URL, set full_page=false, delay_seconds=10, and output_filename='zoom_earth_temp_{{ variables['City'] }}_{{ variables['Country'] }}_analysis.png'. STEP 4 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the temperature screenshot with prompt: 'Analyze this Zoom Earth temperature map screenshot and provide a concise one-line summary of current temperature conditions specifically for {{ variables['City'] }}, {{ variables['Country'] }}. Focus on the city's temperature range, any temperature variations within the city, and notable temperature patterns affecting the urban area.' STEP 5 - Temperature Notification: Send a concise one-line notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Temperature Analysis: {{ variables['City'] }}, {{ variables['Country'] }} \ud83c\udf21\ufe0f' and the AI-generated temperature summary.",
       "variable_names": [
         "City",
         "Country"
@@ -1329,9 +1356,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/zoom_earth_precip_analysis.jpeg?raw=true",
       "description": "Analyzes precipitation conditions for any city using Zoom Earth satellite data and sends intelligent weather notifications.",
       "tags": [
-        "Environment"
+        "Environment",
+        "Browser Automation"
       ],
-      "goal": "Analyze precipitation conditions for a specific location using Zoom Earth satellite data. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Zoom Earth: Construct the URL https://zoom.earth/maps/precipitation/#view={latitude},{longitude},12z/place={latitude},{longitude}/model=icon using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Zoom Earth URL, set full_page=false, delay_seconds=10, and output_filename='zoom_earth_precip_{{ variables['City'] }}_{{ variables['Country'] }}_analysis.png'. STEP 4 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the precipitation screenshot with prompt: 'Analyze this Zoom Earth precipitation map screenshot and provide a concise one-line summary of current precipitation conditions specifically for {{ variables['City'] }}, {{ variables['Country'] }}. Focus on the city's precipitation patterns, rainfall intensity, cloud coverage, and any notable weather systems affecting the urban area.' STEP 5 - Precipitation Notification: Send a concise one-line notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Precipitation Analysis: {{ variables['City'] }}, {{ variables['Country'] }} 🌧️' and the AI-generated precipitation summary.",
+      "goal": "Analyze precipitation conditions for a specific location using Zoom Earth satellite data. STEP 1 - Geocode Location: Use GEO_TOOLS__GET_COORDINATES to convert '{{ variables['City'] }}, {{ variables['Country'] }}' into latitude and longitude coordinates. STEP 2 - Navigate to Zoom Earth: Construct the URL https://zoom.earth/maps/precipitation/#view={latitude},{longitude},12z/place={latitude},{longitude}/model=icon using the coordinates from geocoding. STEP 3 - Capture Screenshot: Use BROWSER__TAKE_SCREENSHOT with the constructed Zoom Earth URL, set full_page=false, delay_seconds=10, and output_filename='zoom_earth_precip_{{ variables['City'] }}_{{ variables['Country'] }}_analysis.png'. STEP 4 - AI Analysis: Use IMAGE_TOOLS__ANALYZE_IMAGE to analyze the precipitation screenshot with prompt: 'Analyze this Zoom Earth precipitation map screenshot and provide a concise one-line summary of current precipitation conditions specifically for {{ variables['City'] }}, {{ variables['Country'] }}. Focus on the city's precipitation patterns, rainfall intensity, cloud coverage, and any notable weather systems affecting the urban area.' STEP 5 - Precipitation Notification: Send a concise one-line notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Precipitation Analysis: {{ variables['City'] }}, {{ variables['Country'] }} \ud83c\udf27\ufe0f' and the AI-generated precipitation summary.",
       "variable_names": [
         "City",
         "Country"
@@ -1351,7 +1379,7 @@
       "tags": [
         "Food"
       ],
-      "goal": "Generate a random recipe PDF based on '{{ variables['Food Preference'] }}' cuisine. STEP 1 - Check Previous Runs: Use GET_PREVIOUS_RUN_OUTPUTS to see what recipes have been generated before for this automation and avoid duplicates if possible. STEP 2 - Search AllRecipes: Use HTTP_TOOLS__GET_REQUEST to fetch the search results from 'https://www.allrecipes.com/search?q={{ variables['Food Preference'] }}'. STEP 3 - Extract Recipe URLs: Parse the HTML response to find recipe URLs that match the pattern '/recipe/[0-9]+/[^/]+/' and collect them into a list. STEP 4 - Select Random Recipe: Randomly select one recipe URL from the collected list, preferring ones not used in previous runs if available. STEP 5 - Prepare Print URL: Append '?print=' to the selected recipe URL to get the clean printable version. STEP 6 - Convert to PDF: Use PDF_TOOLS__URL_TO_PDF to convert the print URL into a PDF document with filename 'random_{{ variables['Food Preference'] }}_recipe.pdf'. STEP 7 - Notification: Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '{{ variables['Food Preference'] }} Recipe Ready! 🍽️ - Your delicious recipe PDF has been generated and is ready for download. Recipe: [Include the recipe name and brief description in the output]'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Food Preference'] }} Recipe Ready! 🍽️' and message 'Your delicious {{ variables['Food Preference'] }} recipe PDF has been generated and is ready for download. Recipe: [Include the recipe name and brief description in the output]'. Make sure to clearly mention the specific recipe name and a brief description in your final output so future runs can reference it.",
+      "goal": "Generate a random recipe PDF based on '{{ variables['Food Preference'] }}' cuisine. STEP 1 - Check Previous Runs: Use GET_PREVIOUS_RUN_OUTPUTS to see what recipes have been generated before for this automation and avoid duplicates if possible. STEP 2 - Search AllRecipes: Use HTTP_TOOLS__GET_REQUEST to fetch the search results from 'https://www.allrecipes.com/search?q={{ variables['Food Preference'] }}'. STEP 3 - Extract Recipe URLs: Parse the HTML response to find recipe URLs that match the pattern '/recipe/[0-9]+/[^/]+/' and collect them into a list. STEP 4 - Select Random Recipe: Randomly select one recipe URL from the collected list, preferring ones not used in previous runs if available. STEP 5 - Prepare Print URL: Append '?print=' to the selected recipe URL to get the clean printable version. STEP 6 - Convert to PDF: Use PDF_TOOLS__URL_TO_PDF to convert the print URL into a PDF document with filename 'random_{{ variables['Food Preference'] }}_recipe.pdf'. STEP 7 - Notification: Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '{{ variables['Food Preference'] }} Recipe Ready! \ud83c\udf7d\ufe0f - Your delicious recipe PDF has been generated and is ready for download. Recipe: [Include the recipe name and brief description in the output]'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title '{{ variables['Food Preference'] }} Recipe Ready! \ud83c\udf7d\ufe0f' and message 'Your delicious {{ variables['Food Preference'] }} recipe PDF has been generated and is ready for download. Recipe: [Include the recipe name and brief description in the output]'. Make sure to clearly mention the specific recipe name and a brief description in your final output so future runs can reference it.",
       "variable_names": [
         "Food Preference"
       ],
@@ -1369,7 +1397,7 @@
       "tags": [
         "Education"
       ],
-      "goal": "Create comprehensive study notes for '{{ variables['Study Topic'] }}' with both text and images in a professional PDF format. STEP 1 - Research Topic: Use SEARXNG to search for '{{ variables['Study Topic'] }} study guide' and '{{ variables['Study Topic'] }} key concepts' to find high-quality educational content. Extract the top 5-7 most relevant URLs from reliable educational sources (Wikipedia, educational websites, academic sites). STEP 2 - Content Collection: For each selected URL, use HTTP_TOOLS__GET_URL to fetch the webpage content. Extract clean text content, headings, key points, and identify any relevant images (diagrams, charts, illustrations) from the HTML. STEP 3 - Image Processing: For each identified educational image, collect the image URL and create descriptive captions explaining what the image shows and its relevance to the study topic. STEP 4 - Content Organization: Structure the collected information into logical study note sections including: Introduction/Overview, Key Concepts, Important Details, Visual Aids (with images and captions), Summary, and Study Questions. STEP 5 - PDF Creation: Use PDF_TOOLS__MARKDOWN_TO_PDF to create a professional study notes document with proper Markdown formatting including: # Main Headings for sections, ## Subheadings for subsections, bullet points for key concepts, numbered lists for steps/processes, and image references with captions. Include image links throughout the document at appropriate sections. STEP 6 - Final Document: Save the comprehensive study notes as '{{ variables['Study Topic'] }}_study_notes.pdf' with a clean, student-friendly layout suitable for printing and studying. STEP 7 - Completion Notification: Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Study Notes Ready! 📚 - Your comprehensive {{ variables['Study Topic'] }} study notes PDF with images and text has been created and is ready for download.'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Study Notes Ready! 📚' and message 'Your comprehensive {{ variables['Study Topic'] }} study notes PDF with images and text has been created and is ready for download.'",
+      "goal": "Create comprehensive study notes for '{{ variables['Study Topic'] }}' with both text and images in a professional PDF format. STEP 1 - Research Topic: Use SEARXNG to search for '{{ variables['Study Topic'] }} study guide' and '{{ variables['Study Topic'] }} key concepts' to find high-quality educational content. Extract the top 5-7 most relevant URLs from reliable educational sources (Wikipedia, educational websites, academic sites). STEP 2 - Content Collection: For each selected URL, use HTTP_TOOLS__GET_URL to fetch the webpage content. Extract clean text content, headings, key points, and identify any relevant images (diagrams, charts, illustrations) from the HTML. STEP 3 - Image Processing: For each identified educational image, collect the image URL and create descriptive captions explaining what the image shows and its relevance to the study topic. STEP 4 - Content Organization: Structure the collected information into logical study note sections including: Introduction/Overview, Key Concepts, Important Details, Visual Aids (with images and captions), Summary, and Study Questions. STEP 5 - PDF Creation: Use PDF_TOOLS__MARKDOWN_TO_PDF to create a professional study notes document with proper Markdown formatting including: # Main Headings for sections, ## Subheadings for subsections, bullet points for key concepts, numbered lists for steps/processes, and image references with captions. Include image links throughout the document at appropriate sections. STEP 6 - Final Document: Save the comprehensive study notes as '{{ variables['Study Topic'] }}_study_notes.pdf' with a clean, student-friendly layout suitable for printing and studying. STEP 7 - Completion Notification: Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Study Notes Ready! \ud83d\udcda - Your comprehensive {{ variables['Study Topic'] }} study notes PDF with images and text has been created and is ready for download.'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Study Notes Ready! \ud83d\udcda' and message 'Your comprehensive {{ variables['Study Topic'] }} study notes PDF with images and text has been created and is ready for download.'",
       "variable_names": [
         "Study Topic"
       ],
@@ -1386,9 +1414,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/cnn_fear_greed.png?raw=true",
       "description": "Analyzes the CNN Fear & Greed Index by taking a screenshot and using AI to determine current market sentiment levels.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Monitor the CNN Fear & Greed Index for current market sentiment. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://edition.cnn.com/markets/fear-and-greed' with extraction_instructions: 'Extract the current Fear & Greed Index value (number between 0-100), the current sentiment label (Extreme Fear, Fear, Neutral, Greed, Extreme Greed), and the last updated timestamp. Look for the main index gauge/meter and its current reading. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'CNN Fear & Greed Index 📊 - Current: {value} - {sentiment}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'CNN Fear & Greed Index 📊' and a short message summarizing the current index value and sentiment.",
+      "goal": "Monitor the CNN Fear & Greed Index for current market sentiment. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://edition.cnn.com/markets/fear-and-greed' with extraction_instructions: 'Extract the current Fear & Greed Index value (number between 0-100), the current sentiment label (Extreme Fear, Fear, Neutral, Greed, Extreme Greed), and the last updated timestamp. Look for the main index gauge/meter and its current reading. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'CNN Fear & Greed Index \ud83d\udcca - Current: {value} - {sentiment}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'CNN Fear & Greed Index \ud83d\udcca' and a short message summarizing the current index value and sentiment.",
       "variable_names": [],
       "required_app_names": [
         "BROWSER",
@@ -1403,7 +1432,7 @@
       "tags": [
         "Travel"
       ],
-      "goal": "Monitor flight prices and alert when they fall below your budget. Use GOOGLE_FLIGHTS__SEARCH_FLIGHTS with departure_airports='{{ variables['From'] }}', arrival_airports='{{ variables['To'] }}', departure_date='{{ variables['Departure Date'] }}', return_date='{{ variables['Return Date'] }}', sort_by='cheapest', max_results=10 to find flights. Check if any flight prices are below {{ variables['Max Price (USD)'] }} (prices are always in USD). If found, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Flight Deal Alert! ✈️ - Found {count} flights from {{ variables['From'] }} to {{ variables['To'] }} under ${{ variables['Max Price (USD)'] }}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Flight Deal Alert! ✈️' and a short message like 'Found {{count}} flights from {{ variables['From'] }} to {{ variables['To'] }} under ${{ variables['Max Price (USD)'] }}'. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'Flight Deals: {{ variables['From'] }} to {{ variables['To'] }} - Under ${{ variables['Max Price (USD)'] }} [Current Date]' including: list of all qualifying flights with airline, price in USD, dates, flight details, and direct booking links.",
+      "goal": "Monitor flight prices and alert when they fall below your budget. Use GOOGLE_FLIGHTS__SEARCH_FLIGHTS with departure_airports='{{ variables['From'] }}', arrival_airports='{{ variables['To'] }}', departure_date='{{ variables['Departure Date'] }}', return_date='{{ variables['Return Date'] }}', sort_by='cheapest', max_results=10 to find flights. Check if any flight prices are below {{ variables['Max Price (USD)'] }} (prices are always in USD). If found, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Flight Deal Alert! \u2708\ufe0f - Found {count} flights from {{ variables['From'] }} to {{ variables['To'] }} under ${{ variables['Max Price (USD)'] }}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Flight Deal Alert! \u2708\ufe0f' and a short message like 'Found {{count}} flights from {{ variables['From'] }} to {{ variables['To'] }} under ${{ variables['Max Price (USD)'] }}'. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'Flight Deals: {{ variables['From'] }} to {{ variables['To'] }} - Under ${{ variables['Max Price (USD)'] }} [Current Date]' including: list of all qualifying flights with airline, price in USD, dates, flight details, and direct booking links.",
       "variable_names": [
         "From",
         "To",
@@ -1422,9 +1451,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/bitcoin_monitor.png?raw=true",
       "description": "Monitors Bitcoin wallet addresses for new transactions and sends instant notifications when activity is detected.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Monitor Bitcoin wallet transactions for new activity. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous transaction data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://blockchair.com/bitcoin/address/{{ variables['Bitcoin Address'] }}#history' with extraction_instructions: 'Extract the latest transactions from the transaction history table including transaction hashes, amounts, timestamps, and types (received/sent). Focus on the most recent transactions and their details.'. Compare with previous run data to identify new transactions. If new transactions are found, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Bitcoin Activity Detected ₿ - New transaction(s) on {{ variables['Bitcoin Address'] }} - check your wallet'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Bitcoin Activity Detected ₿' and a brief summary like 'New transaction(s) on {{ variables['Bitcoin Address'] }} - check your wallet'. Output the current latest transaction data (including hash, amount, timestamp, and type) for comparison in future runs.",
+      "goal": "Monitor Bitcoin wallet transactions for new activity. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous transaction data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://blockchair.com/bitcoin/address/{{ variables['Bitcoin Address'] }}#history' with extraction_instructions: 'Extract the latest transactions from the transaction history table including transaction hashes, amounts, timestamps, and types (received/sent). Focus on the most recent transactions and their details.'. Compare with previous run data to identify new transactions. If new transactions are found, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Bitcoin Activity Detected \u20bf - New transaction(s) on {{ variables['Bitcoin Address'] }} - check your wallet'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Bitcoin Activity Detected \u20bf' and a brief summary like 'New transaction(s) on {{ variables['Bitcoin Address'] }} - check your wallet'. Output the current latest transaction data (including hash, amount, timestamp, and type) for comparison in future runs.",
       "variable_names": [
         "Bitcoin Address"
       ],
@@ -1439,9 +1469,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/ethereum_monitor.png?raw=true",
       "description": "Monitors Ethereum wallet addresses for new transactions and sends instant notifications when activity is detected.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Monitor Ethereum wallet transactions for new activity. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous transaction data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://blockchair.com/ethereum/address/{{ variables['Ethereum Address'] }}#history' with extraction_instructions: 'Extract the latest transactions from the transaction history table including transaction hashes, amounts, timestamps, and types (received/sent). Focus on the most recent transactions and their details.'. Compare with previous run data to identify new transactions. If new transactions are found, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Ethereum Activity Detected Ξ - New transaction(s) on {{ variables['Ethereum Address'] }} - check your wallet'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Ethereum Activity Detected Ξ' and a brief summary like 'New transaction(s) on {{ variables['Ethereum Address'] }} - check your wallet'. Output the current latest transaction data (including hash, amount, timestamp, and type) for comparison in future runs.",
+      "goal": "Monitor Ethereum wallet transactions for new activity. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous transaction data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://blockchair.com/ethereum/address/{{ variables['Ethereum Address'] }}#history' with extraction_instructions: 'Extract the latest transactions from the transaction history table including transaction hashes, amounts, timestamps, and types (received/sent). Focus on the most recent transactions and their details.'. Compare with previous run data to identify new transactions. If new transactions are found, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Ethereum Activity Detected \u039e - New transaction(s) on {{ variables['Ethereum Address'] }} - check your wallet'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Ethereum Activity Detected \u039e' and a brief summary like 'New transaction(s) on {{ variables['Ethereum Address'] }} - check your wallet'. Output the current latest transaction data (including hash, amount, timestamp, and type) for comparison in future runs.",
       "variable_names": [
         "Ethereum Address"
       ],
@@ -1459,7 +1490,7 @@
         "Finance",
         "Markets"
       ],
-      "goal": "Monitor market gainers and detect sector surges. STEP 1 - Fetch Gainers: Use HTTP_TOOLS__GET_URL to fetch 'https://www.google.com/finance/markets/gainers' and extract all gainers with ticker symbols, company names, and percentage changes. STEP 2 - Sector Research: Use AI knowledge to determine the business sector for each ticker based on known company classifications (e.g., Technology: AAPL, MSFT, GOOGL, AMZN; Healthcare: JNJ, PFE, UNH; Energy: XOM, CVX; Financials: JPM, BAC; etc.). For tickers not recognized by AI knowledge, use SEARXNG to search for '{{ticker}} company sector industry' and extract the primary business sector. STEP 3 - Aggregate by Sector: Group gainers by sector and count how many companies are in each sector. STEP 4 - Detect Surges: Identify sectors with {{ variables['Min Surge Count'] }} or more gainers as 'Sector Surges'. STEP 5 - Report: Create a summary showing surging sectors, their gainers, top percentage changes, and source links. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Market Sector Surge Alert! 📈 - Multiple sectors showing strong gains - check your investments'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Market Sector Surge Alert! 📈' and a brief summary of surging sectors. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'Market Sector Surge Alert - [Current Date]' including sector breakdown, ticker lists, and surge analysis.",
+      "goal": "Monitor market gainers and detect sector surges. STEP 1 - Fetch Gainers: Use HTTP_TOOLS__GET_URL to fetch 'https://www.google.com/finance/markets/gainers' and extract all gainers with ticker symbols, company names, and percentage changes. STEP 2 - Sector Research: Use AI knowledge to determine the business sector for each ticker based on known company classifications (e.g., Technology: AAPL, MSFT, GOOGL, AMZN; Healthcare: JNJ, PFE, UNH; Energy: XOM, CVX; Financials: JPM, BAC; etc.). For tickers not recognized by AI knowledge, use SEARXNG to search for '{{ticker}} company sector industry' and extract the primary business sector. STEP 3 - Aggregate by Sector: Group gainers by sector and count how many companies are in each sector. STEP 4 - Detect Surges: Identify sectors with {{ variables['Min Surge Count'] }} or more gainers as 'Sector Surges'. STEP 5 - Report: Create a summary showing surging sectors, their gainers, top percentage changes, and source links. Send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Market Sector Surge Alert! \ud83d\udcc8 - Multiple sectors showing strong gains - check your investments'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Market Sector Surge Alert! \ud83d\udcc8' and a brief summary of surging sectors. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'Market Sector Surge Alert - [Current Date]' including sector breakdown, ticker lists, and surge analysis.",
       "variable_names": [
         "Min Surge Count"
       ],
@@ -1475,9 +1506,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/polymarket_summary.png?raw=true",
       "description": "Daily summary of Polymarket prediction markets based on your search keyword, including market trends, prices, and key insights.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Generate a daily summary of Polymarket prediction markets for '{{ variables['Search Keyword'] }}'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://polymarket.com/search?_q={{ variables['Search Keyword'] }}' with extraction_instructions: 'Extract the top 10-15 prediction markets related to the search keyword. For each market, capture: market title/question, current probability/price, 24h volume, total volume, end date, and market status (active/resolved). Focus on active markets with significant trading volume.' Analyze the extracted data to identify trending markets, price movements, and key insights. Create a comprehensive summary highlighting: top trending markets, significant price changes, high-volume markets, and market sentiment analysis. Format the findings into a professional daily digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Polymarket Daily Summary - {{ variables['Search Keyword'] }} [Current Date]' including: executive summary of market trends, detailed breakdown of top markets with current prices and volumes, key insights and analysis, and direct Polymarket links for each market. Send a brief alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Polymarket Summary 📊 - Daily update for {{ variables['Search Keyword'] }} markets available - check your email for details'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Polymarket Summary 📊' and message 'Daily update for {{ variables['Search Keyword'] }} markets available - check your email for details'.",
+      "goal": "Generate a daily summary of Polymarket prediction markets for '{{ variables['Search Keyword'] }}'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://polymarket.com/search?_q={{ variables['Search Keyword'] }}' with extraction_instructions: 'Extract the top 10-15 prediction markets related to the search keyword. For each market, capture: market title/question, current probability/price, 24h volume, total volume, end date, and market status (active/resolved). Focus on active markets with significant trading volume.' Analyze the extracted data to identify trending markets, price movements, and key insights. Create a comprehensive summary highlighting: top trending markets, significant price changes, high-volume markets, and market sentiment analysis. Format the findings into a professional daily digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Polymarket Daily Summary - {{ variables['Search Keyword'] }} [Current Date]' including: executive summary of market trends, detailed breakdown of top markets with current prices and volumes, key insights and analysis, and direct Polymarket links for each market. Send a brief alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Polymarket Summary \ud83d\udcca - Daily update for {{ variables['Search Keyword'] }} markets available - check your email for details'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Polymarket Summary \ud83d\udcca' and message 'Daily update for {{ variables['Search Keyword'] }} markets available - check your email for details'.",
       "variable_names": [
         "Search Keyword"
       ],
@@ -1492,9 +1524,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/polymarket_trending.png?raw=true",
       "description": "Daily digest of the most trending prediction markets on Polymarket with volume analysis and market insights.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Get the daily trending prediction markets on Polymarket. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://polymarket.com/' with extraction_instructions: 'Extract the top trending prediction markets from the homepage. For each market, capture: market title/question, current probability/price, 24h volume, total volume, end date, market category, and trending rank. Focus on the most active and trending markets.' Analyze the trending data to identify market categories with highest activity, unusual price movements, and emerging trends. Create a trending markets digest highlighting: top 10 trending markets, volume leaders, price movement analysis, and category breakdown. Format the findings into an engaging daily digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Polymarket Trending Markets - Top Questions [Current Date]' including: trending market rankings, volume analysis, price insights, category trends, and direct Polymarket links. Send a brief alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Polymarket Trending 📈 - Top markets update available - check your email for details'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Polymarket Trending 📈' and message 'Top markets update available - check your email for details'.",
+      "goal": "Get the daily trending prediction markets on Polymarket. Use BROWSER__SCRAPE_WITH_BROWSER to scrape 'https://polymarket.com/' with extraction_instructions: 'Extract the top trending prediction markets from the homepage. For each market, capture: market title/question, current probability/price, 24h volume, total volume, end date, market category, and trending rank. Focus on the most active and trending markets.' Analyze the trending data to identify market categories with highest activity, unusual price movements, and emerging trends. Create a trending markets digest highlighting: top 10 trending markets, volume leaders, price movement analysis, and category breakdown. Format the findings into an engaging daily digest and send via NOTIFYME__SEND_ME_EMAIL with subject 'Polymarket Trending Markets - Top Questions [Current Date]' including: trending market rankings, volume analysis, price insights, category trends, and direct Polymarket links. Send a brief alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Polymarket Trending \ud83d\udcc8 - Top markets update available - check your email for details'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Polymarket Trending \ud83d\udcc8' and message 'Top markets update available - check your email for details'.",
       "variable_names": [],
       "required_app_names": [
         "BROWSER",
@@ -1507,9 +1540,10 @@
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/polymarket_odds.png?raw=true",
       "description": "Monitor specific Polymarket prediction market odds and get alerted when probabilities change significantly.",
       "tags": [
-        "Finance"
+        "Finance",
+        "Browser Automation"
       ],
-      "goal": "Monitor odds changes for a specific Polymarket prediction market. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous odds data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape '{{ variables['Market URL'] }}' with extraction_instructions: 'Extract the market title/question, current probability/price for the main outcome, 24h volume, total volume, end date, and market status. Also extract any available historical price data or charts if visible.' Compare current odds with previous run data to detect significant changes (threshold: {{ variables['Change Threshold (%)'] }}% or more). If significant odds movement is detected, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Odds Alert! 📊 - {{ variables['Market URL'] }} odds changed by {change_percentage}% - Current: {current_odds}%'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Odds Alert! 📊' and message '{{ variables['Market URL'] }} odds changed by {change_percentage}% - Current: {current_odds}%'. Always output the current odds data for comparison in future runs. Send a daily summary email via NOTIFYME__SEND_ME_EMAIL with subject 'Odds Monitor - {{ variables['Market URL'] }} [Current Date]' including current odds, recent changes, volume analysis, and market status.",
+      "goal": "Monitor odds changes for a specific Polymarket prediction market. Use GET_PREVIOUS_RUN_OUTPUTS to retrieve previous odds data for this automation. Use BROWSER__SCRAPE_WITH_BROWSER to scrape '{{ variables['Market URL'] }}' with extraction_instructions: 'Extract the market title/question, current probability/price for the main outcome, 24h volume, total volume, end date, and market status. Also extract any available historical price data or charts if visible.' Compare current odds with previous run data to detect significant changes (threshold: {{ variables['Change Threshold (%)'] }}% or more). If significant odds movement is detected, send an immediate alert via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body 'Odds Alert! \ud83d\udcca - {{ variables['Market URL'] }} odds changed by {change_percentage}% - Current: {current_odds}%'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Odds Alert! \ud83d\udcca' and message '{{ variables['Market URL'] }} odds changed by {change_percentage}% - Current: {current_odds}%'. Always output the current odds data for comparison in future runs. Send a daily summary email via NOTIFYME__SEND_ME_EMAIL with subject 'Odds Monitor - {{ variables['Market URL'] }} [Current Date]' including current odds, recent changes, volume analysis, and market status.",
       "variable_names": [
         "Market URL",
         "Change Threshold (%)"
@@ -1543,7 +1577,7 @@
       "tags": [
         "Reddit"
       ],
-      "goal": "Monitor Reddit for trending keywords and topics. STEP 1 - Fetch Reddit Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from 'https://www.reddit.com/r/popular/hot.json?limit=50' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, and other relevant information from the Reddit data. STEP 4 - Keyword Analysis: Search through the extracted post titles for mentions of the specified keywords '{{ variables['keywords'] }}'. Count occurrences of each keyword across the posts. STEP 5 - Threshold Check: If any keyword appears {{ variables['threshold'] }} or more times in the analyzed posts, trigger an alert. STEP 6 - Send Alert: Send an immediate notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'BuzzWatch Alert! 📈' and message 'Keyword(s) gaining traction: [list keywords that exceeded threshold] - Check your email for details'. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'BuzzWatch Alert - Keywords Gaining Traction [Current Date]' including: keyword frequency analysis, list of matching post titles with subreddits and scores, and direct links to trending posts.",
+      "goal": "Monitor Reddit for trending keywords and topics. STEP 1 - Fetch Reddit Data: Use HTTP_TOOLS__FETCH_JSON_TO_ARTIFACT to fetch the latest hot posts from 'https://www.reddit.com/r/popular/hot.json?limit=50' and save the JSON data as an artifact. STEP 2 - Analyze JSON Structure: Use JSON_TOOLS__GENERATE_SCHEMA to understand the structure and available fields in the Reddit JSON data. STEP 3 - Extract Post Data: Use JSON_TOOLS__QUERY_JSON to extract post titles, scores, subreddits, and other relevant information from the Reddit data. STEP 4 - Keyword Analysis: Search through the extracted post titles for mentions of the specified keywords '{{ variables['keywords'] }}'. Count occurrences of each keyword across the posts. STEP 5 - Threshold Check: If any keyword appears {{ variables['threshold'] }} or more times in the analyzed posts, trigger an alert. STEP 6 - Send Alert: Send an immediate notification via NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'BuzzWatch Alert! \ud83d\udcc8' and message 'Keyword(s) gaining traction: [list keywords that exceeded threshold] - Check your email for details'. Then send detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'BuzzWatch Alert - Keywords Gaining Traction [Current Date]' including: keyword frequency analysis, list of matching post titles with subreddits and scores, and direct links to trending posts.",
       "variable_names": [
         "keywords",
         "threshold"
@@ -1751,7 +1785,7 @@
     {
       "name": "Numbeo Price Trends Monitor",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/numbeo_price_trends.jpeg?raw=true",
-      "description": "Weekly breakdown of all price trends in the cost-of-living data — what got cheaper or more expensive this week using Numbeo data.",
+      "description": "Weekly breakdown of all price trends in the cost-of-living data \u2014 what got cheaper or more expensive this week using Numbeo data.",
       "tags": [
         "Finance"
       ],
@@ -1769,7 +1803,7 @@
     {
       "name": "Numbeo Food Prices Monitor",
       "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/numbeo_food_prices.jpeg?raw=true",
-      "description": "Weekly breakdown of food price trends — what got cheaper or more expensive this week using Numbeo food prices data.",
+      "description": "Weekly breakdown of food price trends \u2014 what got cheaper or more expensive this week using Numbeo food prices data.",
       "tags": [
         "Finance",
         "Economics",
@@ -1842,9 +1876,10 @@
       "tags": [
         "Finance",
         "Investing",
-        "Startups"
+        "Startups",
+        "Browser Automation"
       ],
-      "goal": "STEP 0 - CATEGORY MAP: { 'technology': '16', 'design': '7', 'games': '12', 'film': '11', 'music': '14' }. Default = '16' (technology). STEP 1 - For pages 1–4, scrape https://www.kickstarter.com/discover/advanced?state=live&sort=most_funded&category=CATEGORY_NUMBER_HERE_FROM_MAP&raised=CALULATE_THIS,  raised param can be 0,1,2 - for projects under 75% raised 1 for 75-100 2 for over 100%, the user wants this %age : 'variables['MinFundedPercent']'    using BROWSER__SCRAPE_WITH_BROWSER to extract project: name, raised, goal, category, location, URL, and summary. STEP 2 - Filter projects where (raised/goal)*100 >= variables['MinFundedPercent'] (default 30). STEP 3 - Scrape Republic live projects (https://republic.com/companies?filter=live) with same fields. STEP 4 - Use SEARXNG__SEARCH_NEWS and SEARXNG__SEARCH_SOCIAL for 'PROJECT_NAME_HERE startup' and 'PROJECT_NAME_HERE site:reddit.com' to estimate buzz. STEP 5 - Rank top 5–10 by funding velocity, buzz, and credibility mentions. STEP 6 - Send via NOTIFYME__SEND_ME_EMAIL subject 'Top Live Startup Investment Picks - {{ variables['Category'] }} [Current Date]' with ranked summary including name, raised %, location, URL, and short note on buzz and credibility.",
+      "goal": "STEP 0 - CATEGORY MAP: { 'technology': '16', 'design': '7', 'games': '12', 'film': '11', 'music': '14' }. Default = '16' (technology). STEP 1 - For pages 1\u20134, scrape https://www.kickstarter.com/discover/advanced?state=live&sort=most_funded&category=CATEGORY_NUMBER_HERE_FROM_MAP&raised=CALULATE_THIS,  raised param can be 0,1,2 - for projects under 75% raised 1 for 75-100 2 for over 100%, the user wants this %age : 'variables['MinFundedPercent']'    using BROWSER__SCRAPE_WITH_BROWSER to extract project: name, raised, goal, category, location, URL, and summary. STEP 2 - Filter projects where (raised/goal)*100 >= variables['MinFundedPercent'] (default 30). STEP 3 - Scrape Republic live projects (https://republic.com/companies?filter=live) with same fields. STEP 4 - Use SEARXNG__SEARCH_NEWS and SEARXNG__SEARCH_SOCIAL for 'PROJECT_NAME_HERE startup' and 'PROJECT_NAME_HERE site:reddit.com' to estimate buzz. STEP 5 - Rank top 5\u201310 by funding velocity, buzz, and credibility mentions. STEP 6 - Send via NOTIFYME__SEND_ME_EMAIL subject 'Top Live Startup Investment Picks - {{ variables['Category'] }} [Current Date]' with ranked summary including name, raised %, location, URL, and short note on buzz and credibility.",
       "variable_names": [
         "Category",
         "MinFundedPercent"
@@ -1912,7 +1947,7 @@
       "tags": [
         "Productivity"
       ],
-      "goal": "Find free time slots and create focus time blocks automatically. STEP 1 - Get This Week's Events: Use GOOGLE_CALENDAR__EVENTS_LIST with calendarId='primary', timeMin=today, timeMax=7 days from now, orderBy='startTime', singleEvents=true. STEP 2 - Analyze Free Slots: Identify free time blocks of at least {{ variables['Duration (hours)'] }} hours during working hours (9 AM - 6 PM on weekdays). Look for gaps between meetings. STEP 3 - Create Focus Blocks: For each identified free slot, use GOOGLE_CALENDAR__EVENTS_INSERT to create a focus time event with summary='🎯 Focus Time', description='Blocked for focused work - Do Not Disturb', eventType='focusTime', visibility='private', start and end times for the {{ variables['Duration (hours)'] }} hour block. STEP 4 - Send Summary: Send confirmation via NOTIFYME__SEND_ME_EMAIL with subject 'Focus Time Scheduled - {{ block_count }} Sessions Created' listing when each focus block was scheduled.",
+      "goal": "Find free time slots and create focus time blocks automatically. STEP 1 - Get This Week's Events: Use GOOGLE_CALENDAR__EVENTS_LIST with calendarId='primary', timeMin=today, timeMax=7 days from now, orderBy='startTime', singleEvents=true. STEP 2 - Analyze Free Slots: Identify free time blocks of at least {{ variables['Duration (hours)'] }} hours during working hours (9 AM - 6 PM on weekdays). Look for gaps between meetings. STEP 3 - Create Focus Blocks: For each identified free slot, use GOOGLE_CALENDAR__EVENTS_INSERT to create a focus time event with summary='\ud83c\udfaf Focus Time', description='Blocked for focused work - Do Not Disturb', eventType='focusTime', visibility='private', start and end times for the {{ variables['Duration (hours)'] }} hour block. STEP 4 - Send Summary: Send confirmation via NOTIFYME__SEND_ME_EMAIL with subject 'Focus Time Scheduled - {{ block_count }} Sessions Created' listing when each focus block was scheduled.",
       "variable_names": [
         "Duration (hours)"
       ],
@@ -1995,7 +2030,7 @@
       "tags": [
         "Productivity"
       ],
-      "goal": "Send reminders for overdue and upcoming tasks. STEP 1 - Get All Task Lists: Use GOOGLE_TASKS__TASKLIST_LIST to retrieve all task lists. STEP 2 - Find Urgent Tasks: For each task list, use GOOGLE_TASKS__TASKS_LIST with dueMax=today to find overdue tasks, and with dueMin=today, dueMax={{ variables['Days Ahead'] }} days from now for upcoming tasks. STEP 3 - Prioritize Reminders: Categorize tasks by urgency: overdue (highest priority), due today, due tomorrow, due this week. STEP 4 - Generate Reminder Message: Create a focused reminder message highlighting the most urgent tasks that need immediate attention. STEP 5 - Send Urgent Reminder: Send reminder via NOTIFYME__SEND_ME_EMAIL with subject '🚨 Task Reminder - {{ overdue_count }} Overdue Tasks [Current Date]' including the prioritized task list with due dates and task list names.",
+      "goal": "Send reminders for overdue and upcoming tasks. STEP 1 - Get All Task Lists: Use GOOGLE_TASKS__TASKLIST_LIST to retrieve all task lists. STEP 2 - Find Urgent Tasks: For each task list, use GOOGLE_TASKS__TASKS_LIST with dueMax=today to find overdue tasks, and with dueMin=today, dueMax={{ variables['Days Ahead'] }} days from now for upcoming tasks. STEP 3 - Prioritize Reminders: Categorize tasks by urgency: overdue (highest priority), due today, due tomorrow, due this week. STEP 4 - Generate Reminder Message: Create a focused reminder message highlighting the most urgent tasks that need immediate attention. STEP 5 - Send Urgent Reminder: Send reminder via NOTIFYME__SEND_ME_EMAIL with subject '\ud83d\udea8 Task Reminder - {{ overdue_count }} Overdue Tasks [Current Date]' including the prioritized task list with due dates and task list names.",
       "variable_names": [
         "Days Ahead"
       ],

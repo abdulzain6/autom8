@@ -637,16 +637,25 @@ SECURITY VALIDATION RULES:
                     }
                     
                     if js_script:
+                        # Wrap the JS script in a try-catch block
+                        wrapped_js_script = f"""
+                        try {{
+                            {js_script}
+                        }} catch (error) {{
+                            console.error('JavaScript execution error:', error.message || String(error));
+                        }}
+                        """
+
                         # If delay is specified, wrap the JS script with setTimeout
                         if js_delay_seconds > 0:
                             wrapped_js = f"""
                             setTimeout(() => {{
-                                {js_script}
+                                {wrapped_js_script}
                             }}, {int(js_delay_seconds * 1000)});
                             """
                             crawl_config_kwargs["js_code"] = wrapped_js
                         else:
-                            crawl_config_kwargs["js_code"] = js_script
+                            crawl_config_kwargs["js_code"] = wrapped_js_script
                     
                     crawl_config = CrawlerRunConfig(**crawl_config_kwargs)
 
@@ -828,10 +837,35 @@ SECURITY VALIDATION RULES:
                         if delay_seconds > 0:
                             await asyncio.sleep(delay_seconds)
 
-                        # Execute the JS code directly. Playwright will raise an
-                        # exception if the JS code fails, which will be caught below.
-                        result = await page.evaluate(js_code)
-                        return result
+                        # Wrap the JS code in a try-catch block to handle errors gracefully
+                        wrapped_js_code = f"""
+                        (function() {{
+                            try {{
+                                {js_code}
+                            }} catch (error) {{
+                                return {{
+                                    __error__: true,
+                                    message: error.message || String(error),
+                                    stack: error.stack || null
+                                }};
+                            }}
+                        }})();
+                        """
+
+                        # Execute the wrapped JS code
+                        try:
+                            result = await page.evaluate(wrapped_js_code)
+
+                            # Check if the result contains an error from the JS try-catch
+                            if isinstance(result, dict) and result.get('__error__'):
+                                error_msg = result.get('message', 'Unknown JavaScript error')
+                                logger.error(f"JavaScript execution failed: {error_msg}")
+                                raise RuntimeError(f"JavaScript execution error: {error_msg}")
+
+                            return result
+                        except Exception as js_error:
+                            logger.error(f"JavaScript execution failed: {js_error}")
+                            raise RuntimeError(f"JavaScript execution error: {str(js_error)}")
 
                 result = asyncio.run(asyncio.wait_for(_run_js_in_browser(), timeout=600))
                 # If a filename is provided, save the result as an artifact
@@ -963,7 +997,20 @@ SECURITY VALIDATION RULES:
 
                         # Execute optional JavaScript script
                         if js_script:
-                            await page.evaluate(js_script)
+                            # Wrap the JS script in a try-catch block
+                            wrapped_js_script = f"""
+                            try {{
+                                {js_script}
+                            }} catch (error) {{
+                                console.error('JavaScript execution error:', error.message || String(error));
+                                throw error;  // Re-throw to be caught by Python
+                            }}
+                            """
+                            try:
+                                await page.evaluate(wrapped_js_script)
+                            except Exception as js_error:
+                                logger.error(f"JavaScript execution failed: {js_error}")
+                                raise RuntimeError(f"JavaScript execution error: {str(js_error)}")
 
                         # Optional delay after JavaScript execution
                         if js_delay_seconds > 0:
