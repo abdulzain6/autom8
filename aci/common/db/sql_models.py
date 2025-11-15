@@ -66,7 +66,11 @@ class SupabaseUser(Base):
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     subscription_status: Mapped[Optional[SubscriptionStatus]] = mapped_column(
-        SqlEnum(SubscriptionStatus), nullable=True, index=True
+        SqlEnum(SubscriptionStatus), nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_users_subscription_status", "subscription_status"),
     )
     subscription_product_id: Mapped[Optional[str]] = mapped_column(
         String(MAX_STRING_LENGTH), nullable=True
@@ -183,6 +187,13 @@ class Function(Base):
     # the App that this function belongs to
     app: Mapped[App] = relationship(
         "App", lazy="select", back_populates="functions", init=False
+    )
+
+    __table_args__ = (
+        Index("ix_functions_name", "name"),
+        Index("ix_functions_app_id", "app_id"),
+        Index("ix_functions_active", "active"),
+        Index("ix_functions_app_id_active", "app_id", "active"),
     )
 
     @property
@@ -450,6 +461,9 @@ class LinkedAccount(Base):
             "app_id",
             name="uc_user_app_linked_account",
         ),
+        Index("ix_linked_accounts_user_id", "user_id"),
+        Index("ix_linked_accounts_app_id", "app_id"),
+        Index("ix_linked_accounts_last_used_at", "last_used_at"),
     )
 
     secrets: Mapped[list["Secret"]] = relationship(
@@ -486,6 +500,7 @@ class Secret(Base):
 
     __table_args__ = (
         UniqueConstraint("linked_account_id", "key", name="uc_linked_account_key"),
+        Index("ix_secrets_linked_account_id", "linked_account_id"),
     )
 
 
@@ -506,6 +521,12 @@ class Artifact(Base):
     user: Mapped[SupabaseUser] = relationship("SupabaseUser", lazy="select", init=False)
     run_id: Mapped[Optional[str]] = mapped_column(
         String, ForeignKey("automation_runs.id")
+    )
+
+    __table_args__ = (
+        Index("ix_artifacts_user_id", "user_id"),
+        Index("ix_artifacts_run_id", "run_id"),
+        Index("ix_artifacts_expires_at", "expires_at"),
     )
 
 
@@ -547,6 +568,15 @@ class Automation(Base):
         String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
     )
 
+    __table_args__ = (
+        Index("ix_automations_user_id", "user_id"),
+        Index("ix_automations_active", "active"),
+        Index("ix_automations_is_recurring", "is_recurring"),
+        Index("ix_automations_last_run_status", "last_run_status"),
+        Index("ix_automations_created_at", "created_at"),
+        Index("ix_automations_user_active_recurring", "user_id", "active", "is_recurring"),
+    )
+
 
 class AutomationRun(Base):
     __tablename__ = "automation_runs"
@@ -586,6 +616,13 @@ class AutomationRun(Base):
         init=False,
     )
 
+    __table_args__ = (
+        Index("ix_automation_runs_automation_id", "automation_id"),
+        Index("ix_automation_runs_status", "status"),
+        Index("ix_automation_runs_started_at", "started_at"),
+        Index("ix_automation_runs_automation_status", "automation_id", "status"),
+    )
+
 
 class AutomationLinkedAccount(Base):
     __tablename__ = "automation_linked_accounts"
@@ -604,6 +641,11 @@ class AutomationLinkedAccount(Base):
     )
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default_factory=lambda: str(uuid.uuid4()), init=False
+    )
+
+    __table_args__ = (
+        Index("ix_automation_linked_accounts_automation_id", "automation_id"),
+        Index("ix_automation_linked_accounts_linked_account_id", "linked_account_id"),
     )
 
 
@@ -645,6 +687,12 @@ class AutomationTemplate(Base):
         secondary=automation_template_apps,
         lazy="selectin",  # Use 'selectin' for efficient loading of related apps
         init=False,
+    )
+
+    __table_args__ = (
+        Index("ix_apps_name", "name"),
+        Index("ix_apps_active", "active"),
+        Index("ix_apps_categories", "categories", postgresql_using="gin"),
     )
 
     __table_args__ = (
@@ -697,6 +745,8 @@ class FCMToken(Base):
     __table_args__ = (
         # Enforce that a user can only have one token for each device type.
         UniqueConstraint("user_id", "device_type", name="uq_user_device_type"),
+        Index("ix_fcm_tokens_token", "token"),
+        Index("ix_fcm_tokens_user_id", "user_id"),
     )
 
 

@@ -1936,6 +1936,265 @@
         "NOTIFYME"
       ],
       "is_deep": false
+    },
+    {
+      "name": "Meeting Attendance & Engagement Tracker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/meeting_attendance_tracker.jpeg?raw=true",
+      "description": "Premium analytics: Track meeting attendance patterns, participant engagement levels, and generate detailed reports on meeting effectiveness with actionable insights.",
+      "tags": [
+        "Analytics"
+      ],
+      "goal": "Generate comprehensive meeting attendance and engagement analytics. STEP 1 - Fetch Conference Records: Use GOOGLE_MEET__CONFERENCE_RECORDS_LIST to get all meeting records from the past {{ variables['Days Back'] }} days. STEP 2 - Analyze Each Meeting: For each conference record, use GOOGLE_MEET__PARTICIPANTS_LIST to get participant data and GOOGLE_MEET__PARTICIPANT_SESSIONS_LIST to get session durations. STEP 3 - Calculate Engagement Metrics: For each participant, calculate: total time attended, join/leave times, engagement score (time attended vs meeting duration), and attendance consistency. STEP 4 - Generate Individual Reports: Create detailed reports for each participant showing their meeting attendance patterns, average engagement scores, and participation trends. STEP 5 - Create Team Analytics: Aggregate data to show team-wide patterns: most engaged participants, meeting attendance rates, optimal meeting times, and engagement trends. STEP 6 - AI-Powered Insights: Use AI to analyze patterns and provide recommendations like 'Schedule important meetings when {{ top_participant }} has highest attendance' or 'Consider {{ time_adjustment }} for better engagement'. STEP 7 - Format Professional Report: Create a comprehensive PDF report with charts, individual participant breakdowns, team statistics, and actionable recommendations. STEP 8 - Send Executive Summary: Send the PDF report via NOTIFYME__SEND_ME_EMAIL with subject 'Meeting Analytics Report - {{ meeting_count }} Meetings Analyzed [Current Date]' and include key metrics in the email body.",
+      "variable_names": [
+        "Days Back"
+      ],
+      "required_app_names": [
+        "GOOGLE_MEET",
+        "NOTIFYME",
+        "PDF_TOOLS"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Meeting Room Utilization Optimizer",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/meeting_room_optimizer.jpeg?raw=true",
+      "description": "Premium analytics: Optimize meeting room usage with AI-powered recommendations for space allocation, booking patterns, and cost savings.",
+      "tags": [
+        "Analytics"
+      ],
+      "goal": "Analyze meeting space utilization and provide optimization recommendations. STEP 1 - Fetch Space Data: Use GOOGLE_MEET__SPACES_GET to get details about all available meeting spaces. STEP 2 - Analyze Usage Patterns: Use GOOGLE_MEET__CONFERENCE_RECORDS_LIST to get meeting data for the past {{ variables['Analysis Period Days'] }} days, analyzing which spaces are used most/least. STEP 3 - Calculate Utilization Metrics: For each space, calculate: usage frequency, average meeting duration, peak usage times, average participant count, and utilization percentage. STEP 4 - Identify Optimization Opportunities: Use AI to analyze patterns and identify: underutilized spaces, peak demand times, optimal space allocations, and potential cost savings from space consolidation. STEP 5 - Generate Recommendations: Create specific recommendations like 'Consider decommissioning {{ space_name }} ({{ utilization_rate }}% utilization)' or 'Add capacity during {{ peak_time }} when demand exceeds {{ percentage }}%'. STEP 6 - Calculate ROI: Estimate cost savings from optimization recommendations, including space rental savings and productivity improvements. STEP 7 - Create Executive Report: Format findings into a professional PDF report with utilization charts, optimization recommendations, and ROI projections. STEP 8 - Send Optimization Report: Send the PDF report via NOTIFYME__SEND_ME_EMAIL with subject 'Meeting Room Optimization Report - ${{ estimated_savings }} Annual Savings [Current Date]' including key recommendations in the email preview.",
+      "variable_names": [
+        "Analysis Period Days"
+      ],
+      "required_app_names": [
+        "GOOGLE_MEET",
+        "NOTIFYME",
+        "PDF_TOOLS"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Daily Task Digest",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/daily_task_digest.jpeg?raw=true",
+      "description": "Get a daily summary of your Google Tasks including overdue items, today's tasks, and upcoming deadlines.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Send a daily digest of Google Tasks. STEP 1 - Get All Task Lists: Use GOOGLE_TASKS__TASKLIST_LIST to retrieve all task lists. STEP 2 - Fetch Tasks from Each List: For each task list, use GOOGLE_TASKS__TASKS_LIST to get all tasks with showCompleted=false to focus on active tasks. STEP 3 - Categorize Tasks: Sort tasks into categories: overdue (due date passed), today (due today), upcoming (due within 7 days), and future tasks. STEP 4 - Generate Summary: Create a clean email summary showing task counts by category and listing the most urgent tasks first. STEP 5 - Send Daily Digest: Send the task digest via NOTIFYME__SEND_ME_EMAIL with subject 'Daily Task Digest - {{ overdue_count }} Overdue, {{ today_count }} Due Today [Current Date]' including the categorized task list.",
+      "variable_names": [],
+      "required_app_names": [
+        "GOOGLE_TASKS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Overdue Task Reminder",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/overdue_task_reminder.jpeg?raw=true",
+      "description": "Automatically remind you about overdue tasks and tasks due soon to keep you on track.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Send reminders for overdue and upcoming tasks. STEP 1 - Get All Task Lists: Use GOOGLE_TASKS__TASKLIST_LIST to retrieve all task lists. STEP 2 - Find Urgent Tasks: For each task list, use GOOGLE_TASKS__TASKS_LIST with dueMax=today to find overdue tasks, and with dueMin=today, dueMax={{ variables['Days Ahead'] }} days from now for upcoming tasks. STEP 3 - Prioritize Reminders: Categorize tasks by urgency: overdue (highest priority), due today, due tomorrow, due this week. STEP 4 - Generate Reminder Message: Create a focused reminder message highlighting the most urgent tasks that need immediate attention. STEP 5 - Send Urgent Reminder: Send reminder via NOTIFYME__SEND_ME_EMAIL with subject '🚨 Task Reminder - {{ overdue_count }} Overdue Tasks [Current Date]' including the prioritized task list with due dates and task list names.",
+      "variable_names": [
+        "Days Ahead"
+      ],
+      "required_app_names": [
+        "GOOGLE_TASKS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Weekly Task Progress Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/weekly_task_report.jpeg?raw=true",
+      "description": "Weekly summary of task completion rates, productivity trends, and upcoming priorities.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Generate weekly task progress report. STEP 1 - Get Previous Data: Use GET_PREVIOUS_RUN_OUTPUTS to retrieve last week's task completion data for comparison. STEP 2 - Fetch Current Tasks: Use GOOGLE_TASKS__TASKLIST_LIST and GOOGLE_TASKS__TASKS_LIST to get all current tasks across all lists. STEP 3 - Analyze Completion: Compare current task counts with previous week to calculate: tasks completed, tasks added, completion rate percentage, and productivity trends. STEP 4 - Identify Patterns: Analyze which task lists have highest completion rates, most productive days, and common task types. STEP 5 - Generate Insights: Use AI to provide insights like 'You completed {{ percentage }}% more tasks than last week' or 'Your most productive day is {{ day }}'. STEP 6 - Create Report: Format the analysis into a comprehensive weekly report with statistics, trends, and recommendations. STEP 7 - Send Weekly Report: Send the progress report via NOTIFYME__SEND_ME_EMAIL with subject 'Weekly Task Report - {{ completed_count }} Tasks Completed [Current Date]' including key metrics and insights. STEP 8 - Store Current Data: Output current task counts and completion data as structured JSON for next week's comparison.",
+      "variable_names": [],
+      "required_app_names": [
+        "GOOGLE_TASKS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Task Creation from Calendar Events",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/task_from_calendar.jpeg?raw=true",
+      "description": "Automatically create follow-up tasks from calendar events to ensure nothing falls through the cracks.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Create tasks from calendar events automatically. STEP 1 - Get Recent Events: Use GOOGLE_CALENDAR__EVENTS_LIST to fetch events from the past {{ variables['Hours Back'] }} hours that you attended (responseStatus=accepted). STEP 2 - Filter Actionable Events: Identify meetings that need follow-up tasks based on criteria like: meeting duration > {{ variables['Min Duration Minutes'] }} minutes, contains keywords like 'meeting', 'review', 'planning', etc. STEP 3 - Generate Task Titles: For each qualifying event, create meaningful task titles like 'Follow up on {{ event_title }} meeting' or 'Complete action items from {{ event_title }}'. STEP 4 - Create Tasks: Use GOOGLE_TASKS__TASKS_INSERT to create follow-up tasks in the specified task list with appropriate due dates (e.g., 1 day after the meeting). STEP 5 - Add Task Details: Include meeting details in task notes like date, attendees, and any action items mentioned in the event description. STEP 6 - Send Confirmation: Send summary via NOTIFYME__SEND_ME_EMAIL with subject 'Created {{ task_count }} Follow-up Tasks from Recent Meetings' listing the new tasks created.",
+      "variable_names": [
+        "Hours Back",
+        "Min Duration Minutes"
+      ],
+      "required_app_names": [
+        "GOOGLE_CALENDAR",
+        "GOOGLE_TASKS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Task List Cleanup Automator",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/task_cleanup.jpeg?raw=true",
+      "description": "Automatically clean up old completed tasks to keep your task lists organized and clutter-free.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Automatically clean up old completed tasks. STEP 1 - Get All Task Lists: Use GOOGLE_TASKS__TASKLIST_LIST to retrieve all task lists. STEP 2 - Find Old Completed Tasks: For each task list, use GOOGLE_TASKS__TASKS_LIST with showCompleted=true and completedMax={{ variables['Days Old'] }} days ago to find completed tasks older than the specified threshold. STEP 3 - Review Tasks: Check each old completed task to ensure it's safe to delete (skip tasks with important notes or that were recently completed). STEP 4 - Delete Old Tasks: Use GOOGLE_TASKS__TASKS_DELETE to remove tasks that meet the cleanup criteria. STEP 5 - Generate Cleanup Report: Create a summary of cleanup actions: tasks deleted, tasks kept, total space freed. STEP 6 - Send Cleanup Summary: Send report via NOTIFYME__SEND_ME_EMAIL with subject 'Task Cleanup Complete - {{ deleted_count }} Tasks Removed [Current Date]' including the cleanup summary and any tasks that were kept for review.",
+      "variable_names": [
+        "Days Old"
+      ],
+      "required_app_names": [
+        "GOOGLE_TASKS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Task Priority & Deadline Analyzer",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/task_priority_analyzer.jpeg?raw=true",
+      "description": "Analyze your task patterns to identify priority trends and optimize your task management workflow.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Analyze task priority patterns and deadlines. STEP 1 - Get All Tasks: Use GOOGLE_TASKS__TASKLIST_LIST and GOOGLE_TASKS__TASKS_LIST to fetch all tasks across all lists. STEP 2 - Analyze Deadlines: Calculate statistics on task due dates: average time between creation and due date, most common deadline patterns, tasks without due dates. STEP 3 - Identify Priority Patterns: Analyze which task lists get completed faster, which days you complete more tasks, and common task completion times. STEP 4 - Generate Insights: Use AI to provide recommendations like 'You complete {{ percentage }}% more tasks on {{ day }}' or 'Consider setting deadlines for {{ percentage }}% of tasks that currently lack them'. STEP 5 - Create Optimization Report: Format findings into a report with priority insights, deadline analysis, and workflow optimization suggestions. STEP 6 - Send Analysis Report: Send the priority analysis via NOTIFYME__SEND_ME_EMAIL with subject 'Task Priority Analysis - {{ insights_count }} Optimization Insights [Current Date]' including key findings and recommendations.",
+      "variable_names": [],
+      "required_app_names": [
+        "GOOGLE_TASKS",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Notion Workspace Cleanup Automator",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/notion_cleanup.jpeg?raw=true",
+      "description": "Automatically archive old Notion pages and clean up workspace clutter based on age, content type, or custom criteria.",
+      "tags": [
+        "Productivity"
+      ],
+      "goal": "Automatically clean up and organize Notion workspace. STEP 1 - Search for Old Pages: Use NOTION__SEARCH_PAGES to find pages older than {{ variables['Days Old'] }} days that match cleanup criteria. STEP 2 - Analyze Page Content: Use NOTION__GET_PAGE to check page properties and determine if pages should be archived. STEP 3 - Archive Eligible Pages: Use NOTION__TOGGLE_PAGE_ARCHIVE to archive pages that meet cleanup criteria (old drafts, temporary notes, outdated content). STEP 4 - Generate Cleanup Report: Create a summary of archived pages, space freed, and pages kept for review. STEP 5 - Send Cleanup Summary: Send report via NOTIFYME__SEND_ME_EMAIL with subject 'Notion Cleanup Complete - {{ archived_count }} Pages Archived [Current Date]' including details of what was cleaned up.",
+      "variable_names": [
+        "Days Old"
+      ],
+      "required_app_names": [
+        "NOTION",
+        "NOTIFYME"
+      ],
+      "is_deep": false
+    },
+    {
+      "name": "Executive Business Intelligence Briefing",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/executive_briefing.jpeg?raw=true",
+      "description": "Daily executive briefing combining market news, industry trends, competitor analysis, and key business metrics for strategic decision-making.",
+      "tags": [
+        "Business Intelligence",
+        "Executive"
+      ],
+      "goal": "Create comprehensive daily executive business intelligence briefing. STEP 1 - Market Overview: Use YAHOO_FINANCE__GET_MARKET_SUMMARY to get major market indices and sector performance. STEP 2 - Industry News: Use GOOGLE_NEWS__SEARCH_TOPIC with your industry keywords to gather relevant industry developments. STEP 3 - Competitor Monitoring: Use SEARXNG__SEARCH_NEWS to monitor competitor announcements and press releases. STEP 4 - Social Media Buzz: Use SEARXNG__SEARCH_GENERAL with site:twitter.com and site:linkedin.com to track industry conversations and thought leadership. STEP 5 - Trend Analysis: Use GOOGLE_TRENDS__GET_INTEREST_OVER_TIME to identify emerging trends in your industry. STEP 6 - Key Metrics Review: Aggregate business KPIs from your connected systems (if available) or use web research for industry benchmarks. STEP 7 - Risk Assessment: Use SEARXNG__SEARCH_NEWS to identify potential industry risks and regulatory changes. STEP 8 - Strategic Insights: Use AI to synthesize all data into actionable strategic recommendations and opportunities. STEP 9 - Create PDF Report: Format all gathered data into a comprehensive Markdown document with sections for: market overview with key indices, industry developments with news links, competitor landscape analysis, emerging trends data, risk factors assessment, and strategic recommendations. STEP 10 - Generate PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the Markdown report into a professional PDF document titled 'Executive_Business_Intelligence_Briefing_[Current_Date].pdf'. STEP 11 - Send Executive Briefing: Send notification via NOTIFYME__SEND_ME_EMAIL with subject 'Executive Business Intelligence Briefing - [Current Date]' including key insights and PDF attachment with the comprehensive business intelligence report.",
+      "variable_names": [
+        "Industry Keywords",
+        "Key Competitors"
+      ],
+      "required_app_names": [
+        "YAHOO_FINANCE",
+        "GOOGLE_NEWS",
+        "GOOGLE_TRENDS",
+        "SEARXNG",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Industry Trend Analysis Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/industry_trends.jpeg?raw=true",
+      "description": "Weekly industry trend analysis combining news, social media, search trends, and expert insights to identify emerging patterns and opportunities.",
+      "tags": [
+        "Industry Analysis",
+        "Trends"
+      ],
+      "goal": "Generate comprehensive weekly industry trend analysis report. STEP 1 - Trend Discovery: Use GOOGLE_TRENDS__GET_INTEREST_OVER_TIME to identify rising search trends in {{ variables['Industry Sector'] }} over the past 90 days. STEP 2 - News Analysis: Use GOOGLE_NEWS__SEARCH_TOPIC and SEARXNG__SEARCH_NEWS to gather industry news and emerging developments. STEP 3 - Social Media Buzz: Use SEARXNG__SEARCH_GENERAL with site:twitter.com, site:linkedin.com to track industry conversations and thought leadership. STEP 4 - Expert Insights: Use SEARXNG__SEARCH_GENERAL to find recent industry reports, analyst predictions, and expert commentary. STEP 5 - Technology Trends: Use SEARXNG__SEARCH_NEWS to monitor technological advancements and innovations in the industry. STEP 6 - Regulatory Changes: Use SEARXNG__SEARCH_NEWS to track regulatory developments and policy changes affecting the industry. STEP 7 - Consumer Behavior: Use GOOGLE_TRENDS__GET_RELATED_QUERIES to understand changing consumer interests and search patterns. STEP 8 - Competitive Landscape: Use SEARXNG__SEARCH_NEWS to monitor competitor moves and market share changes. STEP 9 - AI-Powered Synthesis: Use AI to analyze all data sources and identify emerging patterns, megatrends, and potential disruptions. STEP 10 - Create PDF Report: Format all gathered data into a comprehensive Markdown document with sections for: emerging trends with search data, technology innovations, regulatory landscape updates, consumer insights, competitive analysis, strategic implications, and AI-generated predictions for the next 6-12 months. STEP 11 - Generate PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the Markdown report into a professional PDF document titled 'Industry_Trend_Analysis_{{ variables['Industry Sector'] }}_[Current_Date].pdf'. STEP 12 - Send Trend Alert: Send notification via NOTIFYME__SEND_ME_EMAIL with subject 'Industry Trend Analysis - {{ variables['Industry Sector'] }} Weekly Report [Current Date]' including key emerging trends and PDF attachment with the comprehensive trend analysis.",
+      "variable_names": [
+        "Industry Sector"
+      ],
+      "required_app_names": [
+        "GOOGLE_TRENDS",
+        "GOOGLE_NEWS",
+        "SEARXNG",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Customer Research & Insights Report",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/customer_research.jpeg?raw=true",
+      "description": "Comprehensive customer research combining social media sentiment, review analysis, forum discussions, and market feedback for product development insights.",
+      "tags": [
+        "Customer Research",
+        "Product Development"
+      ],
+      "goal": "Generate comprehensive customer research and insights report. STEP 1 - Social Media Sentiment: Use SEARXNG__SEARCH_GENERAL with site:twitter.com, site:reddit.com to gather customer feedback and discussions about {{ variables['Product/Service'] }}. STEP 2 - Review Analysis: Use SEARXNG__SEARCH_GENERAL with site:trustpilot.com, site:glassdoor.com, site:appstore.com to collect customer reviews and ratings. STEP 3 - Forum Discussions: Use SEARXNG__SEARCH_GENERAL with site:reddit.com/r/{{ variables['Industry'] }}, site:quora.com to find detailed customer discussions and pain points. STEP 4 - Competitor Comparison: Use SEARXNG__SEARCH_GENERAL to analyze how customers compare your offerings with competitors. STEP 5 - Feature Requests: Use SEARXNG__SEARCH_GENERAL to identify commonly requested features and improvements. STEP 6 - Support Issues: Use SEARXNG__SEARCH_GENERAL with site:reddit.com/r/help, forum searches to identify common support problems and solutions. STEP 7 - Trend Analysis: Use GOOGLE_TRENDS__GET_INTEREST_OVER_TIME to track customer interest and search patterns for your product/service. STEP 8 - Sentiment Analysis: Use AI to analyze all collected feedback and categorize sentiment (positive, negative, neutral) and identify key themes. STEP 9 - Insights Synthesis: Generate actionable insights including customer pain points, feature priorities, market opportunities, and competitive advantages. STEP 10 - Create PDF Report: Format all gathered data into a comprehensive Markdown document with sections for: sentiment overview with key metrics, customer pain points analysis, feature requests prioritization, competitive comparison insights, product development recommendations, and a prioritized list of customer needs and potential product improvements. STEP 11 - Generate PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the Markdown report into a professional PDF document titled 'Customer_Research_Insights_{{ variables['Product/Service'] }}_[Current_Date].pdf'. STEP 12 - Send Research Alert: Send notification via NOTIFYME__SEND_ME_EMAIL with subject 'Customer Research Insights - {{ variables['Product/Service'] }} Analysis [Current Date]' including key findings and PDF attachment with the comprehensive customer research report.",
+      "variable_names": [
+        "Product/Service",
+        "Industry"
+      ],
+      "required_app_names": [
+        "SEARXNG",
+        "GOOGLE_TRENDS",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Product Launch Intelligence Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/product_launch.jpeg?raw=true",
+      "description": "Monitor competitor product launches, feature announcements, and market reactions with comprehensive intelligence gathering and analysis.",
+      "tags": [
+        "Product Intelligence",
+        "Competitive Analysis"
+      ],
+      "goal": "Monitor and analyze competitor product launches and feature announcements. STEP 1 - Launch Detection: Use SEARXNG__SEARCH_NEWS and GOOGLE_NEWS__SEARCH_TOPIC to monitor for new product launches in {{ variables['Industry/Market'] }}. STEP 2 - Feature Tracking: Use SEARXNG__SEARCH_NEWS to track major feature announcements and product updates from key competitors. STEP 3 - Social Media Buzz: Use SEARXNG__SEARCH_GENERAL with site:twitter.com, site:linkedin.com to track launch announcements and initial reactions. STEP 4 - User Feedback: Use SEARXNG__SEARCH_GENERAL with site:reddit.com, site:producthunt.com to gather early user feedback and reviews. STEP 5 - Market Impact: Use GOOGLE_TRENDS__GET_INTEREST_OVER_TIME to measure market interest and search volume spikes around launch events. STEP 6 - Pricing Analysis: Use SEARXNG__SEARCH_GENERAL to research competitor pricing strategies and market positioning. STEP 7 - Competitive Response: Analyze how competitors are responding to new launches and market changes. STEP 8 - AI-Powered Analysis: Use AI to identify launch success indicators, market gaps, and strategic implications for your business. STEP 9 - Create PDF Report: Format all gathered data into a comprehensive Markdown document with sections for: recent launches with details, feature analysis, market reactions data, pricing insights, competitive landscape assessment, strategic recommendations, and a visual timeline of recent product launches and upcoming announcements. STEP 10 - Generate PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the Markdown report into a professional PDF document titled 'Product_Launch_Intelligence_{{ variables['Industry/Market'] }}_[Current_Date].pdf'. STEP 11 - Send Launch Alert: Send notification via NOTIFYME__SEND_ME_EMAIL with subject 'Product Launch Intelligence - {{ variables['Industry/Market'] }} Update [Current Date]' including major launches and PDF attachment with the comprehensive launch intelligence report.",
+      "variable_names": [
+        "Industry/Market",
+        "Key Competitors"
+      ],
+      "required_app_names": [
+        "SEARXNG",
+        "GOOGLE_NEWS",
+        "GOOGLE_TRENDS",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Brand Reputation Monitor",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/brand_reputation.jpeg?raw=true",
+      "description": "Monitor brand reputation across news, social media, reviews, and forums with sentiment analysis and crisis detection capabilities.",
+      "tags": [
+        "Brand Management",
+        "Reputation"
+      ],
+      "goal": "Monitor and analyze brand reputation across multiple channels. STEP 1 - News Monitoring: Use GOOGLE_NEWS__SEARCH_TOPIC and SEARXNG__SEARCH_NEWS to track brand mentions in news media. STEP 2 - Social Media Sentiment: Use SEARXNG__SEARCH_GENERAL with site:twitter.com, site:instagram.com, site:facebook.com to monitor social media conversations. STEP 3 - Review Analysis: Use SEARXNG__SEARCH_GENERAL with site:trustpilot.com, site:glassdoor.com to track customer reviews and feedback. STEP 4 - Forum Discussions: Use SEARXNG__SEARCH_GENERAL with site:reddit.com to monitor forum discussions and community sentiment. STEP 5 - Crisis Detection: Use AI to identify potential PR crises, negative sentiment spikes, or reputation-damaging content. STEP 6 - Sentiment Analysis: Use AI to categorize sentiment (positive, negative, neutral) and track sentiment trends over time. STEP 7 - Competitor Comparison: Monitor how your brand reputation compares to competitors in the same space. STEP 8 - Response Recommendations: Generate recommendations for addressing negative feedback or capitalizing on positive mentions. STEP 9 - Create PDF Report: Format all gathered data into a comprehensive Markdown document with sections for: sentiment overview with key metrics, news mentions with links, social media analysis with sentiment breakdown, review summary with ratings, crisis alerts if any detected, response recommendations, and charts showing sentiment trends, mention volume, and reputation metrics over time. STEP 10 - Generate PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the Markdown report into a professional PDF document titled 'Brand_Reputation_Report_{{ variables['Brand Name'] }}_[Current_Date].pdf'. STEP 11 - Send Reputation Alert: Send notification via NOTIFYME__SEND_ME_EMAIL with subject 'Brand Reputation Monitor - {{ variables['Brand Name'] }} Update [Current Date]' including sentiment summary and PDF attachment with the comprehensive brand reputation analysis.",
+      "variable_names": [
+        "Brand Name",
+        "Industry"
+      ],
+      "required_app_names": [
+        "GOOGLE_NEWS",
+        "SEARXNG",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }
