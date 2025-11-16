@@ -2230,6 +2230,62 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "Keyword Monitor for Any Site",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/keyword_monitor.jpeg?raw=true",
+      "description": "Monitor any website for specific keywords and get notified when they appear. Perfect for tech analysts tracking product announcements or content changes.",
+      "tags": [
+        "Browser Automation",
+        "Monitoring"
+      ],
+      "goal": "Monitor the website '{{ variables['Website URL'] }}' for the keyword '{{ variables['Keyword'] }}'. Use BROWSER__SCRAPE_WITH_BROWSER to scrape the website with extraction_instructions: 'Extract all visible text content from the main page and key sections. Look for the keyword \"{{ variables['Keyword'] }}\" in headings, paragraphs, and any prominent text. Return the full text content and specifically highlight if the keyword appears anywhere on the page.' Check if the keyword appears in the extracted content. If the keyword is found, send an immediate notification using NOTIFYME__SEND_ME_NOTIFICATION with message '🚨 Keyword Alert: \"{{ variables['Keyword'] }}\" found on {{ variables['Website URL'] }} - Check it out now!' and also send an email via NOTIFYME__SEND_ME_EMAIL with subject 'Keyword Monitor Alert: {{ variables['Keyword'] }} Detected' and body containing the URL, keyword found, and timestamp. If the keyword is not found, do nothing. Run this check daily to monitor for new content or updates.",
+      "variable_names": [
+        "Website URL",
+        "Keyword"
+      ],
+      "required_app_names": [
+        "BROWSER",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Wikipedia Topic Delta Checker",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/wikipedia_delta.jpeg?raw=true",
+      "description": "Monitor Wikipedia pages for recent edits and get AI-powered summaries of changes. Perfect for researchers and writers tracking evolving topics.",
+      "tags": [
+        "Research",
+        "Monitoring"
+      ],
+      "goal": "Monitor the Wikipedia page at '{{ variables['Wikipedia Page URL'] }}' for recent edits and provide change summaries. STEP 1 - Extract Page Title: Extract the page title from the URL by taking the part after '/wiki/' in '{{ variables['Wikipedia Page URL'] }}' and replacing underscores with spaces. STEP 2 - Get Previous Data: Use GET_PREVIOUS_RUN_OUTPUTS to retrieve the last stored edit timestamp for comparison. STEP 3 - Fetch History Page: Convert the Wikipedia page URL to its history page by appending '?action=history' to the end of the URL, then use HTTP_TOOLS__GET_URL to fetch the history page HTML content. STEP 4 - Parse Recent Edits: Extract the most recent edit timestamp and summary from the history table. Look for the first row in the history table which contains the latest edit information including timestamp, editor, and edit summary. STEP 5 - Compare Timestamps: Compare the current latest edit timestamp with the previously stored timestamp. STEP 6 - Detect Changes: If the current timestamp is newer than the stored timestamp, extract the edit details including what changed, who made the edit, and any edit summary. STEP 7 - Generate Summary: Use AI to analyze the edit details and create a concise summary of what was modified, added, or removed in the recent edit. STEP 8 - Send Notification: Send an immediate notification via NOTIFYME__SEND_ME_NOTIFICATION with message '📝 Wikipedia Update: Page was edited - [ change_summary ]' and also send a detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'Wikipedia Page Updated [Current Date]' including the edit summary, who made the change, and direct link to the diff page. STEP 9 - Store Current State: Output the current latest edit timestamp as structured data for comparison in the next run. If no new edits detected, do nothing. Run this check daily.",
+      "variable_names": [
+        "Wikipedia Page URL"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
+    },
+    {
+      "name": "Scam Detector",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/scam_detector.jpeg?raw=true",
+      "description": "Is this site legit?",
+      "tags": [
+        "Security",
+        "Scam Detection"
+      ],
+      "goal": "Analyze the website '{{ variables['Website URL'] }}' for potential scam indicators. STEP 1 - Scrape Website: Use HTTP_TOOLS__GET_URL to fetch the content from '{{ variables['Website URL'] }}' and extract the HTML content, page title, and visible text. STEP 2 - Check Domain Age: Use IP_TOOLS__GET_DOMAIN_INFO to check the domain registration date and age for '{{ variables['Website URL'] }}'. Look for domains registered very recently (less than 6 months) as a potential red flag. STEP 3 - Analyze Content: Use AI to analyze the scraped content for suspicious text patterns including: urgent language ('act now', 'limited time'), unrealistic promises, poor grammar/spelling, excessive use of exclamation points, and scam-related keywords. STEP 4 - Check Layout Anomalies: Use AI to analyze the HTML structure for layout anomalies including: missing contact information, lack of HTTPS, suspicious redirects, pop-ups, or unusual page elements that indicate scam sites. STEP 5 - Generate Risk Score: Use AI to combine all findings (domain age, suspicious text, layout issues) into a risk score from 0-100 (where 100 is highest risk) and create a warning summary. STEP 6 - Send Results: Send an immediate notification via NOTIFYME__SEND_ME_WHATSAPP_NOTIFICATION with body '🔍 Scam Check Complete: {{ variables['Website URL'] }} - Risk Score: {score}/100 - {warning_summary}'. If WhatsApp fails or phone number unavailable, fallback to NOTIFYME__SEND_ME_MOBILE_NOTIFICATION with title 'Scam Detector Alert 🔍' and message 'Risk Score: {score}/100 for {{ variables['Website URL'] }} - {warning_summary}'. Also send a detailed email via NOTIFYME__SEND_ME_EMAIL with subject 'Scam Detection Report - {{ variables['Website URL'] }} [Current Date]' including the full analysis, risk factors identified, and recommendations.",
+      "variable_names": [
+        "Website URL"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "IP_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }

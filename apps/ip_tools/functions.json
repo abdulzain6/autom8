@@ -126,5 +126,26 @@
       "visible": ["hostname", "count"],
       "additionalProperties": false
     }
+  },
+  {
+    "name": "IP_TOOLS__GET_DOMAIN_INFO",
+    "description": "Retrieves WHOIS registration information for a given domain name.",
+    "tags": ["domain", "whois", "registration", "lookup"],
+    "visibility": "public",
+    "active": true,
+    "protocol": "connector",
+    "protocol_data": {},
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "The domain name to look up (e.g., 'example.com')."
+        }
+      },
+      "required": ["domain"],
+      "visible": ["domain"],
+      "additionalProperties": false
+    }
   }
 ]

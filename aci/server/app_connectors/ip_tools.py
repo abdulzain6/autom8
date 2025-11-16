@@ -644,18 +644,18 @@ class IpTools(AppConnectorBase):
             # Determine ping command based on OS
             param = "-n" if platform.system().lower() == "windows" else "-c"
             command = ["ping", param, str(count), hostname]
-            
+
             # Execute ping command
             result = subprocess.run(
-                command, 
-                capture_output=True, 
-                text=True, 
+                command,
+                capture_output=True,
+                text=True,
                 timeout=30
             )
-            
+
             output = result.stdout
             success = result.returncode == 0
-            
+
             # Parse basic statistics (simplified)
             packet_loss = "0%" if success else "100%"
             if "% packet loss" in output or "% loss" in output:
@@ -663,7 +663,7 @@ class IpTools(AppConnectorBase):
                 loss_match = re.search(r'(\d+)%.*loss', output)
                 if loss_match:
                     packet_loss = f"{loss_match.group(1)}%"
-            
+
             return {
                 "hostname": hostname,
                 "success": success,
@@ -685,5 +685,73 @@ class IpTools(AppConnectorBase):
                 "hostname": hostname,
                 "success": False,
                 "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+    def get_domain_info(self, domain: str) -> Dict[str, Any]:
+        """
+        Retrieves WHOIS registration information for a given domain name.
+
+        Args:
+            domain: The domain name to look up (e.g., 'example.com').
+
+        Returns:
+            A dictionary containing domain registration details.
+        """
+        self._before_execute()
+        logger.info(f"Fetching WHOIS info for domain: {domain}")
+
+        # Basic domain validation
+        if not domain or not isinstance(domain, str):
+            raise Exception("Domain must be a non-empty string")
+
+        # Remove protocol if present
+        domain = domain.replace('http://', '').replace('https://', '').replace('www.', '')
+        if '/' in domain:
+            domain = domain.split('/')[0]
+
+        try:
+            # WHOIS lookup for domain
+            whois_info = whois.whois(domain)
+
+            # Convert to dict if it's not already
+            if not isinstance(whois_info, dict):
+                whois_info = dict(whois_info) if hasattr(whois_info, '__dict__') else {"raw": str(whois_info)}
+
+            # Calculate domain age if creation date is available
+            domain_age_days = None
+            domain_age_years = None
+            if whois_info.get('creation_date'):
+                creation_date = whois_info['creation_date']
+                if isinstance(creation_date, list):
+                    creation_date = creation_date[0]
+                if isinstance(creation_date, str):
+                    try:
+                        creation_date = datetime.fromisoformat(creation_date.replace('Z', '+00:00'))
+                    except:
+                        try:
+                            creation_date = datetime.strptime(creation_date, '%Y-%m-%d %H:%M:%S')
+                        except:
+                            creation_date = None
+
+                if creation_date and isinstance(creation_date, datetime):
+                    domain_age_days = (datetime.now() - creation_date).days
+                    domain_age_years = round(domain_age_days / 365.25, 1)
+
+            return {
+                "domain": domain,
+                "whois": whois_info,
+                "domain_age_days": domain_age_days,
+                "domain_age_years": domain_age_years,
+                "is_recent": domain_age_days is not None and domain_age_days < 180,  # Less than 6 months
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(
+                f"An unexpected error occurred in get_domain_info for {domain}: {e}"
+            )
+            return {
+                "domain": domain,
+                "error": f"WHOIS lookup failed: {str(e)}",
                 "timestamp": datetime.now().isoformat()
             }
