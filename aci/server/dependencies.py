@@ -42,25 +42,6 @@ class User(BaseModel):
     is_trial: bool = False
 
 
-# --- NEW: Structured Error Models ---
-class ErrorCode:
-    """
-    Custom error codes for 402 Payment Required errors.
-    """
-
-    SUBSCRIPTION_REQUIRED = "SUBSCRIPTION_REQUIRED"
-    USAGE_LIMIT_EXCEEDED = "USAGE_LIMIT_EXCEEDED"
-
-
-class PaymentRequiredErrorDetail(BaseModel):
-    """
-    Schema for the 402 error response detail.
-    """
-
-    code: str
-    message: str
-
-
 class PlanLimits(TypedDict):
     max_automations: int
     max_automation_runs: int
@@ -303,13 +284,9 @@ def _get_subscribed_context_internal(
         )
 
         # 3. Raise 402 with structured error
-        error_detail = PaymentRequiredErrorDetail(
-            code=ErrorCode.SUBSCRIPTION_REQUIRED,
-            message="This feature requires an active subscription or trial.",
-        )
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=error_detail.model_dump(),
+            detail="This feature requires an active subscription or trial.",
         )
     else:
         logger.info(f"User {user.id} has active subscription. Access granted.")
@@ -551,13 +528,9 @@ class UsageLimiter:
                 f"User {user_id} exceeded limit for {self.limit_to_check}. "
                 f"Usage: {current_usage}, Limit: {limit_value}"
             )
-            error_detail = PaymentRequiredErrorDetail(
-                code=ErrorCode.USAGE_LIMIT_EXCEEDED,
-                message=f"You have exceeded your usage limit for {self.limit_to_check.value}.",
-            )
             raise HTTPException(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail=error_detail.model_dump(),
+                detail=f"You have exceeded your usage limit for {self.limit_to_check.value}.",
             )
 
         return True

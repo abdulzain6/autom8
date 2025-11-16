@@ -2286,6 +2286,27 @@
         "NOTIFYME"
       ],
       "is_deep": true
+    },
+    {
+      "name": "Balanced News Analysis",
+      "banner_image_url": "https://github.com/abdulzain6/autom8-logos/blob/master/automation_banners/balanced_news.jpeg?raw=true",
+      "description": "Summarize what each side is saying about this news topic. Scrapes 3 left-leaning and 3 right-leaning sites. AI produces a balanced comparison.",
+      "tags": [
+        "News"
+      ],
+      "goal": "Generate a balanced analysis of '{{ variables['News Topic'] }}' by comparing coverage from left-leaning and right-leaning news sources. STEP 1 - Scrape Left-Leaning Sources: Use HTTP_TOOLS__GET_URL to fetch content from 3 left-leaning sites searching for '{{ variables['News Topic'] }}': CNN (https://www.cnn.com/search?q={{ variables['News Topic']|replace(' ', '+') }}), MSNBC (https://www.msnbc.com/search/?q={{ variables['News Topic']|replace(' ', '+') }}), and HuffPost (https://www.huffpost.com/search?q={{ variables['News Topic']|replace(' ', '+') }}). Extract the top 2-3 articles from each site's search results. STEP 2 - Scrape Right-Leaning Sources: Use HTTP_TOOLS__GET_URL to fetch content from 3 right-leaning sites searching for '{{ variables['News Topic'] }}': Fox News (https://www.foxnews.com/search?q={{ variables['News Topic']|replace(' ', '+') }}), Breitbart (https://www.breitbart.com/search/{{ variables['News Topic']|replace(' ', '+') }}/page/1/), and New York Post (https://nypost.com/search/{{ variables['News Topic']|replace(' ', '+') }}/page/1/). Extract the top 2-3 articles from each site's search results. STEP 3 - Summarize Left Perspective: Use AI to analyze all left-leaning articles and create a comprehensive summary of how left-leaning sources are covering '{{ variables['News Topic'] }}', including key facts, opinions, and framing. STEP 4 - Summarize Right Perspective: Use AI to analyze all right-leaning articles and create a comprehensive summary of how right-leaning sources are covering '{{ variables['News Topic'] }}', including key facts, opinions, and framing. STEP 5 - Generate Balanced Comparison: Use AI to compare the left and right perspectives, highlighting agreements, disagreements, biases, omitted facts, and provide a neutral, fact-based overview of '{{ variables['News Topic'] }}'. STEP 6 - Format Analysis Report: Create a professional report with sections for: Left-Leaning Coverage Summary, Right-Leaning Coverage Summary, Key Agreements, Key Disagreements, Neutral Facts, and Bias Analysis. STEP 7 - Create PDF: Use PDF_TOOLS__MARKDOWN_TO_PDF to convert the analysis into a professional PDF document. STEP 8 - Send Balanced Analysis: Send the PDF report via NOTIFYME__SEND_ME_EMAIL with subject 'Balanced News Analysis - {{ variables['News Topic'] }} [Current Date]' and artifact_id for the PDF attachment, including a brief summary in the email body.",
+      "variable_names": [
+        "News Topic"
+      ],
+      "required_app_names": [
+        "HTTP_TOOLS",
+        "SEARXNG",
+        "BBC_NEWS",
+        "GOOGLE_NEWS",
+        "PDF_TOOLS",
+        "NOTIFYME"
+      ],
+      "is_deep": true
     }
   ]
 }

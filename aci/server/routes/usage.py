@@ -4,7 +4,7 @@ from aci.common.db.crud import usage as usage_crud
 from aci.common.schemas.usage import (
     UserUsageResponse,
 )
-from aci.server.dependencies import ErrorCode, PaymentRequiredErrorDetail, RequestContext, get_request_context
+from aci.server.dependencies import RequestContext, get_request_context
 
 router = APIRouter()
 
@@ -19,13 +19,9 @@ def get_current_usage(
 
     # If no billing window, user is unsubscribed
     if not start_date or not end_date:
-        error_detail = PaymentRequiredErrorDetail(
-            code=ErrorCode.SUBSCRIPTION_REQUIRED,
-            message="User is not subscribed.",
-        )
         raise HTTPException(
             status_code=402,
-            detail=error_detail.model_dump(),
+            detail="User is not subscribed.",
         )
 
     # Get usage between subscription dates
