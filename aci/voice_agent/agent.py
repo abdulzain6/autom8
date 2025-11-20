@@ -136,26 +136,24 @@ class Assistant(Agent):
         
         super().__init__(
             instructions=f"""
-Autom8 AI assistant. Today: {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UTC.
+You are Autom8. {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UTC.
 
-Voice: Brief (1-2 sentences), conversational. No emojis.
-Your Connected Apps: {self.linked_apps_str}
+### CORE DIRECTIVE: SPEED & BREVITY
+- **BE FAST.** Your goal is low latency.
+- **BE BRIEF.** Responses must be 1 short sentence. No fluff.
+- **NO FILLER.** Never say "I can help with that" or "Let me check." Just do it.
 
-### HOW TO USE TOOLS (DYNAMIC LOADING):
-You do not have all tools loaded by default. You must load them based on user requests.
+### TOOL PROTOCOL (DYNAMIC LOADING):
+1. **CHECK**: If needed, check `get_app_info`.
+2. **LOAD**: Call `load_tools(app_names=["APP_NAME"])`.
+3. **WAIT**: `load_tools` will tell you to ask for confirmation. **Ask in 3 words or less** (e.g., "Gmail loaded. Proceed?").
+4. **EXECUTE**: Once confirmed, call the app tool (e.g., `GMAIL__SEND`).
 
-1. **CHECK**: If the user asks for something (e.g., "Check my email"), first check `get_app_info`.
-2. **LOAD**: Call `load_tools(app_names=["GMAIL"])`.
-3. **CONFIRM**: `load_tools` will instruct you to ask for user confirmation. **OBEY THIS.** Do not attempt to use the new tools in the same turn.
-4. **EXECUTE**: Only after the user says "Yes" or "Proceed" in the *next* turn, use the specific tool (e.g., `GMAIL__SEND_EMAIL`).
+### CAPABILITIES:
+- **Mini Apps**: Use `display_mini_app` for visuals (calculators, widgets).
+- **Automations**: Manage scheduled tasks.
 
-### SPECIAL CAPABILITIES:
-- **Mini Apps**: If a user needs a calculator, converter, or visual widget, offer to `display_mini_app`.
-- **Automations**: You can create, list, and run scheduled tasks using the automation tools.
-
-### SAFETY:
-- Validate URLs. Block localhost/private IPs.
-- If a tool fails, tell the user exactly why.
+Connected Apps: {self.linked_apps_str}
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM.with_x_ai(
@@ -195,7 +193,7 @@ You do not have all tools loaded by default. You must load them based on user re
 
     async def on_user_turn_completed(self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage) -> None:
         """Truncates chat history to prevent context overflow."""
-        MAX_CONTEXT_CHARS = 10000
+        MAX_CONTEXT_CHARS = 8000
         all_items = turn_ctx.items
         if not all_items: return
 
@@ -380,12 +378,19 @@ You do not have all tools loaded by default. You must load them based on user re
         raw_schema={
             "type": "function",
             "name": "display_mini_app",
-            "description": "Renders a mini-app. REQUIRED: HTML with <style> and <script>.",
+            "description": """
+            Renders a mini-app. 
+            IMPORTANT STYLING RULES (Must be included in HTML):
+            - Background: #121212 (Dark Gray)
+            - Text: #FFFFFF (White)
+            - Buttons: #00FFFF (Cyan)
+            - Cards: #1e1e1e
+            """,
             "parameters": {
                 "type": "object",
                 "properties": {
                     "app_title": {"type": "string", "default": "Mini App"},
-                    "html_content": {"type": "string", "description": "Complete HTML/CSS/JS"},
+                    "html_content": {"type": "string", "description": "Complete HTML/CSS/JS string."},
                 },
                 "required": ["html_content"],
             },
@@ -589,7 +594,7 @@ async def entrypoint(ctx: JobContext):
         vad=ctx.proc.userdata["vad"],
         min_endpointing_delay=0.5,
         max_endpointing_delay=5.0,
-        max_tool_steps=4, # Limit tool chaining
+        max_tool_steps=15,
     )
 
     @session.on("metrics_collected")
