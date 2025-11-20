@@ -144,9 +144,10 @@ Your Connected Apps: {self.linked_apps_str}
 ### HOW TO USE TOOLS (DYNAMIC LOADING):
 You do not have all tools loaded by default. You must load them based on user requests.
 
-1. **CHECK**: If the user asks for something (e.g., "Check my email"), first check `get_app_info` to see what capabilities exist for that app.
-2. **LOAD**: Call `load_tools(app_names=["GMAIL"])`. This will UNLOAD previous apps and LOAD the new ones into your context.
-3. **USE**: Once loaded, the specific tools (e.g., `GMAIL__SEND_EMAIL`) will be available to you. Call them directly.
+1. **CHECK**: If the user asks for something (e.g., "Check my email"), first check `get_app_info`.
+2. **LOAD**: Call `load_tools(app_names=["GMAIL"])`.
+3. **CONFIRM**: `load_tools` will instruct you to ask for user confirmation. **OBEY THIS.** Do not attempt to use the new tools in the same turn.
+4. **EXECUTE**: Only after the user says "Yes" or "Proceed" in the *next* turn, use the specific tool (e.g., `GMAIL__SEND_EMAIL`).
 
 ### SPECIAL CAPABILITIES:
 - **Mini Apps**: If a user needs a calculator, converter, or visual widget, offer to `display_mini_app`.
@@ -332,7 +333,14 @@ You do not have all tools loaded by default. You must load them based on user re
                 
         await self.update_tools(tools=final_tool_list)
 
-        msg = f"Loaded {len(dynamic_tools)} tools for {app_names}. Context refreshed."
+        app_list_str = ", ".join(app_names)
+        
+        msg = (
+            f"SYSTEM UPDATE: The tools for {app_list_str} have been loaded successfully. "
+            f"CRITICAL INSTRUCTION: Do NOT attempt to use these tools immediately. "
+            f"Instead, tell the user: 'I have connected to {app_list_str}. Shall I proceed with your request?' "
+            f"Wait for the user's confirmation."
+        )
         return msg
 
     # --- STANDARD TOOLS ---
