@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
-from aci.common.db.sql_models import AutomationTemplate, App
+from aci.common.db.sql_models import AutomationTemplate, App, automation_template_apps
 from aci.common.schemas.automation_templates import (
     AutomationTemplateUpsert,
 )
@@ -34,8 +34,21 @@ def get_template_by_name(db: Session, name: str) -> Optional[AutomationTemplate]
 
 
 def get_all_templates(db: Session) -> List[AutomationTemplate]:
-    """Lists all automation templates without pagination."""
-    stmt = select(AutomationTemplate).order_by(AutomationTemplate.name)
+    """Lists all automation templates without pagination. Only returns templates whose required apps are active."""
+    stmt = (
+        select(AutomationTemplate)
+        .join(
+            automation_template_apps,
+            automation_template_apps.c.template_id == AutomationTemplate.id,
+        )
+        .join(
+            App,
+            App.id == automation_template_apps.c.app_id,
+        )
+        .where(App.active == True)
+        .distinct()
+        .order_by(AutomationTemplate.name)
+    )
     return list(db.execute(stmt).scalars().all())
 
 
@@ -52,9 +65,21 @@ def list_templates(
 ) -> List[AutomationTemplate]:
     """
     Lists all automation templates with pagination, optional category filtering,
-    and full-text search.
+    and full-text search. Only returns templates whose required apps are active.
     """
-    stmt = select(AutomationTemplate)
+    stmt = (
+        select(AutomationTemplate)
+        .join(
+            automation_template_apps,
+            automation_template_apps.c.template_id == AutomationTemplate.id,
+        )
+        .join(
+            App,
+            App.id == automation_template_apps.c.app_id,
+        )
+        .where(App.active == True)
+        .distinct()
+    )
 
     if category:
         # Check if the category exists in the tags array using array_position
@@ -80,10 +105,19 @@ def list_templates(
 
 
 def get_all_categories(db: Session) -> List[str]:
-    """Retrieves a distinct, sorted list of all tags/categories from all templates."""
-    # This query unnests the tags array and selects the distinct values.
+    """Retrieves a distinct, sorted list of all tags/categories from templates whose required apps are active."""
+    # This query unnests the tags array and selects the distinct values, but only for templates with active apps.
     stmt = (
         select(func.unnest(AutomationTemplate.tags).label("category"))
+        .join(
+            automation_template_apps,
+            automation_template_apps.c.template_id == AutomationTemplate.id,
+        )
+        .join(
+            App,
+            App.id == automation_template_apps.c.app_id,
+        )
+        .where(App.active == True)
         .distinct()
         .order_by("category")
     )
