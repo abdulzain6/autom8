@@ -434,13 +434,13 @@ class Browser(AppConnectorBase):
 
                         # 4️⃣ Init LLMs
                         llm = ChatOpenAI(
-                            model="grok-4-fast-non-reasoning-latest",
+                            model="grok-4.1-fast-non-reasoning-latest",
                             temperature=0.3,
                             api_key=config.XAI_API_KEY,
                             base_url="https://api.x.ai/v1"
                         )
                         page_extraction_llm = ChatOpenAI(
-                            model="grok-4-fast-non-reasoning-latest",
+                            model="grok-4.1-fast-non-reasoning-latest",
                             temperature=0.3,
                             api_key=config.XAI_API_KEY,
                             base_url="https://api.x.ai/v1"
@@ -606,7 +606,7 @@ SECURITY VALIDATION RULES:
 
                     # Setup LLM extraction strategy with required schema
                     llm_config = LLMConfig(
-                        provider="xai/grok-4-fast-non-reasoning-latest",
+                        provider="xai/grok-4.1-fast-non-reasoning-latest",
                         api_token=config.XAI_API_KEY,
                     )
 
