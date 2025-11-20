@@ -286,7 +286,7 @@ class ImageTools(AppConnectorBase):
             # Initialize the multimodal LLM
             llm = ChatXAI(
                 api_key=SecretStr(XAI_API_KEY),
-                model="grok-4-fast-non-reasoning-latest",
+                model="grok-4.1-fast-non-reasoning-latest",
                 timeout=300,
                 max_retries=3,
             )
