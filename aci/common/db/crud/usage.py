@@ -93,62 +93,33 @@ def get_user_total_automations_count(session: Session, user_id: str) -> int:
 def get_usage_between_dates(
     session: Session, user_id: str, start_date: datetime, end_date: datetime
 ) -> Optional[UserUsage]:
-    """
-    Gets aggregated user usage for a specific date range by filtering
-    the 'created_at' timestamp (for the transactional usage model).
-
-    Returns a single, unmanaged UserUsage-like object with summed values.
-    """
-
-    # Create a filter for rows where created_at is between the
-    # start and end of the billing period.
-    date_filter = and_(
-        UserUsage.created_at >= start_date, UserUsage.created_at < end_date
-    )
-
-    # We create a subquery to aggregate the sums for all metrics
-    usage_agg = (
-        session.query(
-            UserUsage.user_id,
-            func.sum(UserUsage.voice_agent_minutes).label("voice_agent_minutes"),
-            func.sum(UserUsage.automation_runs_count).label("automation_runs_count"),
-            func.sum(UserUsage.successful_automation_runs).label(
-                "successful_automation_runs"
-            ),
-            func.sum(UserUsage.failed_automation_runs).label("failed_automation_runs"),
-            func.sum(UserUsage.llm_tokens_used).label("llm_tokens_used"),
-            func.sum(UserUsage.stt_audio_minutes).label("stt_audio_minutes"),
-            func.sum(UserUsage.tts_characters_used).label("tts_characters_used"),
-        )
-        .filter(UserUsage.user_id == user_id, date_filter)  # Apply filters
-        .group_by(UserUsage.user_id)
-        .subquery()
-    )
-
-    # Query from the aggregated subquery
+    
+    # Optimized query: Direct selection, no subquery, no group_by
     result = session.query(
-        usage_agg.c.user_id,
-        usage_agg.c.voice_agent_minutes,
-        usage_agg.c.automation_runs_count,
-        usage_agg.c.successful_automation_runs,
-        usage_agg.c.failed_automation_runs,
-        usage_agg.c.llm_tokens_used,
-        usage_agg.c.stt_audio_minutes,
-        usage_agg.c.tts_characters_used,
+        func.sum(UserUsage.voice_agent_minutes),
+        func.sum(UserUsage.automation_runs_count),
+        func.sum(UserUsage.successful_automation_runs),
+        func.sum(UserUsage.failed_automation_runs),
+        func.sum(UserUsage.llm_tokens_used),
+        func.sum(UserUsage.stt_audio_minutes),
+        func.sum(UserUsage.tts_characters_used),
+    ).filter(
+        UserUsage.user_id == user_id,
+        UserUsage.created_at >= start_date,
+        UserUsage.created_at < end_date
     ).first()
 
-    if not result:
-        return None
+    # If the query returns a row of Nones (which happens if no rows match), handle it
+    if not result or result[0] is None:
+        return None # Or return an empty UserUsage object depending on your preference
 
-    # Return an unmanaged UserUsage object with the summed data.
-    # We use or 0 / or 0.0 because func.sum() returns None for no rows.
     return UserUsage(
-        user_id=result.user_id,
-        voice_agent_minutes=result.voice_agent_minutes or 0.0,
-        automation_runs_count=result.automation_runs_count or 0,
-        successful_automation_runs=result.successful_automation_runs or 0,
-        failed_automation_runs=result.failed_automation_runs or 0,
-        llm_tokens_used=result.llm_tokens_used or 0,
-        stt_audio_minutes=result.stt_audio_minutes or 0.0,
-        tts_characters_used=result.tts_characters_used or 0,
+        user_id=user_id,
+        voice_agent_minutes=result[0] or 0.0,
+        automation_runs_count=result[1] or 0,
+        successful_automation_runs=result[2] or 0,
+        failed_automation_runs=result[3] or 0,
+        llm_tokens_used=result[4] or 0,
+        stt_audio_minutes=result[5] or 0.0,
+        tts_characters_used=result[6] or 0,
     )

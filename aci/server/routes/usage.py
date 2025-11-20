@@ -5,6 +5,11 @@ from aci.common.schemas.usage import (
     UserUsageResponse,
 )
 from aci.server.dependencies import RequestContext, get_request_context
+    
+from aci.common.utils import get_logger
+
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -14,6 +19,8 @@ def get_current_usage(
     context: RequestContext = Depends(get_request_context(check_subscription=False)),
 ):
     """Get current subscription period usage for the authenticated user."""
+    logger.info
+    (f"Fetching current usage for user_id={context.user.id}")
     start_date = context.user.subscription_period_starts_at
     end_date = context.user.subscription_expires_at
 
