@@ -31,6 +31,8 @@ def list_runs_for_automation(
 ) -> List[AutomationRun]:
     """
     Lists all runs for a given automation with filtering and pagination.
+
+    Optimized with composite index on (automation_id, started_at) for efficient ordering.
     """
     stmt = select(AutomationRun).where(AutomationRun.automation_id == automation_id)
 

@@ -288,6 +288,11 @@ class App(Base):
         init=False,
     )
 
+    __table_args__ = (
+        Index("ix_apps_active", "active"),
+        Index("ix_apps_categories", "categories", postgresql_using="gin"),
+    )
+
     @property
     def has_default_credentials(self) -> bool:
         """
@@ -621,6 +626,7 @@ class AutomationRun(Base):
         Index("ix_automation_runs_status", "status"),
         Index("ix_automation_runs_started_at", "started_at"),
         Index("ix_automation_runs_automation_status", "automation_id", "status"),
+        Index("ix_automation_runs_automation_started", "automation_id", "started_at"),
     )
 
 
@@ -690,15 +696,14 @@ class AutomationTemplate(Base):
     )
 
     __table_args__ = (
-        Index("ix_apps_name", "name"),
-        Index("ix_apps_active", "active"),
-        Index("ix_apps_categories", "categories", postgresql_using="gin"),
-    )
-
-    __table_args__ = (
         Index(
             "ix_automation_templates_search_vector",
             "search_vector",
+            postgresql_using="gin",
+        ),
+        Index(
+            "ix_automation_templates_tags",
+            "tags",
             postgresql_using="gin",
         ),
     )

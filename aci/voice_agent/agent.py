@@ -542,6 +542,9 @@ Connected Apps: {self.linked_apps_str}
 # --- MAIN ENTRYPOINT ---
 
 def prewarm(proc: JobProcess):
+    from aci.common.utils import get_db_engine, get_sessionmaker
+    get_db_engine.cache_clear()
+    get_sessionmaker.cache_clear()
     proc.userdata["vad"] = silero.VAD.load()
 
 

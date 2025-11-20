@@ -200,3 +200,18 @@ Generate a clear, concise description (max 100 characters) that explains what th
             f"Failed to generate description for automation '{name}': {str(e)}"
         )
         return None
+
+
+def _clear_engine_cache():
+    """
+    Clears the DB engine and sessionmaker caches.
+    This is registered to run after a fork in the child process to ensure
+    that each process gets its own DB engine and connection pool.
+    """
+    get_db_engine.cache_clear()
+    get_sessionmaker.cache_clear()
+    logger.info("Cleared DB engine cache after fork.")
+
+
+# Register the hook to ensure fork safety for multiprocessing (FastAPI workers, LiveKit agents)
+os.register_at_fork(after_in_child=_clear_engine_cache)

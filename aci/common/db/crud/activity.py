@@ -49,26 +49,28 @@ def get_user_activity_count(
 ) -> int:
     """
     Get total count of user activities.
-    
+
     Args:
         db: Database session
         user_id: User ID to count activities for
         status_filter: Optional status filter
-    
+
     Returns:
         Total count of activities
+
+    Optimized with efficient join and indexing.
     """
     from sqlalchemy import func
-    
+
     stmt = (
         select(func.count(AutomationRun.id))
         .join(Automation)
         .where(Automation.user_id == user_id)
     )
-    
+
     if status_filter:
         stmt = stmt.where(AutomationRun.status == status_filter)
-    
+
     return db.execute(stmt).scalar() or 0
 
 

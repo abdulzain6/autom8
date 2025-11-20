@@ -61,6 +61,7 @@ def revenuecat_webhook(
         event_id = webhook_event.id
     except Exception as e:
         logger.warning(f"Failed to store webhook event: {e}")
+        context.db_session.rollback()
 
     try:
         # The code here will only run if verify_revenuecat_signature passes

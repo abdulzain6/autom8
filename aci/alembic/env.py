@@ -86,7 +86,11 @@ def run_migrations_online() -> None:
     connectable = create_engine(
         _get_db_url(),
         poolclass=pool.NullPool,
-        connect_args={"prepare_threshold": None},  # Disable prepared statements
+        pool_pre_ping=True,  # Detect and discard stale connections
+        connect_args={
+            "prepare_threshold": None,  # Disable prepared statements
+            "connect_timeout": 60,  # Connection timeout
+        },
     )
 
     with connectable.connect() as connection:

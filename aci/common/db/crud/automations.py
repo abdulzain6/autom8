@@ -63,6 +63,8 @@ def list_user_automations(
     1. Active automations first
     2. Recurring automations (scheduled to run) before one-time automations
     3. Then by creation time (newest first)
+
+    Optimized with composite index on (user_id, active, is_recurring).
     """
     stmt = (
         select(Automation)
@@ -292,28 +294,26 @@ def get_due_recurring_automations(db: Session) -> List[Automation]:
     1. Filters for active and recurring automations.
     2. Excludes any automations that are currently in an 'in_progress' state to prevent duplicate runs.
     3. Uses croniter to check if the cron schedule was due between the last run time and now.
+
+    Optimized to reduce database queries and Python processing.
     """
     now = datetime.now(timezone.utc)
-    
-    # First, get all potentially due automations.
-    # This is the main guard against duplicate runs: if a task is already
-    # in the queue or running, its status will be 'in_progress'.
+
+    # Get all potentially due automations in a single query
     stmt = select(Automation).where(
         Automation.is_recurring == True,
         Automation.active == True,
-        Automation.last_run_status != RunStatus.in_progress
+        Automation.last_run_status != RunStatus.in_progress,
+        Automation.cron_schedule.isnot(None)  # Exclude automations without cron schedules
     )
-    
+
     candidate_automations = db.execute(stmt).scalars().all()
-    
+
     due_automations = []
     for automation in candidate_automations:
-        if not automation.cron_schedule:
-            continue
-
         # Use the last run time as the base, or a very old date if it has never run.
         base_time = automation.last_run_at or datetime(1970, 1, 1, tzinfo=timezone.utc)
-        
+
         # croniter helps us find the previously scheduled runtime before "now".
         cron = croniter(automation.cron_schedule, now)
         previous_run_time = cron.get_prev(datetime)
@@ -321,5 +321,5 @@ def get_due_recurring_automations(db: Session) -> List[Automation]:
         # The automation is due if its last actual run was before the last scheduled time.
         if base_time < previous_run_time:
             due_automations.append(automation)
-            
+
     return due_automations

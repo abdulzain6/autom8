@@ -93,8 +93,12 @@ def get_user_total_automations_count(session: Session, user_id: str) -> int:
 def get_usage_between_dates(
     session: Session, user_id: str, start_date: datetime, end_date: datetime
 ) -> Optional[UserUsage]:
-    
-    # Optimized query: Direct selection, no subquery, no group_by
+    """
+    Get aggregated usage statistics for a user between two dates.
+
+    Optimized with index on (user_id, created_at) for efficient date range queries.
+    """
+    # Optimized query: Direct aggregation with proper indexing
     result = session.query(
         func.sum(UserUsage.voice_agent_minutes),
         func.sum(UserUsage.automation_runs_count),
@@ -111,7 +115,7 @@ def get_usage_between_dates(
 
     # If the query returns a row of Nones (which happens if no rows match), handle it
     if not result or result[0] is None:
-        return None # Or return an empty UserUsage object depending on your preference
+        return None  # Or return an empty UserUsage object depending on your preference
 
     return UserUsage(
         user_id=user_id,
