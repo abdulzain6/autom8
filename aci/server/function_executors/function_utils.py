@@ -115,7 +115,7 @@ def execute_function(
         logger.error(
             f"Failed to execute function, function not found, function_name={function_name}"
         )
-        raise FunctionNotFound(f"function={function_name} not found")
+        raise FunctionNotFound(f"function={function_name} not found, Make sure to get all functions of the app and pick from there.")
 
     # Check if the App (that this function belongs to) is configured
     app_configuration = crud.app_configurations.get_app_configuration(

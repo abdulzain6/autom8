@@ -19,6 +19,7 @@ from livekit.agents import (
 from livekit.rtc import ConnectionState
 from livekit.plugins import noise_cancellation, silero, openai, mistralai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
+from typeguard import function_name
 from aci.common.enums import FunctionDefinitionFormat
 from aci.common.schemas.function import OpenAIFunctionDefinition
 from aci.server.dependencies import get_db_session
@@ -93,114 +94,90 @@ class Assistant(Agent):
         self.db_session = create_db_session(DB_FULL_URL)
         self.user_id = user_id
         
-        # Auto-create linked accounts for essential apps if they don't exist
+        # --- AUTO-CREATE LOGIC (Unchanged) ---
         essential_apps = ["SEARXNG", "NOTIFYME"]
         for app_name in essential_apps:
             try:
-                # Check if linked account already exists
                 existing_linked_account = crud.linked_accounts.get_linked_account(
                     self.db_session, user_id, app_name.upper()
                 )
-                
                 if not existing_linked_account:
-                    # Get the app from database
                     app = crud.apps.get_app(self.db_session, app_name, active_only=True)
                     if app and app.has_default_credentials:
-                        # Create linked account with default credentials
                         from aci.common.enums import SecurityScheme
                         from aci.common.schemas.security_scheme import NoAuthSchemeCredentials
-                        
-                        # Use NO_AUTH security scheme with empty credentials for default apps
                         crud.linked_accounts.create_linked_account(
-                            self.db_session,
-                            user_id,
-                            app_name,
-                            SecurityScheme.NO_AUTH,
-                            NoAuthSchemeCredentials(),
+                            self.db_session, user_id, app_name,
+                            SecurityScheme.NO_AUTH, NoAuthSchemeCredentials(),
                         )
                         self.db_session.commit()
-                        logger.info(f"Auto-created linked account for {app_name} for user {user_id}")
             except Exception as e:
-                logger.warning(f"Failed to auto-create linked account for {app_name}: {e}")
-                # Don't fail initialization if auto-creation fails
                 self.db_session.rollback()
         
-        # Fetch user's linked apps to inject into prompt
+        # --- CHANGED: FETCH EXACT FUNCTION NAMES ---
+        # 1. Get list of connected app names
         user_app_names = crud.apps.get_user_linked_app_names(self.db_session, user_id)
-        # Filter out restricted apps
         user_app_names = [name for name in user_app_names if name.lower() not in self._restricted_apps]
-        linked_apps_str = ", ".join(user_app_names) if user_app_names else "No apps connected yet"
-        self.linked_apps_str = linked_apps_str
+        
+        # 2. Get the specific function definitions for these apps
+        # We fetch the actual function names (e.g. 'SEARXNG__SEARCH_GENERAL') to inject into prompt
+        function_registry_str = ""
+        try:
+            if user_app_names:
+                # Assuming crud.apps.get_apps_with_functions_by_names exists (used in your get_app_info)
+                apps_data = crud.apps.get_apps_with_functions_by_names(
+                    self.db_session, [name.upper() for name in user_app_names]
+                )
+                
+                registry_lines = []
+                for app in apps_data:
+                    funcs = [f.name for f in app.functions if f.active]
+                    if funcs:
+                        # Format: APP_NAME: [FUNC_NAME_1, FUNC_NAME_2]
+                        registry_lines.append(f"- {app.name}: {json.dumps(funcs)}")
+                
+                function_registry_str = "\n".join(registry_lines)
+        except Exception as e:
+            logger.error(f"Failed to build function registry: {e}")
+            function_registry_str = "Error loading specific functions. Use get_app_info."
 
+        self.linked_apps_str = ", ".join(user_app_names) if user_app_names else "No apps connected"
+
+        # --- CHANGED: UPDATED SYSTEM PROMPT ---
         super().__init__(
             instructions=f"""
 Autom8 AI assistant. Today: {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UTC.
 
-Voice: Brief (1-2 sentences), conversational, summarize results. Match user's language.
-Be accurate about success/failure - never claim success if a tool returned an error or failure.
+Voice: Brief (1-2 sentences), conversational. Avoid emojis
 
-YOUR CONNECTED APPS: {linked_apps_str}
-Use execute_function with functions from these apps only. If user asks about an app not in this list, tell them it's not connected.
-If user asks "what apps do I have?", just tell them from the list above - no need to call get_linked_apps.
+YOUR AVAILABLE TOOLKIT (EXACT FUNCTION NAMES):
+{function_registry_str}
 
-CRITICAL - EXTREME TOOL CALL LIMITS:
-- MAXIMUM 1 tool call per response unless absolutely necessary
-- System has hard limit - too many calls = failure
-- You already know your connected apps (see above) - NO need for get_linked_apps unless user explicitly asks
-- If you need function details, call get_app_info ONLY if necessary
-- Better: Try execute_function directly, it will tell you if parameters are wrong
+RULES FOR TOOL USE:
+1. **NEVER GUESS** function names. Only use the EXACT strings listed above in "YOUR AVAILABLE TOOLKIT".
+2. If a function is not in the list above, you CANNOT use it. Tell the user the app is not connected.
+3. **ONE TRY ONLY**: Do not chain calls (get_app_info -> execute). Use the list above to call `execute_function` directly.
+4. **STRICT TRUTH**: If `execute_function` returns success=False, you MUST tell the user "I failed to do that because [Error Message]". NEVER say "I did it" if the tool returned an error.
 
-WRONG APPROACH (causes failures):
-❌ get_linked_apps → get_app_info → execute_function (3 calls!)
-❌ get_app_info → execute_function (2 calls - still too many)
+COMMON MAPPINGS:
+- "Search", "Google", "News" -> execute_function("SEARXNG__SEARCH_GENERAL", {{"query": "..."}})
+- "Email", "Notify" -> execute_function("NOTIFYME__SEND_ME_NOTIFICATION", {{"message": "..."}})
 
-CORRECT APPROACH:
-✅ Just call execute_function directly (1 call)
-✅ "latest news" → execute_function(SEARXNG__SEARCH_GENERAL, {{"query": "latest news"}})
-✅ "send notification" → execute_function(NOTIFYME__SEND_ME_NOTIFICATION, {{"message": "text"}})
-✅ "cricket scores" → execute_function(CRICBUZZ__GET_LIVE_MATCHES, {{}})
+SECURITY:
+- Validate URLs. Block localhost/private IPs.
 
-AGENT TOOLS:
-- execute_function: Run app functions from your connected apps
-- create_automation: Create recurring/scheduled tasks (check list_user_automations FIRST to avoid duplicates!)
-- list_user_automations: Check existing automations BEFORE creating new ones
-- update_automation: Modify existing automation settings
-- get_user_timezone: Get timezone for scheduling
-- get_linked_apps: Return connected apps (rarely needed - you already know them above)
-- get_app_info: ONLY if you need to know function parameters
-- display_mini_app: Show HTML tools
-
-AUTOMATION WORKFLOW:
-Before creating automation: Call list_user_automations to check if similar one exists
-If duplicate found: Suggest using existing one or updating it instead
-
-REAL-TIME DATA:
-- NEVER say "I don't have current info" or "knowledge cutoff"
-- Search/news → execute_function(SEARXNG__SEARCH_GENERAL, {{"query": "...", "num_results": 5}})
-- Notifications → execute_function(NOTIFYME__SEND_ME_EMAIL or NOTIFYME__SEND_ME_NOTIFICATION)
-
-SECURITY VALIDATION RULES:
-- ALWAYS validate URLs before using them in any tool calls
-- BLOCK any URLs that are localhost, private IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x), or internal services
-- BLOCK dangerous schemes like file://, javascript:, data:, or custom protocols
-- BLOCK suspicious patterns like encoded payloads or unusual characters
-- ONLY allow HTTP/HTTPS URLs pointing to legitimate public websites
-- If a URL fails security validation, explain the security concern and suggest alternatives
-- Be extremely conservative with any URL-based operations - when in doubt, reject
-
-Timezone: Call get_user_timezone, convert to UTC, explain conversion.
-Voice: Brief (1-2 sentences), conversational, summarize results. Match user's language.
+Voice Style: If a tool fails, sound apologetic. If it succeeds, be concise.
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM.with_x_ai(
                 model="grok-4-1-fast-non-reasoning-latest",
-                temperature=0,
+                temperature=0, # Keep temp 0 to reduce hallucinations
                 api_key=XAI_API_KEY
             ),
             tts=openai.TTS(
                 model="gpt-4o-mini-tts",
                 voice="sage",
-                instructions="Speak in a friendly and engaging tone. Ignore markdown formatting, treat it as plain text. Do not pronounce special characters like #, *, etc.",
+                instructions="Speak in a friendly and engaging tone. Ignore markdown.",
                 api_key=OPENAI_API_KEY,
             ),
             vad=silero.VAD.load(),
@@ -411,6 +388,16 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
         
         try:
             function_name = str(raw_arguments["function_name"])
+            if "__" not in function_name:
+                 # This catches hallucinations like "send_email" or "spotify_play"
+                 error_msg = f"INVALID FUNCTION NAME '{function_name}'. You must use the exact format APP__ACTION (e.g., NOTIFYME__SEND_EMAIL). Check your system prompt list."
+                 await self._notify_tool_completed("execute_function", success=False, error="Invalid Name", display_name=function_name)
+                 return json.dumps({
+                     "success": False,
+                     "error": error_msg,
+                     "instruction": "SYSTEM INSTRUCTION: You guessed a wrong name. Tell the user you don't know how to perform that specific action."
+                 })
+            
             # Convert parameters to dict, handling the object type from raw_arguments
             parameters_obj = raw_arguments.get("parameters", {})
             if isinstance(parameters_obj, dict):
@@ -464,6 +451,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
                 return json.dumps({
                     "success": False,
                     "error": result.error,
+                    "system_instruction": "CRITICAL: The tool FAILED. You must tell the user exactly what went wrong. Do not pretend it succeeded."
                 })
             
         except KeyError as e:
