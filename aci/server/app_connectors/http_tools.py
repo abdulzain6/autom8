@@ -356,7 +356,7 @@ class HttpTools(AppConnectorBase):
             logger.info(f"Successfully fetched content from {url} ({len(text_content)} characters)")
             
             llm_config = LLMConfig(
-                provider="xai/grok-4.1-fast-non-reasoning-latest",
+                provider="xai/grok-4-1-fast-non-reasoning-latest",
                 api_token=config.XAI_API_KEY,
             )
 

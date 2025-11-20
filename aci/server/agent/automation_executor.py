@@ -304,7 +304,7 @@ class AutomationExecutor:
     def create_agent(self):
         model = ChatXAI(
             api_key=SecretStr(XAI_API_KEY),
-            model="grok-4.1-fast-reasoning-latest",
+            model="grok-4-1-fast-reasoning-latest",
             timeout=300,
             max_retries=3,
         )
