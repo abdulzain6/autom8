@@ -286,7 +286,6 @@ You do not have all tools loaded by default. You must load them based on user re
         await self._notify_tool_used("load_tools", display_name=f"Loading {', '.join(app_names)}...")
 
         # 1. Get the function definitions from DB
-        # We use a fresh session here since this is a 'tool' method
         try:
             with create_db_session(DB_FULL_URL) as db_sess:
                 functions = crud.functions.get_user_enabled_functions_for_apps(
@@ -322,14 +321,24 @@ You do not have all tools loaded by default. You must load them based on user re
             new_tools[function.name] = livekit_tool
 
         # 3. Re-assemble tools (Core + New)
-        # We intentionally discard old dynamic tools to keep context clean
         final_tools_map: Dict[str, Any] = {}
         
-        # Identify core tools from the current agent instance
-        # (Methods decorated with @function_tool on 'self')
         for tool in self.tools: 
-            if tool.name in self._core_tool_names:
-                final_tools_map[tool.name] = tool
+            # Attempt to get the name from LiveKit metadata first
+            tool_info = tool.__livekit_tool_info
+            
+            # Fallback to .name (if it exists) or .__name__ (standard python function)
+            tool_name = None
+            if tool_info:
+                tool_name = tool_info.name
+            elif hasattr(tool, "name"):
+                tool_name = tool.name
+            elif hasattr(tool, "__name__"):
+                tool_name = tool.__name__
+            
+            # Only keep if it's a core tool
+            if tool_name and tool_name in self._core_tool_names:
+                final_tools_map[tool_name] = tool
 
         # Add the new dynamic tools
         final_tools_map.update(new_tools)
@@ -426,9 +435,7 @@ You do not have all tools loaded by default. You must load them based on user re
         except Exception as e:
             return f"Could not get timezone: {e}"
 
-    # --- AUTOMATION TOOLS (Preserved) ---
-    # Keeping these allows the agent to manage automations without "loading" the automation app.
-
+    # --- AUTOMATION TOOLS ---
     @function_tool()
     async def list_user_automations(self, raw_arguments: dict[str, object], context: RunContext):
         limit = min(int(raw_arguments.get("limit", 20)), 100)
@@ -442,7 +449,6 @@ You do not have all tools loaded by default. You must load them based on user re
 
     @function_tool()
     async def create_automation(self, raw_arguments: dict[str, object], context: RunContext):
-        # ... (Logic same as before, wrapped in try/except) ...
         try:
             from aci.common.schemas.automations import AutomationAgentCreate, AutomationCreate
             from aci.common.db.crud import linked_accounts as linked_accounts_crud
