@@ -57,20 +57,23 @@ def format_to_screaming_snake_case(name: str) -> str:
 def get_db_engine(db_url: str) -> Engine:
     engine = create_engine(
         db_url,
+        # Connection limits (Keep these low for Supabase Free Tier)
         pool_size=10,
         max_overflow=10,
-        pool_timeout=120,  # Increased from 30 to 120 seconds for long-running operations
-        pool_recycle=1800,  # Reduced from 3600 to 1800 seconds (30 minutes) for better connection health
-        pool_pre_ping=True,  # Enable pre-ping to detect dead connections
+        
+        # Health Checks
+        pool_timeout=120,
+        pool_recycle=1800, 
+        pool_pre_ping=True,  # <--- CRITICAL for stability
+        
         connect_args={
-            "prepare_threshold": None,  # Disable prepared statements
-            "autocommit": False,  # Explicit autocommit setting
-            "connect_timeout": 60,  # Connection timeout
+            # REMOVED: "prepare_threshold": None (Not needed for port 5432)
+            "connect_timeout": 60,
+            # "autocommit": False is default in SQLAlchemy 2.0, but harmless to keep
         },
-        isolation_level="READ_COMMITTED",  # Set explicit isolation level
-        echo=False,  # Set to True for debugging SQL queries
+        isolation_level="READ_COMMITTED",
+        echo=False,
     )
-
     # Add event listeners for better connection management
     @event.listens_for(engine, "connect")
     def set_autocommit_false(dbapi_connection, connection_record):
