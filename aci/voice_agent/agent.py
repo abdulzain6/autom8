@@ -193,7 +193,7 @@ Voice: Brief (1-2 sentences), conversational, summarize results. Match user's la
 """,
             stt=mistralai.STT(model="voxtral-mini-latest", api_key=MISTRALAI_API_KEY),
             llm=openai.LLM.with_x_ai(
-                model="grok-4-fast-non-reasoning-latest",
+                model="grok-4.1-fast-non-reasoning-latest",
                 temperature=0,
                 api_key=XAI_API_KEY
             ),
