@@ -134,9 +134,6 @@ class Assistant(Agent):
 
         self.linked_apps_str = ", ".join(user_app_names) if user_app_names else "No apps connected yet"
         
-        # Map to store currently active tools (Core + Dynamically Loaded)
-        self.tools_names: Dict[str, Any] = {}
-
         super().__init__(
             instructions=f"""
 Autom8 AI assistant. Today: {datetime.now(timezone.utc).strftime('%Y-%m-%d')} UTC.
@@ -279,8 +276,8 @@ You do not have all tools loaded by default. You must load them based on user re
     @function_tool()
     async def load_tools(self, context: RunContext, app_names: list[str]) -> str:
         """
-        Loads the specific tools for the requested apps and unloads others to save context.
-        Always call this before trying to use a tool that isn't currently available.
+        Loads the specific tools for the requested apps.
+        It rebuilds the toolset from scratch (Core Tools + New Apps) to ensure a clean state.
         """
         logger.info(f"Loading tools for apps: {app_names}")
         await self._notify_tool_used("load_tools", display_name=f"Loading {', '.join(app_names)}...")
@@ -297,10 +294,10 @@ You do not have all tools loaded by default. You must load them based on user re
         if not functions:
             return f"No enabled tools found for apps: {app_names}. Are they connected?"
 
-        # 2. Build the new toolset
-        new_tools: Dict[str, Any] = {}
+        # 2. Create the Dynamic Tools
+        dynamic_tools = []
         for function in functions:
-            # Format schema for LLM
+            # Format schema
             formatted_function: OpenAIFunction = cast(
                 OpenAIFunctionDefinition,
                 format_function_definition(function, FunctionDefinitionFormat.OPENAI),
@@ -313,41 +310,29 @@ You do not have all tools loaded by default. You must load them based on user re
                 "parameters": formatted_function.parameters,
             }
             
-            # Create the executable logic wrapper
+            # Create wrapper and instance
             tool_logic = self._create_tool_callable(function)
-            
-            # Create LiveKit tool instance
             livekit_tool = function_tool(raw_schema=raw_schema)(tool_logic)
-            new_tools[function.name] = livekit_tool
+            dynamic_tools.append(livekit_tool)
 
-        # 3. Re-assemble tools (Core + New)
-        final_tools_map: Dict[str, Any] = {}
-        
-        for tool in self.tools: 
-            # Attempt to get the name from LiveKit metadata first
-            tool_info = tool.__livekit_tool_info
-            
-            # Fallback to .name (if it exists) or .__name__ (standard python function)
-            tool_name = None
-            if tool_info:
-                tool_name = tool_info.name
-            elif hasattr(tool, "name"):
-                tool_name = tool.name
-            elif hasattr(tool, "__name__"):
-                tool_name = tool.__name__
-            
-            # Only keep if it's a core tool
-            if tool_name and tool_name in self._core_tool_names:
-                final_tools_map[tool_name] = tool
+        # 3. REBUILD STRATEGY: Start Empty -> Add Core -> Add Dynamic
+        final_tool_list = []
 
-        # Add the new dynamic tools
-        final_tools_map.update(new_tools)
-        
-        # 4. Update the Agent's state
-        self.tools_names = final_tools_map
-        await self.update_tools(tools=list(self.tools_names.values()))
+        # A. Add Core Tools (By looking them up on 'self')
+        # This avoids inspecting the 'tool' object and crashing on missing attributes
+        for name in self._core_tool_names:
+            if hasattr(self, name):
+                core_tool = getattr(self, name)
+                final_tool_list.append(core_tool)
+            else:
+                logger.warning(f"Core tool '{name}' not found on Agent instance.")
 
-        msg = f"Loaded {len(new_tools)} tools for {app_names}. Previous non-core tools have been unloaded."
+        # B. Add the new Dynamic Tools
+        final_tool_list.extend(dynamic_tools)
+                
+        await self.update_tools(tools=final_tool_list)
+
+        msg = f"Loaded {len(dynamic_tools)} tools for {app_names}. Context refreshed."
         return msg
 
     # --- STANDARD TOOLS ---
