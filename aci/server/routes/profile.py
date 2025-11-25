@@ -3,6 +3,7 @@ import magic
 from typing import Annotated
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from aci.common.db import crud
+from aci.common.db.crud.users import delete_user_data
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.profiles import UserProfileResponse, UserProfileUpdate
 from aci.server import dependencies as deps
@@ -113,3 +114,19 @@ def get_my_avatar(
         return {"avatar_url": url}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.delete("")
+def delete_my_profile(
+    context: Annotated[deps.RequestContext, Depends(deps.get_request_context(check_subscription=False))],
+):
+    """
+    Deletes the current authenticated user's profile and all associated data.
+    """
+    if delete_user_data(db=context.db_session, user_id=context.user.id):
+        return {"message": "User and all associated data deleted successfully."}
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
+    )
+
+
