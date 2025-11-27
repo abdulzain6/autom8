@@ -7,15 +7,11 @@ logger = get_logger(__name__)
 def delete_user_data(db: Session, user_id: str):
     """
     Deletes a user and all their associated data from the database.
+    Note: This does not delete from Supabase auth; that should be handled separately.
     """
     user = db.query(SupabaseUser).filter(SupabaseUser.id == user_id).first()
     if not user:
         return False
-
-    # Due to cascade="all, delete-orphan" on relationships in SupabaseUser,
-    # deleting the user will automatically delete related UserProfile, FCMToken,
-    # LinkedAccount, Automation, and UserUsage records.
-    # Artifacts and WebhookEvents also have a foreign key to user_id.
 
     # Delete UserProfile
     db.query(UserProfile).filter(UserProfile.id == user_id).delete()
@@ -41,5 +37,5 @@ def delete_user_data(db: Session, user_id: str):
     # Finally, delete the SupabaseUser itself
     db.delete(user)
     db.commit()
-    logger.info(f"User and all associated data for user_id {user_id} deleted successfully.")
+    logger.info(f"User and all associated data for user_id {user_id} deleted successfully from database.")
     return True

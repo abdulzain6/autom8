@@ -2,12 +2,14 @@
 import magic
 from typing import Annotated
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from supabase import create_client, Client
 from aci.common.db import crud
 from aci.common.db.crud.users import delete_user_data
 from aci.common.logging_setup import get_logger
 from aci.common.schemas.profiles import UserProfileResponse, UserProfileUpdate
 from aci.server import dependencies as deps
 from aci.server.file_management import FileManager
+from aci.server.config import SUPABASE_URL, SUPABASE_SERVICE_KEY
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -123,7 +125,17 @@ def delete_my_profile(
     """
     Deletes the current authenticated user's profile and all associated data.
     """
-    if delete_user_data(db=context.db_session, user_id=context.user.id):
+    user_id = context.user.id
+    if delete_user_data(db=context.db_session, user_id=user_id):
+        # Now delete from Supabase auth
+        try:
+            supabase_admin: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+            supabase_admin.auth.admin.delete_user(user_id)
+            logger.info(f"User {user_id} deleted from Supabase auth.")
+        except Exception as e:
+            logger.error(f"Failed to delete user {user_id} from Supabase auth: {str(e)}")
+            # Note: User data is already deleted, but auth deletion failed.
+            # This might need manual intervention.
         return {"message": "User and all associated data deleted successfully."}
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, detail="User not found."
